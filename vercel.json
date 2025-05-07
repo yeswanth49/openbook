@@ -4,10 +4,5 @@
             "path": "/api/cron-handler",
             "schedule": "0 0 * * *"
         }
-    ],
-    "regions": [
-        "iad1",
-        "sfo1",
-        "bom1"
     ]
 }

@@ -1,0 +1,14 @@
+/* [project]/node_modules/.pnpm/react-tweet@3.2.2_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/react-tweet/dist/twitter-theme/tweet-link.module.css [app-client] (css) */
+.tweet-link-module__uLTi6q__root {
+  font-weight: inherit;
+  color: var(--tweet-color-blue-secondary);
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.tweet-link-module__uLTi6q__root:hover {
+  text-decoration-line: underline;
+  text-decoration-thickness: 1px;
+}
+
+/*# sourceMappingURL=d9e89_react-tweet_dist_twitter-theme_tweet-link_module_css_f9ee138c._.single.css.map*/

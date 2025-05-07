@@ -1,0 +1,28 @@
+/* [project]/node_modules/.pnpm/react-tweet@3.2.2_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/react-tweet/dist/twitter-theme/skeleton.module.css [app-client] (css) */
+.skeleton-module__TRew5a__skeleton {
+  background-image: var(--tweet-skeleton-gradient);
+  background-size: 400% 100%;
+  border-radius: 5px;
+  width: 100%;
+  animation: 8s ease-in-out infinite skeleton-module__TRew5a__loading;
+  display: block;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton-module__TRew5a__skeleton {
+    background-position: 200% 0;
+    animation: none;
+  }
+}
+
+@keyframes skeleton-module__TRew5a__loading {
+  0% {
+    background-position: 200% 0;
+  }
+
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/*# sourceMappingURL=d9e89_react-tweet_dist_twitter-theme_skeleton_module_css_f9ee138c._.single.css.map*/

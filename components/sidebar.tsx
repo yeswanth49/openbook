@@ -1,0 +1,206 @@
+"use client";
+
+import { useState } from 'react';
+import { BookOpen, ChevronLeft, ChevronRight, Plus, Search, Clock, ChevronDown, Settings, MessageSquare, Flag, HelpCircle, LogOut } from 'lucide-react';
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import Link from 'next/link';
+import { useTheme } from 'next-themes';
+import { cn } from '@/lib/utils';
+import { useSpaces, Space as SpaceType } from '@/contexts/SpacesContext';
+
+interface SidebarProps {
+  isOpen: boolean;
+  setIsOpen: (open: boolean) => void;
+}
+
+export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
+  const [showNewMenu, setShowNewMenu] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const { theme } = useTheme();
+  const { spaces, currentSpaceId, createSpace, switchSpace } = useSpaces();
+
+  const handleCreateSpace = () => {
+    const name = window.prompt('Enter space name');
+    if (name && name.trim()) {
+      createSpace(name.trim());
+    }
+    setShowNewMenu(false);
+  };
+
+  const handleCreateJournal = () => {
+    setShowNewMenu(false);
+  };
+
+  return (
+    <>
+      {/* Toggle button that always stays visible */}
+      <button
+        className={cn(
+          "fixed top-24 left-0 z-50 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800",
+          "rounded-r-md p-2 shadow-md transition-all duration-300",
+          "hover:bg-neutral-100 dark:hover:bg-neutral-800"
+        )}
+        onClick={() => setIsOpen(!isOpen)}
+        aria-label={isOpen ? "Collapse sidebar" : "Expand sidebar"}
+        style={{ 
+          transform: isOpen ? 'translateX(256px)' : 'translateX(0)'
+        }}
+      >
+        {isOpen ? 
+          <ChevronLeft className="h-5 w-5 text-neutral-600 dark:text-neutral-400" /> :
+          <ChevronRight className="h-5 w-5 text-neutral-600 dark:text-neutral-400" />
+        }
+      </button>
+      
+      <aside
+        className={cn(
+          "fixed top-0 left-0 h-screen transition-all duration-300 flex flex-col",
+          "bg-white dark:bg-neutral-900 border-r border-neutral-200 dark:border-neutral-800 shadow-xl",
+          isOpen ? "w-64 z-40 pointer-events-auto" : "w-0 z-0 pointer-events-none"
+        )}
+        style={{ boxShadow: isOpen ? '0 2px 24px 0 rgba(0,0,0,0.10)' : 'none' }}
+      >
+        {/* Hide content when closed for accessibility and performance */}
+        <div className={cn("flex flex-col h-full overflow-x-hidden transition-opacity duration-200", isOpen ? "opacity-100" : "opacity-0 pointer-events-none select-none")}
+          style={{ width: isOpen ? '100%' : '0', minWidth: isOpen ? '16rem' : '0' }}
+        >
+          <div className="p-4 pb-2 border-b border-neutral-200 dark:border-neutral-800">
+            {/* Brand row */}
+            <div className="flex items-center space-x-2 mb-2">
+              <BookOpen className="h-6 w-6 text-neutral-700 dark:text-neutral-300" />
+              <span className="text-xl font-bold text-neutral-800 dark:text-neutral-200">OpenBook</span>
+            </div>
+            {/* Controls row: collapse, greeting, new */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <span className="text-lg font-medium text-neutral-800 dark:text-neutral-200">Hi, Yeswanth</span>
+              </div>
+              <div className="relative">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 rounded-full border border-neutral-200 dark:border-neutral-800 flex items-center justify-center hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                  onClick={() => setShowNewMenu(!showNewMenu)}
+                  aria-label="New"
+                >
+                  <Plus className="h-5 w-5 text-emerald-500" />
+                </Button>
+                {showNewMenu && (
+                  <div className="absolute mt-2 right-0 bg-white dark:bg-neutral-900 shadow-lg rounded-md border border-neutral-200 dark:border-neutral-800 z-10">
+                    <div className="p-2">
+                      <button
+                        className="flex items-center gap-2 w-full text-left p-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded"
+                        onClick={handleCreateSpace}
+                      >
+                        <div className="h-5 w-5 flex items-center justify-center bg-neutral-100 dark:bg-neutral-800 rounded">
+                          <span className="text-xs">📄</span>
+                        </div>
+                        <span className="text-sm text-neutral-700 dark:text-neutral-300">New Space</span>
+                      </button>
+                      <button
+                        className="flex items-center gap-2 w-full text-left p-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded"
+                        onClick={handleCreateJournal}
+                      >
+                        <div className="h-5 w-5 flex items-center justify-center bg-neutral-100 dark:bg-neutral-800 rounded">
+                          <span className="text-xs">📝</span>
+                        </div>
+                        <span className="text-sm text-neutral-700 dark:text-neutral-300">New Journal</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+          
+          <div className="mt-4 px-4">
+            <div className="relative">
+              <Search className="absolute left-2 top-2.5 h-4 w-4 text-neutral-400" />
+              <Input 
+                placeholder="Search" 
+                className="pl-8 bg-neutral-50 dark:bg-neutral-800 border-neutral-200 dark:border-neutral-700 rounded-lg"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <div className="mt-6">
+            <div className="px-4 py-2">
+              <h3 className="text-xs font-semibold text-neutral-500 tracking-wider">JOURNALS</h3>
+            </div>
+            <button className="flex items-center gap-2 w-full text-left px-4 py-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-lg">
+              <Clock className="h-4 w-4 text-neutral-400" />
+              <span className="text-sm text-neutral-600 dark:text-neutral-400">Create Journal</span>
+            </button>
+          </div>
+
+          <div className="mt-6">
+            <div className="px-4 py-2 flex items-center justify-between">
+              <h3 className="text-xs font-semibold text-neutral-500 tracking-wider">SPACES</h3>
+              <ChevronDown className="h-4 w-4 text-neutral-400" />
+            </div>
+            <div className="space-y-1">
+              {spaces.map((space: SpaceType) => (
+                <button
+                  key={space.id}
+                  onClick={() => switchSpace(space.id)}
+                  className={cn(
+                    "flex items-center gap-2 w-full text-left px-4 py-2 rounded-lg transition-colors",
+                    space.id === currentSpaceId
+                      ? "bg-emerald-50 dark:bg-emerald-900/20"
+                      : "hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                  )}
+                >
+                  <div className="h-4 w-4 flex items-center justify-center">
+                    <span className="text-xs">📄</span>
+                  </div>
+                  <span className={cn(
+                    "text-sm",
+                    space.id === currentSpaceId
+                      ? "text-emerald-700 dark:text-emerald-400 font-semibold"
+                      : "text-neutral-600 dark:text-neutral-400"
+                  )}>
+                    {space.name}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="mt-auto space-y-1 pb-6 pt-6 border-t border-neutral-200 dark:border-neutral-800 px-4">
+            <button className="flex items-center gap-2 w-full text-left px-4 py-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-lg">
+              <Settings className="h-4 w-4 text-neutral-400" />
+              <span className="text-sm text-neutral-600 dark:text-neutral-400">Get Premium</span>
+            </button>
+            <button className="flex items-center gap-2 w-full text-left px-4 py-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-lg">
+              <Settings className="h-4 w-4 text-neutral-400" />
+              <span className="text-sm text-neutral-600 dark:text-neutral-400">Settings</span>
+            </button>
+            <Link href="https://discord.gg/your-discord" target="_blank">
+              <button className="flex items-center gap-2 w-full text-left px-4 py-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-lg">
+                <MessageSquare className="h-4 w-4 text-neutral-400" />
+                <span className="text-sm text-neutral-600 dark:text-neutral-400">Join Discord</span>
+              </button>
+            </Link>
+            <button className="flex items-center gap-2 w-full text-left px-4 py-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-lg">
+              <Flag className="h-4 w-4 text-neutral-400" />
+              <span className="text-sm text-neutral-600 dark:text-neutral-400">Report Bug</span>
+            </button>
+            <button className="flex items-center gap-2 w-full text-left px-4 py-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-lg">
+              <HelpCircle className="h-4 w-4 text-neutral-400" />
+              <span className="text-sm text-neutral-600 dark:text-neutral-400">Help</span>
+            </button>
+            <Link href="/">
+              <button className="flex items-center gap-2 w-full text-left px-4 py-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-lg">
+                <LogOut className="h-4 w-4 text-neutral-400" />
+                <span className="text-sm text-neutral-600 dark:text-neutral-400">Exit to Home</span>
+              </button>
+            </Link>
+          </div>
+        </div>
+      </aside>
+    </>
+  );
+} 

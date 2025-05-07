@@ -46,8 +46,8 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
       {/* Toggle button that always stays visible */}
       <button
         className={cn(
-          "fixed top-24 left-0 z-50 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800",
-          "rounded-r-md p-2 shadow-md transition-all duration-300",
+          "fixed top-24 left-0 z-50 bg-white dark:bg-neutral-900",
+          "rounded-r-md p-2 shadow-sm transition-transform duration-200 ease-out",
           "hover:bg-neutral-100 dark:hover:bg-neutral-800"
         )}
         onClick={() => setIsOpen(!isOpen)}
@@ -64,17 +64,18 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
       
       <aside
         className={cn(
-          "fixed top-0 left-0 h-screen transition-all duration-300 flex flex-col",
-          "bg-white dark:bg-neutral-900 border-r border-neutral-200 dark:border-neutral-800 shadow-xl",
-          isOpen ? "w-64 z-40 pointer-events-auto" : "w-0 z-0 pointer-events-none"
+          "fixed top-0 left-0 h-screen transition-[width] duration-200 ease-out flex flex-col overflow-hidden",
+          "bg-white dark:bg-neutral-900 shadow-sm",
+          isOpen ? "w-64 pointer-events-auto" : "w-0 pointer-events-none"
         )}
-        style={{ boxShadow: isOpen ? '0 2px 24px 0 rgba(0,0,0,0.10)' : 'none' }}
       >
         {/* Hide content when closed for accessibility and performance */}
-        <div className={cn("flex flex-col h-full overflow-x-hidden transition-opacity duration-200", isOpen ? "opacity-100" : "opacity-0 pointer-events-none select-none")}
-          style={{ width: isOpen ? '100%' : '0', minWidth: isOpen ? '16rem' : '0' }}
+        <div className={cn(
+          "flex flex-col h-full flex-1 transition-opacity duration-200 ease-out overflow-hidden",
+          isOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+        )}
         >
-          <div className="p-4 pb-2 border-b border-neutral-200 dark:border-neutral-800">
+          <div className="p-4 pb-2 border-b border-neutral-100 dark:border-neutral-800">
             {/* Brand row */}
             <div className="flex items-center space-x-2 mb-2">
               <BookOpen className="h-6 w-6 text-neutral-700 dark:text-neutral-300" />
@@ -96,7 +97,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                   <Plus className="h-5 w-5 text-emerald-500" />
                 </Button>
                 {showNewMenu && (
-                  <div className="absolute mt-2 right-0 bg-white dark:bg-neutral-900 shadow-lg rounded-md border border-neutral-200 dark:border-neutral-800 z-10">
+                  <div className="absolute mt-2 right-0 bg-white dark:bg-neutral-900 shadow-sm rounded-md z-10">
                     <div className="p-2">
                       <button
                         className="flex items-center gap-2 w-full text-left p-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded"
@@ -177,7 +178,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                     key={space.id}
                     onClick={() => {
                       switchSpace(space.id)
-                      router.push('/')
+                      router.push(`/space/${space.id}`)
                     }}
                     className={cn(
                       "flex items-center gap-2 w-full text-left px-4 py-2 rounded-lg transition-colors",

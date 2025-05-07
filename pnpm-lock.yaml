@@ -221,6 +221,9 @@ importers:
       mapbox-gl:
         specifier: ^3.7.0
         version: 3.10.0
+      marked:
+        specifier: ^15.0.11
+        version: 15.0.11
       marked-react:
         specifier: ^3.0.0
         version: 3.0.0(react@18.3.1)
@@ -3784,8 +3787,8 @@ packages:
     peerDependencies:
       react: ^16.8.0 || >=17.0.0
 
-  marked@15.0.8:
-    resolution: {integrity: sha512-rli4l2LyZqpQuRve5C0rkn6pj3hT8EWPC+zkAxFTAJLxRbENfTAhEQq9itrmf1Y81QtAX5D/MYlGlIomNgj9lA==}
+  marked@15.0.11:
+    resolution: {integrity: sha512-1BEXAU2euRCG3xwgLVT1y0xbJEld1XOrmRJpUwRCcy7rxhSCwMrmEu9LXoPhHSCJG41V7YcQ2mjKRr5BA3ITIA==}
     engines: {node: '>= 18'}
     hasBin: true
 
@@ -9014,10 +9017,10 @@ snapshots:
 
   marked-react@3.0.0(react@18.3.1):
     dependencies:
-      marked: 15.0.8
+      marked: 15.0.11
       react: 18.3.1
 
-  marked@15.0.8: {}
+  marked@15.0.11: {}
 
   math-intrinsics@1.1.0: {}
 

@@ -81,6 +81,7 @@
     "lucide-react": "^0.424.0",
     "luxon": "^3.5.0",
     "mapbox-gl": "^3.7.0",
+    "marked": "^15.0.11",
     "marked-react": "^3.0.0",
     "mem0ai": "^2.1.18",
     "motion": "^12.9.2",

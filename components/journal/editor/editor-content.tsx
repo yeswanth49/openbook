@@ -63,6 +63,11 @@ export default function EditorContent({ blocks, onKeyDown, onChange, onFocus }: 
         className="group relative block-container"
       >
         {renderBlockContent(block, commonProps)}
+        {block.content.trim() === "" && !block.isFocused && (
+          <span className="absolute inset-0 flex items-center text-gray-400 pointer-events-none select-none px-1">
+            Type '/' for commands
+          </span>
+        )}
         <div className="absolute -left-5 top-1.5 block-hover-indicator">
           <div className="h-2 w-2 rounded-full opacity-30"></div>
         </div>

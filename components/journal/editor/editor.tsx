@@ -6,18 +6,18 @@ import SlashCommandMenu from "./slash-command-menu"
 import EditorContent from "./editor-content"
 import EmptyState from "./empty-state"
 import { type Block, BlockType } from '../../../lib/types'
+import { marked } from 'marked'
 
 interface EditorProps {
   initialBlocks?: Block[]
   onBlocksChange?: (blocks: Block[]) => void
+  title?: string
 }
 
-export default function Editor({ initialBlocks, onBlocksChange }: EditorProps) {
+export default function Editor({ initialBlocks, onBlocksChange, title }: EditorProps) {
   const [blocks, setBlocks] = useState<Block[]>(() =>
     initialBlocks ?? [
-      { id: "1", type: BlockType.H1, content: "Physics Notes" },
-      { id: "2", type: BlockType.H2, content: "Unit 1" },
-      { id: "3", type: BlockType.Text, content: "", isFocused: true },
+      { id: Date.now().toString(), type: BlockType.Text, content: "", isFocused: true },
     ]
   )
 
@@ -49,13 +49,25 @@ export default function Editor({ initialBlocks, onBlocksChange }: EditorProps) {
     onBlocksChange?.(updated)
   }
 
+  // Handle pasting markdown: insert parsed HTML inline
+  const handlePaste = (e: React.ClipboardEvent<HTMLDivElement>) => {
+    e.preventDefault()
+    // Get plain markdown text
+    const markdown = e.clipboardData.getData('text/plain')
+    // Parse to HTML
+    const html = marked.parse(markdown)
+    // Insert HTML at cursor
+    document.execCommand('insertHTML', false, html)
+  }
+
   const handleKeyDown = (e: React.KeyboardEvent, blockId: string) => {
     const blockIndex = blocks.findIndex((b) => b.id === blockId)
     if (blockIndex === -1) return
     const block = blocks[blockIndex]
 
-    if (e.key === "/" && block.content === "") {
+    if (e.key === "/") {
       e.preventDefault()
+      setCurrentBlockId(blockId)
       setShowSlashMenu(true)
       const blockElement = document.getElementById(`block-${blockId}`)
       if (blockElement) {
@@ -114,7 +126,7 @@ export default function Editor({ initialBlocks, onBlocksChange }: EditorProps) {
     <div className="flex flex-col h-full bg-white text-black dark:bg-black dark:text-white">
       <header className="flex h-12 items-center border-b border-solid px-4" style={{ borderColor: "rgb(var(--border-color))" }}>
         <div className="flex items-center space-x-2">
-          <span className="text-sm opacity-60">{blocks.find((b) => b.isFocused)?.content || "Untitled"}</span>
+          <span className="text-sm opacity-60">{title || "Untitled"}</span>
           <span className="opacity-30">•</span>
           <span className="text-sm opacity-60">Private</span>
         </div>
@@ -123,7 +135,7 @@ export default function Editor({ initialBlocks, onBlocksChange }: EditorProps) {
         </div>
       </header>  
 
-      <div ref={editorRef} className="flex-1 overflow-y-auto px-4 py-8 md:px-16">
+      <div ref={editorRef} className="flex-1 overflow-y-auto px-4 py-8 md:px-16" onPaste={handlePaste}>
         {blocks.length === 0 ? (
           <EmptyState onCreateBlock={() => updateBlocks([{ id: Date.now().toString(), type: BlockType.Text, content: "", isFocused: true }])} />
         ) : (

@@ -5,6 +5,7 @@ const STORAGE_KEY = 'journalEntries'
 
 export function useJournal() {
   const [entries, setEntries] = useState<JournalEntry[]>([])
+  const [initialized, setInitialized] = useState(false)
 
   // Load entries from localStorage on mount
   useEffect(() => {
@@ -16,17 +17,30 @@ export function useJournal() {
         console.error('Failed to parse journal entries from storage', e)
       }
     }
+    // Mark as initialized whether or not data was present
+    setInitialized(true)
   }, [])
 
-  // Persist entries on change
+  // Persist entries on change, but skip initial load to avoid overwriting
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(entries))
-  }, [entries])
+    if (!initialized) {
+      return
+    }
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(entries))
+    } catch (e) {
+      console.error('Failed to persist entries', e)
+    }
+  }, [entries, initialized])
 
   const createEntry = useCallback((title: string) => {
     const now = new Date().toISOString()
+    const id =
+      typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+        ? crypto.randomUUID()
+        : Math.random().toString(36).substring(2, 9)
     const newEntry: JournalEntry = {
-      id: crypto.randomUUID(),
+      id,
       title,
       blocks: [],
       tags: [],
@@ -80,5 +94,6 @@ export function useJournal() {
     deleteEntry,
     getEntry,
     searchEntries,
+    initialized,
   }
 } 

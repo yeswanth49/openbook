@@ -11,7 +11,7 @@ runtime.loadChunk("server/chunks/ssr/[root-of-the-server]__af238fc4._.js");
 runtime.loadChunk("server/chunks/ssr/node_modules__pnpm_b45afb03._.js");
 runtime.loadChunk("server/chunks/ssr/791c6_next_dist_client_components_forbidden-error_cf388d1a.js");
 runtime.loadChunk("server/chunks/ssr/791c6_next_dist_client_components_unauthorized-error_d1689a1f.js");
-runtime.loadChunk("server/chunks/ssr/app_journal_layout_tsx_66868bee._.js");
+runtime.loadChunk("server/chunks/ssr/[root-of-the-server]__a4a3cab7._.js");
 runtime.loadChunk("server/chunks/ssr/791c6_next_dist_9c4131e5._.js");
 runtime.loadChunk("server/chunks/ssr/_f5e09bea._.js");
 runtime.getOrInstantiateRuntimeModule("[project]/.next-internal/server/app/journal/page/actions.js [app-rsc] (server actions loader, ecmascript)", CHUNK_PUBLIC_PATH);

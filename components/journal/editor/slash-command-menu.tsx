@@ -51,8 +51,11 @@ export default function SlashCommandMenu({ position, onSelect, onClose }: SlashC
     { type: BlockType.Code, label: "Code", icon: <Code className="w-4 h-4" /> },
   ]
 
-  // Filter commands based on search term
-  const filteredCommands = commands.filter((command) => command.label.toLowerCase().includes(searchTerm.toLowerCase()))
+  // Filter commands based on search term and shortcut
+  const filteredCommands = commands.filter((command) =>
+    command.label.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    command.shortcut?.toLowerCase().includes(searchTerm.toLowerCase())
+  )
 
   useEffect(() => {
     // Scroll selected item into view
@@ -75,7 +78,7 @@ export default function SlashCommandMenu({ position, onSelect, onClose }: SlashC
       } else if (e.key === "Escape") {
         e.preventDefault()
         onClose()
-      } else if (/^[a-zA-Z0-9]$/.test(e.key)) {
+      } else if (e.key.length === 1) {
         // Update search term for filtering
         setSearchTerm((prev) => prev + e.key)
         setSelectedIndex(0)
@@ -104,24 +107,20 @@ export default function SlashCommandMenu({ position, onSelect, onClose }: SlashC
   return (
     <motion.div
       ref={menuRef}
-      className="absolute z-50 bg-white rounded shadow-sm w-56 overflow-hidden dark:bg-black border border-solid"
-      style={{
-        top: position.top + 5,
-        left: position.left,
-        borderColor: "rgb(var(--border-color))",
-      }}
-      initial={{ opacity: 0, y: -5 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -5 }}
-      transition={{ duration: 0.1 }}
+      className="absolute z-50 bg-white rounded shadow-md w-56 overflow-hidden dark:bg-black"
+      style={{ top: position.top + 5, left: position.left }}
+      initial={{ opacity: 0, y: -4, scale: 0.97 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, y: -4, scale: 0.97 }}
+      transition={{ duration: 0.08, ease: 'easeOut' }}
     >
       {searchTerm && (
-        <div className="p-2 border-b border-solid" style={{ borderColor: "rgb(var(--border-color))" }}>
+        <div className="p-2">
           <div className="text-xs opacity-60 px-2">Searching: {searchTerm}</div>
         </div>
       )}
 
-      <div className="p-1 border-b border-solid" style={{ borderColor: "rgb(var(--border-color))" }}>
+      <div className="p-1">
         <div className="text-xs opacity-60 px-2 py-1">Basic blocks</div>
       </div>
 
@@ -149,10 +148,7 @@ export default function SlashCommandMenu({ position, onSelect, onClose }: SlashC
         )}
       </div>
 
-      <div
-        className="p-2 border-t border-solid text-xs opacity-60 flex items-center"
-        style={{ borderColor: "rgb(var(--border-color))" }}
-      >
+      <div className="p-2 text-xs opacity-60 flex items-center">
         <span>Type / on the page</span>
         <span className="ml-auto px-1 border border-solid rounded text-xs font-mono opacity-40">esc</span>
       </div>

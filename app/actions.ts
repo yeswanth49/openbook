@@ -224,7 +224,7 @@ const groupPrompts = {
   extreme: `${groupInstructions.extreme}`,
 } as const;
 
-export async function getGroupConfig(groupId: SearchGroupId = 'web') {
+export async function getGroupConfig(groupId: SearchGroupId = 'chat') {
   "use server";
   const tools = groupTools[groupId];
   const instructions = groupInstructions[groupId];

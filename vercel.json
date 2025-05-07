@@ -1,8 +1,8 @@
 {
     "crons": [
         {
-            "path": "/api/clean_images",
-            "schedule": "0 * * * *"
+            "path": "/api/cron-handler",
+            "schedule": "0 0 * * *"
         }
     ],
     "regions": [

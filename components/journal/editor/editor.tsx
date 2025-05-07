@@ -50,12 +50,12 @@ export default function Editor({ initialBlocks, onBlocksChange, title }: EditorP
   }
 
   // Handle pasting markdown: insert parsed HTML inline
-  const handlePaste = (e: React.ClipboardEvent<HTMLDivElement>) => {
+  const handlePaste = async (e: React.ClipboardEvent<HTMLDivElement>) => {
     e.preventDefault()
     // Get plain markdown text
     const markdown = e.clipboardData.getData('text/plain')
     // Parse to HTML
-    const html = marked.parse(markdown)
+    const html = await marked.parse(markdown)
     // Insert HTML at cursor
     document.execCommand('insertHTML', false, html)
   }

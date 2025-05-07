@@ -1,9 +1,0 @@
-{
-  "[project]/components/interactive-maps.tsx [app-client] (ecmascript, next/dynamic entry)": {
-    "id": "[project]/components/interactive-maps.tsx [app-client] (ecmascript, next/dynamic entry)",
-    "files": [
-      "static/chunks/components_interactive-maps_tsx_1c473179._.js",
-      "static/chunks/components_interactive-maps_tsx_cc3d4aa2._.js"
-    ]
-  }
-}

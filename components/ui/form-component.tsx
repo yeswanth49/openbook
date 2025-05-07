@@ -1526,7 +1526,7 @@ const FormComponent: React.FC<FormComponentProps> = ({
                                                 onClick={(e) => {
                                                     e.preventDefault();
                                                     e.stopPropagation();
-                                                    const newMode = selectedGroup === 'extreme' ? 'web' : 'extreme';
+                                                    const newMode = selectedGroup === 'extreme' ? 'chat' : 'extreme';
                                                     setSelectedGroup(newMode);
 
                                                     // Enhanced notification messages

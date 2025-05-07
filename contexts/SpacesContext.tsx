@@ -1,6 +1,7 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import * as React from 'react';
+import type { ReactNode } from 'react';
 
 export type ChatMessage = {
   id: string;
@@ -31,15 +32,15 @@ export interface SpacesContextType {
   exportSpace: (id: string) => void;
 }
 
-const SpacesContext = createContext<SpacesContextType | undefined>(undefined);
+const SpacesContext = React.createContext<SpacesContextType | undefined>(undefined);
 const STORAGE_KEY = 'openbook_spaces_data';
 
 export const SpacesProvider = ({ children }: { children: ReactNode }) => {
-  const [spaces, setSpaces] = useState<Space[]>([]);
-  const [currentSpaceId, setCurrentSpaceId] = useState<string>('');
+  const [spaces, setSpaces] = React.useState<Space[]>([]);
+  const [currentSpaceId, setCurrentSpaceId] = React.useState<string>('');
 
   // Load from localStorage
-  useEffect(() => {
+  React.useEffect(() => {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
       try {
@@ -65,7 +66,7 @@ export const SpacesProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   // Persist to localStorage
-  useEffect(() => {
+  React.useEffect(() => {
     if (spaces.length && currentSpaceId) {
       localStorage.setItem(STORAGE_KEY, JSON.stringify({ spaces, currentSpaceId }));
     }
@@ -138,7 +139,7 @@ export const SpacesProvider = ({ children }: { children: ReactNode }) => {
 };
 
 export const useSpaces = () => {
-  const context = useContext(SpacesContext);
+  const context = React.useContext(SpacesContext);
   if (!context) throw new Error('useSpaces must be used within SpacesProvider');
   return context;
 }; 

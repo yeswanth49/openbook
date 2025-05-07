@@ -1,6 +1,0 @@
-{
-  "version": 3,
-  "sources": [],
-  "sections": [
-    {"offset": {"line": 1, "column": 0}, "map": {"version":3,"sources":["turbopack:///[project]/node_modules/.pnpm/react-tweet@3.2.2_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/react-tweet/dist/twitter-theme/tweet-skeleton.module.css"],"sourcesContent":[".root {\n  pointer-events: none;\n  padding-bottom: 0.25rem;\n}\n"],"names":[],"mappings":"AAAA","ignoreList":[0]}}]
-}

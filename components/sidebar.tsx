@@ -8,6 +8,8 @@ import Link from 'next/link';
 import { useTheme } from 'next-themes';
 import { cn } from '@/lib/utils';
 import { useSpaces, Space as SpaceType } from '@/contexts/SpacesContext';
+import { useRouter } from 'next/navigation';
+import { useJournal } from '@/hooks/useJournal';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -16,9 +18,13 @@ interface SidebarProps {
 
 export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
   const [showNewMenu, setShowNewMenu] = useState(false);
+  const [journalsOpen, setJournalsOpen] = useState(false);
+  const [spacesOpen, setSpacesOpen] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const { theme } = useTheme();
   const { spaces, currentSpaceId, createSpace, switchSpace } = useSpaces();
+  const { createEntry, entries } = useJournal();
+  const router = useRouter();
 
   const handleCreateSpace = () => {
     const name = window.prompt('Enter space name');
@@ -30,6 +36,9 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
 
   const handleCreateJournal = () => {
     setShowNewMenu(false);
+    const title = window.prompt('New journal title', 'Untitled')?.trim() || 'Untitled';
+    const newEntry = createEntry(title);
+    router.push(`/journal/${newEntry.id}`);
   };
 
   return (
@@ -127,46 +136,71 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
           </div>
 
           <div className="mt-6">
-            <div className="px-4 py-2">
+            <div className="px-4 py-2 flex items-center justify-between cursor-pointer" onClick={() => setJournalsOpen(!journalsOpen)}>
               <h3 className="text-xs font-semibold text-neutral-500 tracking-wider">JOURNALS</h3>
+              <ChevronDown className={cn("h-4 w-4 text-neutral-400 transition-transform", journalsOpen && "rotate-180")} />
             </div>
-            <button className="flex items-center gap-2 w-full text-left px-4 py-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-lg">
-              <Clock className="h-4 w-4 text-neutral-400" />
-              <span className="text-sm text-neutral-600 dark:text-neutral-400">Create Journal</span>
-            </button>
+            {journalsOpen && (
+              <div>
+                <button
+                  onClick={handleCreateJournal}
+                  className="flex items-center gap-2 w-full text-left px-4 py-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-lg"
+                >
+                  <Clock className="h-4 w-4 text-neutral-400" />
+                  <span className="text-sm text-neutral-600 dark:text-neutral-400">Create Journal</span>
+                </button>
+                <ul className="mt-2 space-y-1 max-h-48 overflow-auto">
+                  {entries.map((entry) => (
+                    <li key={entry.id}>
+                      <button
+                        onClick={() => router.push(`/journal/${entry.id}`)}
+                        className="flex items-center gap-2 w-full text-left px-4 py-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-lg"
+                      >
+                        <span className="text-sm text-neutral-600 dark:text-neutral-400">{entry.title}</span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
 
           <div className="mt-6">
-            <div className="px-4 py-2 flex items-center justify-between">
+            <div className="px-4 py-2 flex items-center justify-between cursor-pointer" onClick={() => setSpacesOpen(!spacesOpen)}>
               <h3 className="text-xs font-semibold text-neutral-500 tracking-wider">SPACES</h3>
-              <ChevronDown className="h-4 w-4 text-neutral-400" />
+              <ChevronDown className={cn("h-4 w-4 text-neutral-400 transition-transform", spacesOpen && "rotate-180")} />
             </div>
-            <div className="space-y-1">
-              {spaces.map((space: SpaceType) => (
-                <button
-                  key={space.id}
-                  onClick={() => switchSpace(space.id)}
-                  className={cn(
-                    "flex items-center gap-2 w-full text-left px-4 py-2 rounded-lg transition-colors",
-                    space.id === currentSpaceId
-                      ? "bg-emerald-50 dark:bg-emerald-900/20"
-                      : "hover:bg-neutral-100 dark:hover:bg-neutral-800"
-                  )}
-                >
-                  <div className="h-4 w-4 flex items-center justify-center">
-                    <span className="text-xs">📄</span>
-                  </div>
-                  <span className={cn(
-                    "text-sm",
-                    space.id === currentSpaceId
-                      ? "text-emerald-700 dark:text-emerald-400 font-semibold"
-                      : "text-neutral-600 dark:text-neutral-400"
-                  )}>
-                    {space.name}
-                  </span>
-                </button>
-              ))}
-            </div>
+            {spacesOpen && (
+              <div className="space-y-1">
+                {spaces.map((space: SpaceType) => (
+                  <button
+                    key={space.id}
+                    onClick={() => {
+                      switchSpace(space.id)
+                      router.push('/')
+                    }}
+                    className={cn(
+                      "flex items-center gap-2 w-full text-left px-4 py-2 rounded-lg transition-colors",
+                      space.id === currentSpaceId
+                        ? "bg-emerald-50 dark:bg-emerald-900/20"
+                        : "hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                    )}
+                  >
+                    <div className="h-4 w-4 flex items-center justify-center">
+                      <span className="text-xs">📄</span>
+                    </div>
+                    <span className={cn(
+                      "text-sm",
+                      space.id === currentSpaceId
+                        ? "text-emerald-700 dark:text-emerald-400 font-semibold"
+                        : "text-neutral-600 dark:text-neutral-400"
+                    )}>
+                      {space.name}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           <div className="mt-auto space-y-1 pb-6 pt-6 border-t border-neutral-200 dark:border-neutral-800 px-4">

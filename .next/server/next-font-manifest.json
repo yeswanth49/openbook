@@ -1,8 +1,20 @@
 {
   "app": {
-    "[project]/app/page": [
+    "[project]/app/_not-found/page": [
       "static/media/8vIH7w4qzmVxm2BL9G78HEY-s.p.32492f67.woff2",
+      "static/media/Geist_Variable-s.p.781b491f.woff2"
+    ],
+    "[project]/app/journal/[id]/page": [
+      "static/media/8vIH7w4qzmVxm2BL9G78HEY-s.p.32492f67.woff2",
+      "static/media/Geist_Variable-s.p.781b491f.woff2"
+    ],
+    "[project]/app/journal/page": [
+      "static/media/8vIH7w4qzmVxm2BL9G78HEY-s.p.32492f67.woff2",
+      "static/media/Geist_Variable-s.p.781b491f.woff2"
+    ],
+    "[project]/app/page": [
       "static/media/GeistMono_Variable.p.0ce97b8a.woff2",
+      "static/media/8vIH7w4qzmVxm2BL9G78HEY-s.p.32492f67.woff2",
       "static/media/Geist_Variable-s.p.781b491f.woff2"
     ]
   },

@@ -1,7 +1,11 @@
 {
-  "/api/search/route": "app/api/search/route.js",
+  "/_not-found/page": "app/_not-found/page.js",
+  "/apple-icon.png/route": "app/apple-icon.png/route.js",
+  "/favicon.ico/route": "app/favicon.ico/route.js",
+  "/icon.png/route": "app/icon.png/route.js",
   "/journal/[id]/page": "app/journal/[id]/page.js",
   "/manifest.webmanifest/route": "app/manifest.webmanifest/route.js",
+  "/opengraph-image.png/route": "app/opengraph-image.png/route.js",
   "/page": "app/page.js",
   "/space/[spaceId]/page": "app/space/[spaceId]/page.js"
 }

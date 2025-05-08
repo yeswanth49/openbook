@@ -4,6 +4,7 @@ import React, { useState, useMemo } from 'react'
 import { useJournal } from '@/hooks/useJournal'
 import { JournalEntry } from '@/lib/types'
 import { format } from 'date-fns'
+import { PlusCircle, Search, ChevronDown, Clock, Calendar, AlignLeft } from 'lucide-react'
 
 interface JournalSidebarProps {
   selectedEntryId?: string
@@ -14,6 +15,7 @@ export const JournalSidebar: React.FC<JournalSidebarProps> = ({ selectedEntryId,
   const { entries, createEntry, searchEntries } = useJournal()
   const [sortBy, setSortBy] = useState<'createdAt' | 'updatedAt' | 'title'>('updatedAt')
   const [searchQuery, setSearchQuery] = useState('')
+  const [showSortOptions, setShowSortOptions] = useState(false)
 
   // Filter entries by search query
   const filtered = searchQuery ? searchEntries(searchQuery) : entries
@@ -28,59 +30,116 @@ export const JournalSidebar: React.FC<JournalSidebarProps> = ({ selectedEntryId,
     })
   }, [filtered, sortBy])
 
-  // Create a new entry and select it
+  // Create a new entry with the date-based naming convention
   const handleNew = () => {
-    const title = window.prompt('New entry title', 'Untitled')?.trim() || 'Untitled'
+    const defaultTitle = `Journal - ${format(new Date(), 'MM/dd/yyyy')}`
+    const title = window.prompt('New entry title', defaultTitle)?.trim() || defaultTitle
     const newEntry = createEntry(title)
     onSelect(newEntry.id)
   }
 
+  // Get sort icon based on sortBy value
+  const getSortIcon = () => {
+    switch (sortBy) {
+      case 'updatedAt': return <Clock className="w-3.5 h-3.5" />
+      case 'createdAt': return <Calendar className="w-3.5 h-3.5" />
+      case 'title': return <AlignLeft className="w-3.5 h-3.5" />
+      default: return <Clock className="w-3.5 h-3.5" />
+    }
+  }
+
   return (
-    <aside className="w-64 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 p-4 flex flex-col">
-      <button
-        onClick={handleNew}
-        className="mb-4 px-3 py-2 text-sm bg-indigo-600 text-white rounded hover:bg-indigo-700"
-      >
-        New Entry
-      </button>
+    <aside className="w-64 bg-white dark:bg-neutral-900 border-r border-neutral-200 dark:border-neutral-800 flex flex-col">
+      <div className="px-3 py-4 flex flex-col">
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="font-bold text-lg text-neutral-800 dark:text-neutral-200">Journal</h3>
+        </div>
 
-      <input
-        type="text"
-        placeholder="Search..."
-        value={searchQuery}
-        onChange={e => setSearchQuery(e.target.value)}
-        className="mb-4 w-full rounded border border-gray-300 bg-gray-50 px-2 py-1 text-sm text-gray-900 focus:outline-none focus:ring dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-400"
-      />
-
-      <div className="mb-4">
-        <label className="text-xs text-gray-600 dark:text-gray-400">Sort by</label>
-        <select
-          value={sortBy}
-          onChange={e => setSortBy(e.target.value as any)}
-          className="mt-1 w-full rounded border border-gray-300 bg-white px-2 py-1 text-sm text-gray-900 focus:outline-none focus:ring dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
+        <button
+          onClick={handleNew}
+          className="flex items-center gap-2 py-1.5 px-3 text-sm font-medium rounded-md hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-300 mb-4 transition-colors"
         >
-          <option value="updatedAt">Last edited</option>
-          <option value="createdAt">Date created</option>
-          <option value="title">Title</option>
-        </select>
+          <PlusCircle className="w-4 h-4" />
+          <span>New entry</span>
+        </button>
+
+        <div className="relative mb-4">
+          <div className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none">
+            <Search className="w-4 h-4 text-neutral-400" />
+          </div>
+          <input
+            type="text"
+            placeholder="Search entries..."
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            className="w-full rounded-md border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 py-1.5 pl-9 pr-3 text-sm placeholder:text-neutral-500 dark:placeholder:text-neutral-400 focus:ring-1 focus:ring-neutral-400 dark:focus:ring-neutral-600 focus:outline-none"
+          />
+        </div>
+
+        <div className="relative mb-4">
+          <button 
+            onClick={() => setShowSortOptions(!showSortOptions)}
+            className="flex items-center justify-between w-full text-sm px-3 py-1.5 rounded-md bg-neutral-50 dark:bg-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors"
+          >
+            <div className="flex items-center gap-2">
+              {getSortIcon()}
+              <span className="text-neutral-700 dark:text-neutral-300">
+                {sortBy === 'updatedAt' ? 'Last edited' : sortBy === 'createdAt' ? 'Date created' : 'Title'}
+              </span>
+            </div>
+            <ChevronDown className="w-4 h-4 text-neutral-500" />
+          </button>
+          
+          {showSortOptions && (
+            <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-neutral-800 rounded-md shadow-lg border border-neutral-200 dark:border-neutral-700 z-10">
+              <button
+                onClick={() => { setSortBy('updatedAt'); setShowSortOptions(false) }}
+                className={`flex items-center gap-2 w-full text-left px-3 py-2 text-sm hover:bg-neutral-100 dark:hover:bg-neutral-700 ${sortBy === 'updatedAt' ? 'bg-neutral-100 dark:bg-neutral-700' : ''}`}
+              >
+                <Clock className="w-3.5 h-3.5" />
+                <span>Last edited</span>
+              </button>
+              <button
+                onClick={() => { setSortBy('createdAt'); setShowSortOptions(false) }}
+                className={`flex items-center gap-2 w-full text-left px-3 py-2 text-sm hover:bg-neutral-100 dark:hover:bg-neutral-700 ${sortBy === 'createdAt' ? 'bg-neutral-100 dark:bg-neutral-700' : ''}`}
+              >
+                <Calendar className="w-3.5 h-3.5" />
+                <span>Date created</span>
+              </button>
+              <button
+                onClick={() => { setSortBy('title'); setShowSortOptions(false) }}
+                className={`flex items-center gap-2 w-full text-left px-3 py-2 text-sm hover:bg-neutral-100 dark:hover:bg-neutral-700 ${sortBy === 'title' ? 'bg-neutral-100 dark:bg-neutral-700' : ''}`}
+              >
+                <AlignLeft className="w-3.5 h-3.5" />
+                <span>Title</span>
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
-      <ul className="flex-1 overflow-auto space-y-2">
-        {sorted.map((entry: JournalEntry) => (
-          <li
-            key={entry.id}
-            onClick={() => onSelect(entry.id)}
-            className={`flex justify-between items-center p-2 rounded cursor-pointer truncate ${
-              entry.id === selectedEntryId
-                ? 'bg-indigo-100 dark:bg-indigo-800'
-                : 'hover:bg-gray-100 dark:hover:bg-gray-800'
-            }`}
-          >
-            <span className="font-medium truncate">{entry.title}</span>
-            <span className="text-xs text-gray-500">{format(new Date(entry.updatedAt), 'MMM d, yyyy')}</span>
-          </li>
-        ))}
-      </ul>
+      <div className="flex-1 overflow-auto px-2">
+        <ul className="space-y-0.5">
+          {sorted.map((entry: JournalEntry) => (
+            <li
+              key={entry.id}
+              onClick={() => onSelect(entry.id)}
+              className={`flex flex-col p-2 rounded-md cursor-pointer ${
+                entry.id === selectedEntryId
+                  ? 'bg-neutral-100 dark:bg-neutral-800'
+                  : 'hover:bg-neutral-50 dark:hover:bg-neutral-800/50'
+              }`}
+            >
+              <span className="font-medium text-sm truncate text-neutral-800 dark:text-neutral-200">
+                {entry.title}
+              </span>
+              <div className="flex items-center text-xs text-neutral-500 dark:text-neutral-400 mt-1">
+                <span>{format(new Date(entry.updatedAt), 'MMM d, yyyy')}</span>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </div>
     </aside>
   )
-} 
+}

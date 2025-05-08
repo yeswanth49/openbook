@@ -12,14 +12,19 @@ interface EditorProps {
   initialBlocks?: Block[]
   onBlocksChange?: (blocks: Block[]) => void
   title?: string
+  onTitleChange?: (title: string) => void
 }
 
-export default function Editor({ initialBlocks, onBlocksChange, title }: EditorProps) {
+export default function Editor({ initialBlocks, onBlocksChange, title, onTitleChange }: EditorProps) {
   const [blocks, setBlocks] = useState<Block[]>(() =>
     initialBlocks ?? [
       { id: Date.now().toString(), type: BlockType.Text, content: "", isFocused: true },
     ]
   )
+
+  // Create a more descriptive default title
+  const defaultTitle = `Journal - ${new Date().toLocaleDateString()}`
+  const [currentTitle, setCurrentTitle] = useState(title || defaultTitle)
 
   const [showSlashMenu, setShowSlashMenu] = useState(false)
   const [slashMenuPosition, setSlashMenuPosition] = useState({ top: 0, left: 0 })
@@ -44,9 +49,21 @@ export default function Editor({ initialBlocks, onBlocksChange, title }: EditorP
     }
   }, [initialBlocks])
 
+  // Sync title from props
+  useEffect(() => {
+    if (title && title !== currentTitle) {
+      setCurrentTitle(title)
+    }
+  }, [title])
+
   const updateBlocks = (updated: Block[]) => {
     setBlocks(updated)
     onBlocksChange?.(updated)
+  }
+
+  const handleTitleChange = (newTitle: string) => {
+    setCurrentTitle(newTitle)
+    onTitleChange?.(newTitle)
   }
 
   // Handle pasting markdown: insert parsed HTML inline
@@ -92,6 +109,82 @@ export default function Editor({ initialBlocks, onBlocksChange, title }: EditorP
       updated[newFocus] = { ...updated[newFocus], isFocused: true }
       updateBlocks(updated)
       setCurrentBlockId(updated[newFocus].id)
+    } else if (e.key === "ArrowUp" && !e.shiftKey) {
+      // Only handle arrow up if at the start of the text
+      const selection = window.getSelection()
+      const range = selection?.getRangeAt(0)
+      const container = range?.startContainer
+      const offset = range?.startOffset
+      
+      if (offset === 0 && blockIndex > 0) {
+        e.preventDefault()
+        const updated = [...blocks]
+        updated.forEach(blk => blk.isFocused = false)
+        updated[blockIndex - 1].isFocused = true
+        updateBlocks(updated)
+        setCurrentBlockId(updated[blockIndex - 1].id)
+      }
+    } else if (e.key === "ArrowDown" && !e.shiftKey) {
+      // Only handle arrow down if at the end of the text
+      const selection = window.getSelection()
+      const range = selection?.getRangeAt(0)
+      const container = range?.startContainer
+      const offset = range?.startOffset
+      const length = container?.textContent?.length || 0
+      
+      if (offset === length && blockIndex < blocks.length - 1) {
+        e.preventDefault()
+        const updated = [...blocks]
+        updated.forEach(blk => blk.isFocused = false)
+        updated[blockIndex + 1].isFocused = true
+        updateBlocks(updated)
+        setCurrentBlockId(updated[blockIndex + 1].id)
+      }
+    } else if (block.content === "#" && e.key === " ") {
+      e.preventDefault()
+      updateBlocks(
+        blocks.map((blk) => (blk.id === blockId ? { ...blk, type: BlockType.H1, content: "" } : blk))
+      )
+    } else if (block.content === "##" && e.key === " ") {
+      e.preventDefault()
+      updateBlocks(
+        blocks.map((blk) => (blk.id === blockId ? { ...blk, type: BlockType.H2, content: "" } : blk))
+      )
+    } else if (block.content === "###" && e.key === " ") {
+      e.preventDefault()
+      updateBlocks(
+        blocks.map((blk) => (blk.id === blockId ? { ...blk, type: BlockType.H3, content: "" } : blk))
+      )
+    } else if (block.content === "-" && e.key === " ") {
+      e.preventDefault()
+      updateBlocks(
+        blocks.map((blk) => (blk.id === blockId ? { ...blk, type: BlockType.BulletList, content: "" } : blk))
+      )
+    } else if (block.content === "1." && e.key === " ") {
+      e.preventDefault()
+      updateBlocks(
+        blocks.map((blk) => (blk.id === blockId ? { ...blk, type: BlockType.NumberedList, content: "" } : blk))
+      )
+    } else if (block.content === "[]" && e.key === " ") {
+      e.preventDefault()
+      updateBlocks(
+        blocks.map((blk) => (blk.id === blockId ? { ...blk, type: BlockType.TodoList, content: "" } : blk))
+      )
+    } else if (block.content === ">" && e.key === " ") {
+      e.preventDefault()
+      updateBlocks(
+        blocks.map((blk) => (blk.id === blockId ? { ...blk, type: BlockType.Quote, content: "" } : blk))
+      )
+    } else if (block.content === "---" && e.key === " ") {
+      e.preventDefault()
+      updateBlocks(
+        blocks.map((blk) => (blk.id === blockId ? { ...blk, type: BlockType.Divider, content: "" } : blk))
+      )
+    } else if (block.content === "```" && e.key === " ") {
+      e.preventDefault()
+      updateBlocks(
+        blocks.map((blk) => (blk.id === blockId ? { ...blk, type: BlockType.Code, content: "" } : blk))
+      )
     }
   }
 
@@ -102,6 +195,40 @@ export default function Editor({ initialBlocks, onBlocksChange, title }: EditorP
   const handleBlockFocus = (id: string) => {
     updateBlocks(blocks.map((blk) => ({ ...blk, isFocused: blk.id === id })))
     setCurrentBlockId(id)
+  }
+
+  const handleDeleteBlock = (id: string) => {
+    const updated = blocks.filter(block => block.id !== id)
+    if (updated.length === 0) {
+      // If we deleted the last block, add a new empty one
+      updated.push({ id: Date.now().toString(), type: BlockType.Text, content: "", isFocused: true })
+    } else {
+      // Focus the previous block or the next one if we deleted the first
+      const index = blocks.findIndex(block => block.id === id)
+      const newFocusIndex = Math.max(0, index > 0 ? index - 1 : 0)
+      updated[newFocusIndex] = { ...updated[newFocusIndex], isFocused: true }
+    }
+    updateBlocks(updated)
+  }
+
+  const handleDuplicateBlock = (id: string) => {
+    const blockToDuplicate = blocks.find(block => block.id === id)
+    if (!blockToDuplicate) return
+
+    const index = blocks.findIndex(block => block.id === id)
+    const duplicatedBlock = { 
+      ...blockToDuplicate,
+      id: Date.now().toString(), 
+      isFocused: true
+    }
+    
+    const updated = [...blocks]
+    // Remove focus from all blocks
+    updated.forEach(block => block.isFocused = false)
+    // Insert the duplicated block after the original
+    updated.splice(index + 1, 0, duplicatedBlock)
+    
+    updateBlocks(updated)
   }
 
   const handleCommandSelect = (type: BlockType) => {
@@ -123,27 +250,42 @@ export default function Editor({ initialBlocks, onBlocksChange, title }: EditorP
   }
 
   return (
-    <div className="flex flex-col h-full bg-white text-black dark:bg-black dark:text-white">
-      <header className="flex h-12 items-center border-b border-solid px-4" style={{ borderColor: "rgb(var(--border-color))" }}>
-        <div className="flex items-center space-x-2">
-          <span className="text-sm opacity-60">{title || "Untitled"}</span>
-          <span className="opacity-30">•</span>
-          <span className="text-sm opacity-60">Private</span>
+    <div className="flex flex-col h-full bg-white text-black dark:bg-neutral-900 dark:text-white">
+      <header className="flex h-20 items-center px-8" style={{ borderBottom: "none" }}>
+        <div className="flex items-center space-x-2 w-full max-w-2xl mx-auto">
+          <input
+            type="text"
+            className="text-3xl font-bold bg-transparent border-none outline-none focus:ring-0 w-full opacity-90 focus:opacity-100"
+            value={currentTitle}
+            onChange={(e) => handleTitleChange(e.target.value)}
+            placeholder={defaultTitle}
+          />
         </div>
-        <div className="ml-auto flex items-center space-x-4">
-          <button className="text-sm opacity-60 hover:opacity-100">Share</button>
-        </div>
-      </header>  
+      </header>
 
-      <div ref={editorRef} className="flex-1 overflow-y-auto px-4 py-8 md:px-16" onPaste={handlePaste}>
-        {blocks.length === 0 ? (
-          <EmptyState onCreateBlock={() => updateBlocks([{ id: Date.now().toString(), type: BlockType.Text, content: "", isFocused: true }])} />
-        ) : (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }}>
-            <EditorContent blocks={blocks} onKeyDown={handleKeyDown} onChange={handleBlockChange} onFocus={handleBlockFocus} />
-          </motion.div>
-        )}
-        {showSlashMenu && <SlashCommandMenu position={slashMenuPosition} onSelect={handleCommandSelect} onClose={() => setShowSlashMenu(false)} />}
+      <div 
+        ref={editorRef} 
+        className="flex-1 overflow-y-auto py-8 px-8"
+        onPaste={handlePaste}
+      >
+        <div className="max-w-2xl mx-auto">
+          {blocks.length === 0 ? (
+            <EmptyState onCreateBlock={() => updateBlocks([{ id: Date.now().toString(), type: BlockType.Text, content: "", isFocused: true }])} />
+          ) : (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }}>
+              <EditorContent 
+                blocks={blocks} 
+                onKeyDown={handleKeyDown} 
+                onChange={handleBlockChange} 
+                onFocus={handleBlockFocus}
+                onDeleteBlock={handleDeleteBlock}
+                onDuplicateBlock={handleDuplicateBlock}
+                onBlocksChange={updateBlocks}
+              />
+            </motion.div>
+          )}
+          {showSlashMenu && <SlashCommandMenu position={slashMenuPosition} onSelect={handleCommandSelect} onClose={() => setShowSlashMenu(false)} />}
+        </div>
       </div>
     </div>
   )

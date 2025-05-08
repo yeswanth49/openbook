@@ -1,19 +1,45 @@
 "use client"
 
 import type React from "react"
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 import { motion } from "framer-motion"
 import { type Block, BlockType } from "../../../lib/types"
+import { MoreHorizontal, Trash2, Copy, MoveVertical, Palette, Check } from "lucide-react"
 
 interface EditorContentProps {
   blocks: Block[]
   onKeyDown: (e: React.KeyboardEvent, blockId: string) => void
   onChange: (id: string, content: string) => void
   onFocus: (id: string) => void
+  onDeleteBlock?: (id: string) => void
+  onDuplicateBlock?: (id: string) => void
+  onBlocksChange?: (blocks: Block[]) => void
 }
 
-export default function EditorContent({ blocks, onKeyDown, onChange, onFocus }: EditorContentProps) {
+export default function EditorContent({ 
+  blocks, 
+  onKeyDown, 
+  onChange, 
+  onFocus,
+  onDeleteBlock,
+  onDuplicateBlock,
+  onBlocksChange
+}: EditorContentProps) {
   const blockRefs = useRef<Record<string, HTMLDivElement | null>>({})
+  const [activeMenu, setActiveMenu] = useState<string | null>(null)
+  const menuRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    // Close menu when clicking outside
+    const handleClickOutside = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setActiveMenu(null)
+      }
+    }
+    
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
 
   useEffect(() => {
     // Focus on the block that has isFocused set to true
@@ -39,6 +65,27 @@ export default function EditorContent({ blocks, onKeyDown, onChange, onFocus }: 
     }
   }, [blocks])
 
+  const handleBlockAction = (action: string, blockId: string) => {
+    setActiveMenu(null)
+    
+    switch (action) {
+      case 'delete':
+        onDeleteBlock?.(blockId)
+        break
+      case 'duplicate':
+        onDuplicateBlock?.(blockId)
+        break
+      case 'move':
+        // Future implementation
+        console.log('Move action for block:', blockId)
+        break
+      case 'color':
+        // Future implementation
+        console.log('Color action for block:', blockId)
+        break
+    }
+  }
+
   const renderBlock = (block: Block, index: number) => {
     const commonProps = {
       id: `block-${block.id}`,
@@ -51,7 +98,7 @@ export default function EditorContent({ blocks, onKeyDown, onChange, onFocus }: 
       },
       onFocus: () => onFocus(block.id),
       ref: (el: HTMLDivElement) => (blockRefs.current[block.id] = el),
-      placeholder: "Type '/' for commands",
+      placeholder: "",
       className: "outline-none mb-1 min-h-[1.5em]",
     }
 
@@ -62,14 +109,65 @@ export default function EditorContent({ blocks, onKeyDown, onChange, onFocus }: 
         transition={{ duration: 0.1 }}
         className="group relative block-container"
       >
-        {renderBlockContent(block, commonProps)}
-        {block.content.trim() === "" && !block.isFocused && (
-          <span className="absolute inset-0 flex items-center text-gray-400 pointer-events-none select-none px-1">
-            Type '/' for commands
-          </span>
+        <div className="absolute -left-10 top-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex">
+          <button 
+            onClick={() => setActiveMenu(activeMenu === block.id ? null : block.id)}
+            className="h-6 w-6 rounded-md flex items-center justify-center hover:bg-neutral-100 dark:hover:bg-neutral-800"
+          >
+            <MoreHorizontal className="h-3.5 w-3.5 text-neutral-400" />
+          </button>
+        </div>
+        
+        {/* Action menu dropdown */}
+        {activeMenu === block.id && (
+          <div 
+            ref={menuRef}
+            className="absolute z-40 top-0 -left-40 bg-white dark:bg-neutral-900 rounded-lg shadow-lg w-36 overflow-hidden border border-neutral-200 dark:border-neutral-800"
+          >
+            <div className="py-1">
+              <button 
+                onClick={() => handleBlockAction('delete', block.id)}
+                className="flex items-center gap-2 w-full px-3 py-1.5 text-sm text-left hover:bg-neutral-100 dark:hover:bg-neutral-800"
+              >
+                <Trash2 className="h-3.5 w-3.5 text-neutral-500" />
+                <span>Delete</span>
+              </button>
+              <button 
+                onClick={() => handleBlockAction('duplicate', block.id)}
+                className="flex items-center gap-2 w-full px-3 py-1.5 text-sm text-left hover:bg-neutral-100 dark:hover:bg-neutral-800"
+              >
+                <Copy className="h-3.5 w-3.5 text-neutral-500" />
+                <span>Duplicate</span>
+              </button>
+              <button 
+                onClick={() => handleBlockAction('move', block.id)}
+                className="flex items-center gap-2 w-full px-3 py-1.5 text-sm text-left hover:bg-neutral-100 dark:hover:bg-neutral-800"
+              >
+                <MoveVertical className="h-3.5 w-3.5 text-neutral-500" />
+                <span>Move to</span>
+              </button>
+              <button 
+                onClick={() => handleBlockAction('color', block.id)}
+                className="flex items-center gap-2 w-full px-3 py-1.5 text-sm text-left hover:bg-neutral-100 dark:hover:bg-neutral-800"
+              >
+                <Palette className="h-3.5 w-3.5 text-neutral-500" />
+                <span>Color</span>
+              </button>
+            </div>
+          </div>
         )}
-        <div className="absolute -left-5 top-1.5 block-hover-indicator">
-          <div className="h-2 w-2 rounded-full opacity-30"></div>
+
+        {renderBlockContent(block, commonProps)}
+        {/* Only show command hint when block is focused and empty */}
+        {block.content.trim() === "" && block.isFocused && (
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <span className="flex items-center gap-1 text-neutral-400 select-none text-sm font-normal opacity-70">
+              Type <span className="inline-block px-1.5 py-0.5 bg-neutral-100 dark:bg-neutral-800 rounded text-xs font-medium">/</span> for commands
+            </span>
+          </div>
+        )}
+        <div className="absolute -left-5 top-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+          <div className="h-2 w-2 rounded-full bg-neutral-300 dark:bg-neutral-600"></div>
         </div>
       </motion.div>
     )
@@ -86,55 +184,92 @@ export default function EditorContent({ blocks, onKeyDown, onChange, onFocus }: 
 
     switch (block.type) {
       case BlockType.H1:
-        return <h1 {...contentProps} className="text-3xl font-bold mb-3 outline-none" />
+        return <h1 {...contentProps} className="text-3xl font-bold mb-4 outline-none" />
       case BlockType.H2:
-        return <h2 {...contentProps} className="text-2xl font-bold mb-2 outline-none" />
+        return <h2 {...contentProps} className="text-2xl font-semibold mb-3 outline-none" />
       case BlockType.H3:
-        return <h3 {...contentProps} className="text-xl font-bold mb-2 outline-none" />
+        return <h3 {...contentProps} className="text-xl font-medium mb-3 outline-none" />
       case BlockType.BulletList:
         return (
-          <div className="flex items-start mb-1">
-            <span className="mr-2 mt-1 opacity-60">•</span>
+          <div className="flex items-start mb-1 py-1">
+            <span className="mr-2 mt-1 opacity-60 text-sm">•</span>
             <div {...contentProps} className="outline-none flex-1" />
           </div>
         )
       case BlockType.NumberedList:
         return (
-          <div className="flex items-start mb-1">
-            <span className="mr-2 mt-1 opacity-60">1.</span>
+          <div className="flex items-start mb-1 py-1">
+            <span className="mr-2 mt-1 opacity-60 text-sm">1.</span>
             <div {...contentProps} className="outline-none flex-1" />
           </div>
         )
       case BlockType.TodoList:
         return (
-          <div className="flex items-start mb-1">
-            <div className="mr-2 mt-1 h-4 w-4 rounded border border-solid opacity-30"></div>
-            <div {...contentProps} className="outline-none flex-1" />
+          <div className="flex items-start mb-1 py-1">
+            <div 
+              className={`mr-2 mt-1 h-4 w-4 rounded border border-solid border-neutral-300 dark:border-neutral-600 flex items-center justify-center cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-800 ${block.metadata?.checked ? 'bg-blue-500 border-blue-500 dark:bg-blue-600 dark:border-blue-600' : ''}`}
+              onClick={(e) => {
+                e.stopPropagation()
+                const isChecked = !!block.metadata?.checked
+                onChange(block.id, block.content)
+                // Update the metadata for the block
+                const updatedBlocks = blocks.map(b => 
+                  b.id === block.id 
+                    ? { 
+                        ...b, 
+                        metadata: { 
+                          ...b.metadata, 
+                          checked: !isChecked 
+                        } 
+                      } 
+                    : b
+                )
+                // We need to update the blocks state in the parent component
+                // This will be picked up by the editor component
+                onBlocksChange?.(updatedBlocks)
+              }}
+            >
+              {block.metadata?.checked && (
+                <Check className="h-3 w-3 text-white" />
+              )}
+            </div>
+            <div 
+              {...contentProps} 
+              className={`outline-none flex-1 ${block.metadata?.checked ? 'line-through text-neutral-400 dark:text-neutral-500' : ''}`} 
+            />
           </div>
         )
       case BlockType.ToggleList:
         return (
-          <div className="flex items-start mb-1">
-            <span className="mr-2 mt-1 opacity-60">▸</span>
+          <div className="flex items-start mb-1 py-1">
+            <span className="mr-2 mt-1 opacity-60 text-sm">▸</span>
             <div {...contentProps} className="outline-none flex-1" />
           </div>
         )
       case BlockType.Quote:
         return (
-          <div className="border-l-2 border-solid border-opacity-30 pl-4 mb-2 opacity-80">
-            <div {...contentProps} className="outline-none italic" />
+          <div className="border-l-4 border-neutral-200 dark:border-neutral-700 pl-4 mb-3 text-neutral-600 dark:text-neutral-300">
+            <div {...contentProps} className="outline-none" />
           </div>
         )
       case BlockType.Divider:
-        return <hr className="my-4 border-t border-solid opacity-20" />
+        return (
+          <div className="relative py-6 cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-800 rounded-md transition-colors">
+            <hr className="border-t border-neutral-200 dark:border-neutral-700" />
+            <div 
+              className="sr-only"
+              {...commonProps}
+            ></div>
+          </div>
+        )
       case BlockType.Code:
         return (
-          <div className="bg-opacity-5 rounded p-3 mb-3 font-mono">
+          <div className="bg-neutral-50 dark:bg-neutral-800 rounded-md p-4 mb-4 font-mono text-sm">
             <div {...contentProps} className="outline-none" />
           </div>
         )
       default:
-        return <div {...contentProps} />
+        return <div {...contentProps} className="py-1 outline-none" />
     }
   }
 

@@ -73,8 +73,6 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
         .filter(entry => 
           // Search in title
           entry.title.toLowerCase().includes(query.toLowerCase()) ||
-          // Search in tags
-          entry.tags?.some(tag => tag.toLowerCase().includes(query.toLowerCase())) ||
           // Search in block content
           entry.blocks.some(block => block.content.toLowerCase().includes(query.toLowerCase()))
         )
@@ -92,22 +90,11 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
               preview: matchingBlock.content,
               matchType: 'content'
             };
-          } else if (entry.title.toLowerCase().includes(query.toLowerCase())) {
+          } else {
             return {
               id: entry.id,
               title: entry.title,
               matchType: 'title'
-            };
-          } else {
-            // Must be a tag match
-            const matchingTag = entry.tags?.find(tag => 
-              tag.toLowerCase().includes(query.toLowerCase())
-            );
-            return {
-              id: entry.id,
-              title: entry.title,
-              preview: matchingTag,
-              matchType: 'tag'
             };
           }
         });
@@ -225,29 +212,39 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
   // Update handleCreateJournal
   const handleCreateJournal = () => {
     setShowNewMenu(false);
-    // Create entry with default "Untitled" name without showing a prompt
-    const newEntry = createEntry("Untitled");
-    // Set this new entry to be in editing mode immediately without navigating
+    
+    // Create entry with a more descriptive default name
+    const defaultTitle = `Journal - ${new Date().toLocaleDateString()}`;
+    const newEntry = createEntry(defaultTitle);
+    
+    // Set this new entry to be in editing mode immediately
     setEditingJournalId(newEntry.id);
-    setEditingJournalTitle("Untitled");
+    setEditingJournalTitle(defaultTitle);
+    
     // Track that this is a newly created journal
     setNewlyCreatedJournalId(newEntry.id);
-    // Don't navigate - let the user rename first
-    // The user can click on the item later to navigate to it
+    
+    // Open the journals section if it's closed
+    if (!journalsOpen) {
+      setJournalsOpen(true);
+    }
   };
 
   // Update handleCreateSpace
   const handleCreateSpace = () => {
     setShowNewMenu(false);
-    // Create space with default "Untitled" name without showing a prompt
-    const newSpaceId = createSpace("Untitled");
-    // Set this new space to be in editing mode immediately without navigating
+    // Create space with descriptive default name
+    const defaultTitle = `Space - ${new Date().toLocaleDateString()}`;
+    const newSpaceId = createSpace(defaultTitle);
+    // Set this new space to be in editing mode immediately
     setEditingSpaceId(newSpaceId);
-    setEditingSpaceName("Untitled");
+    setEditingSpaceName(defaultTitle);
     // Track that this is a newly created space
     setNewlyCreatedSpaceId(newSpaceId);
-    // Don't navigate - let the user rename first
-    // The user can click on the item later to navigate to it
+    // Open spaces section if it's closed
+    if (!spacesOpen) {
+      setSpacesOpen(true);
+    }
   };
 
   // Update the journal rename function as you already have
@@ -383,16 +380,16 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                   "h-4 w-4 text-neutral-400 transition-transform duration-200 ease-in-out",
                   journalsOpen ? "rotate-180" : ""
                 )} />
-            </div>
+              </div>
               
               {/* New Journal button - always visible */}
-                <button
-                  onClick={handleCreateJournal}
+              <button
+                onClick={handleCreateJournal}
                 className="w-full flex items-center gap-2 text-left px-4 py-1.5 text-sm text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 mt-1"
-                >
+              >
                 <PenLine className="h-3.5 w-3.5 text-neutral-400" />
                 <span>New Journal</span>
-                </button>
+              </button>
               
               {/* Animate journals dropdown - contains only journal entries */}
               <div className={cn(
@@ -421,34 +418,42 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                                 autoFocus
                                 onKeyDown={(e) => {
                                   if (e.key === 'Enter') {
-                                    updateEntry(entry.id, { title: editingJournalTitle.trim() });
+                                    const defaultTitle = `Journal - ${new Date().toLocaleDateString()}`;
+                                    const title = editingJournalTitle.trim() || defaultTitle;
+                                    updateEntry(entry.id, { title });
+                                    setEditingJournalId(null);
+                                    
+                                    // Navigate to the newly created journal
                                     if (newlyCreatedJournalId === entry.id) {
                                       router.push(`/journal/${entry.id}`);
                                       setNewlyCreatedJournalId(null);
                                     }
-                                    setEditingJournalId(null);
                                   } else if (e.key === 'Escape') {
                                     setEditingJournalId(null);
                                   }
                                 }}
                                 onBlur={() => {
-                                  updateEntry(entry.id, { title: editingJournalTitle.trim() });
+                                  const defaultTitle = `Journal - ${new Date().toLocaleDateString()}`;
+                                  const title = editingJournalTitle.trim() || defaultTitle;
+                                  updateEntry(entry.id, { title });
+                                  setEditingJournalId(null);
+                                  
+                                  // Navigate to the newly created journal
                                   if (newlyCreatedJournalId === entry.id) {
                                     router.push(`/journal/${entry.id}`);
                                     setNewlyCreatedJournalId(null);
                                   }
-                                  setEditingJournalId(null);
                                 }}
                               />
                             </div>
                           ) : (
                             // Show regular button when not editing
-                      <button
-                        onClick={() => router.push(`/journal/${entry.id}`)}
+                            <button
+                              onClick={() => router.push(`/journal/${entry.id}`)}
                               className="w-full text-left px-4 py-1.5 text-sm flex items-center"
                               style={{ color: isActive ? 'var(--tw-color-emerald-600)' : 'var(--tw-color-neutral-600)' }}
                             >
-                              <span className="truncate pl-5 font-normal">{entry.title}</span>
+                              <span className="truncate pl-5 font-medium">{entry.title}</span>
                             </button>
                           )}
                           
@@ -471,10 +476,10 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                                 aria-label="Delete journal"
                               >
                                 <Trash2 className="h-3 w-3 text-neutral-500 dark:text-neutral-400" />
-                      </button>
-              </div>
-            )}
-          </div>
+                              </button>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     );
                   })}
@@ -564,7 +569,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                               className="w-full text-left px-4 py-1.5 text-sm flex items-center"
                               style={{ color: isActive ? 'var(--tw-color-emerald-600)' : 'var(--tw-color-neutral-600)' }}
                             >
-                              <span className="truncate pl-5 font-normal">{space.name}</span>
+                              <span className="truncate pl-5 font-medium">{space.name}</span>
                             </button>
                           )}
                           

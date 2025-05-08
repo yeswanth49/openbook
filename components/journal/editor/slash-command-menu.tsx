@@ -16,6 +16,11 @@ import {
   Quote,
   Minus,
   Code,
+  Image,
+  Table,
+  Link,
+  CalendarDays,
+  ExternalLink,
 } from "lucide-react"
 
 interface SlashCommandMenuProps {
@@ -29,6 +34,8 @@ interface CommandOption {
   label: string
   icon: React.ReactNode
   shortcut?: string
+  category: 'basic' | 'advanced' | 'media'
+  description?: string
 }
 
 export default function SlashCommandMenu({ position, onSelect, onClose }: SlashCommandMenuProps) {
@@ -38,24 +45,146 @@ export default function SlashCommandMenu({ position, onSelect, onClose }: SlashC
   const selectedRef = useRef<HTMLDivElement>(null)
 
   const commands: CommandOption[] = [
-    { type: BlockType.Text, label: "Text", icon: <Type className="w-4 h-4" /> },
-    { type: BlockType.H1, label: "Heading 1", icon: <Heading1 className="w-4 h-4" />, shortcut: "#" },
-    { type: BlockType.H2, label: "Heading 2", icon: <Heading2 className="w-4 h-4" />, shortcut: "##" },
-    { type: BlockType.H3, label: "Heading 3", icon: <Heading3 className="w-4 h-4" />, shortcut: "###" },
-    { type: BlockType.BulletList, label: "Bulleted list", icon: <List className="w-4 h-4" />, shortcut: "-" },
-    { type: BlockType.NumberedList, label: "Numbered list", icon: <ListOrdered className="w-4 h-4" />, shortcut: "1." },
-    { type: BlockType.TodoList, label: "To-do list", icon: <CheckSquare className="w-4 h-4" />, shortcut: "[]" },
-    { type: BlockType.ToggleList, label: "Toggle list", icon: <ChevronRight className="w-4 h-4" />, shortcut: ">" },
-    { type: BlockType.Quote, label: "Quote", icon: <Quote className="w-4 h-4" /> },
-    { type: BlockType.Divider, label: "Divider", icon: <Minus className="w-4 h-4" /> },
-    { type: BlockType.Code, label: "Code", icon: <Code className="w-4 h-4" /> },
+    { 
+      type: BlockType.Text, 
+      label: "Text", 
+      icon: <Type className="w-4 h-4" />, 
+      category: 'basic',
+      description: "Just start writing with plain text"
+    },
+    { 
+      type: BlockType.H1, 
+      label: "Heading 1", 
+      icon: <Heading1 className="w-4 h-4" />, 
+      shortcut: "#", 
+      category: 'basic',
+      description: "Big section heading"
+    },
+    { 
+      type: BlockType.H2, 
+      label: "Heading 2", 
+      icon: <Heading2 className="w-4 h-4" />, 
+      shortcut: "##", 
+      category: 'basic',
+      description: "Medium section heading"
+    },
+    { 
+      type: BlockType.H3, 
+      label: "Heading 3", 
+      icon: <Heading3 className="w-4 h-4" />, 
+      shortcut: "###", 
+      category: 'basic',
+      description: "Small section heading"
+    },
+    { 
+      type: BlockType.BulletList, 
+      label: "Bulleted list", 
+      icon: <List className="w-4 h-4" />, 
+      shortcut: "-", 
+      category: 'basic',
+      description: "Create a simple bulleted list"
+    },
+    { 
+      type: BlockType.NumberedList, 
+      label: "Numbered list", 
+      icon: <ListOrdered className="w-4 h-4" />, 
+      shortcut: "1.", 
+      category: 'basic',
+      description: "Create a numbered list"
+    },
+    { 
+      type: BlockType.TodoList, 
+      label: "To-do list", 
+      icon: <CheckSquare className="w-4 h-4" />, 
+      shortcut: "[]", 
+      category: 'basic',
+      description: "Create a to-do checklist"
+    },
+    { 
+      type: BlockType.ToggleList, 
+      label: "Toggle list", 
+      icon: <ChevronRight className="w-4 h-4" />, 
+      shortcut: ">", 
+      category: 'basic',
+      description: "Create a toggleable list item"
+    },
+    { 
+      type: BlockType.Quote, 
+      label: "Quote", 
+      icon: <Quote className="w-4 h-4" />, 
+      category: 'basic',
+      description: "Capture a quote"
+    },
+    { 
+      type: BlockType.Divider, 
+      label: "Divider", 
+      icon: <Minus className="w-4 h-4" />, 
+      shortcut: "---", 
+      category: 'basic',
+      description: "Visual divider between sections"
+    },
+    { 
+      type: BlockType.Code, 
+      label: "Code", 
+      icon: <Code className="w-4 h-4" />, 
+      shortcut: "```", 
+      category: 'advanced',
+      description: "Capture a code snippet"
+    },
+    { 
+      type: BlockType.Image, 
+      label: "Image", 
+      icon: <Image className="w-4 h-4" />, 
+      category: 'media',
+      description: "Upload or embed an image"
+    },
+    { 
+      type: BlockType.Table, 
+      label: "Table", 
+      icon: <Table className="w-4 h-4" />, 
+      category: 'advanced',
+      description: "Add a table"
+    },
+    { 
+      type: BlockType.Link, 
+      label: "Link", 
+      icon: <Link className="w-4 h-4" />, 
+      category: 'advanced',
+      description: "Add a web link"
+    },
+    { 
+      type: BlockType.Date, 
+      label: "Date", 
+      icon: <CalendarDays className="w-4 h-4" />, 
+      category: 'advanced',
+      description: "Insert a date or reminder"
+    },
+    { 
+      type: BlockType.Embed, 
+      label: "Embed", 
+      icon: <ExternalLink className="w-4 h-4" />, 
+      category: 'media',
+      description: "Embed from a link"
+    },
   ]
 
   // Filter commands based on search term and shortcut
-  const filteredCommands = commands.filter((command) =>
-    command.label.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    command.shortcut?.toLowerCase().includes(searchTerm.toLowerCase())
-  )
+  const filteredCommands = searchTerm
+    ? commands.filter((command) =>
+        command.label.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        command.shortcut?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        command.description?.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    : commands
+
+  // Group commands by category
+  const groupedCommands = filteredCommands.reduce((acc, command) => {
+    if (!acc[command.category]) {
+      acc[command.category] = []
+    }
+    acc[command.category].push(command)
+    return acc
+  }, {} as Record<string, CommandOption[]>)
 
   useEffect(() => {
     // Scroll selected item into view
@@ -104,10 +233,72 @@ export default function SlashCommandMenu({ position, onSelect, onClose }: SlashC
     return () => document.removeEventListener("mousedown", handleClickOutside)
   }, [onClose])
 
+  // Function to render a category
+  const renderCategory = (category: string, commands: CommandOption[], startIndex: number) => {
+    let currentIndex = startIndex
+    
+    const categoryLabels: Record<string, string> = {
+      'basic': 'Basic blocks',
+      'advanced': 'Advanced blocks',
+      'media': 'Media'
+    }
+
+    return (
+      <div key={category} className="mb-2">
+        <div className="text-xs text-neutral-500 dark:text-neutral-400 px-2 py-1 font-medium">
+          {categoryLabels[category] || category}
+        </div>
+        {commands.map((command) => {
+          const isSelected = currentIndex === selectedIndex
+          const itemIndex = currentIndex++
+          
+          return (
+            <div
+              key={command.type}
+              ref={isSelected ? selectedRef : null}
+              className={`flex items-center px-2 py-1.5 cursor-pointer rounded-md menu-item ${
+                isSelected ? "bg-neutral-100 dark:bg-neutral-800" : ""
+              }`}
+              onClick={() => onSelect(command.type)}
+              onMouseEnter={() => setSelectedIndex(itemIndex)}
+            >
+              <div className="w-6 h-6 flex items-center justify-center text-neutral-500 dark:text-neutral-400">
+                {command.icon}
+              </div>
+              <div className="ml-2 flex-1">
+                <div className="text-sm">{command.label}</div>
+                {command.description && isSelected && (
+                  <div className="text-xs text-neutral-400 dark:text-neutral-500 mt-0.5">
+                    {command.description}
+                  </div>
+                )}
+              </div>
+              {command.shortcut && (
+                <div className="text-xs text-neutral-400 dark:text-neutral-500 px-2 font-mono">
+                  {command.shortcut}
+                </div>
+              )}
+            </div>
+          )
+        })}
+      </div>
+    )
+  }
+
+  // Calculate starting index for each category
+  const getCategoryStartIndex = (categoryKey: string) => {
+    let startIndex = 0
+    for (const category in groupedCommands) {
+      if (category === categoryKey) break
+      startIndex += groupedCommands[category].length
+    }
+    return startIndex
+  }
+
   return (
     <motion.div
       ref={menuRef}
-      className="absolute z-50 bg-white rounded shadow-md w-56 overflow-hidden dark:bg-black"
+      className="absolute z-50 bg-white dark:bg-neutral-900 rounded-lg shadow-lg w-72 overflow-hidden border border-neutral-200 dark:border-neutral-800"
       style={{ top: position.top + 5, left: position.left }}
       initial={{ opacity: 0, y: -4, scale: 0.97 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -115,42 +306,26 @@ export default function SlashCommandMenu({ position, onSelect, onClose }: SlashC
       transition={{ duration: 0.08, ease: 'easeOut' }}
     >
       {searchTerm && (
-        <div className="p-2">
-          <div className="text-xs opacity-60 px-2">Searching: {searchTerm}</div>
+        <div className="p-2 border-b border-neutral-100 dark:border-neutral-800">
+          <div className="bg-neutral-50 dark:bg-neutral-800 rounded-md px-2 py-1.5 text-sm">
+            Searching: <span className="font-medium">{searchTerm}</span>
+          </div>
         </div>
       )}
 
-      <div className="p-1">
-        <div className="text-xs opacity-60 px-2 py-1">Basic blocks</div>
-      </div>
-
       <div className="max-h-64 overflow-y-auto p-1">
-        {filteredCommands.length > 0 ? (
-          filteredCommands.map((command, index) => (
-            <div
-              key={command.type}
-              ref={selectedIndex === index ? selectedRef : null}
-              className={`flex items-center px-2 py-1.5 cursor-pointer rounded menu-item ${
-                selectedIndex === index ? "bg-[rgb(var(--hover-color))]" : ""
-              }`}
-              onClick={() => onSelect(command.type)}
-              onMouseEnter={() => setSelectedIndex(index)}
-            >
-              <div className="w-6 h-6 flex items-center justify-center opacity-60">{command.icon}</div>
-              <div className="ml-2 flex-1">
-                <div className="text-sm">{command.label}</div>
-              </div>
-              {command.shortcut && <div className="text-xs opacity-40 px-2 font-mono">{command.shortcut}</div>}
-            </div>
-          ))
+        {Object.keys(groupedCommands).length > 0 ? (
+          Object.keys(groupedCommands).map((category) => 
+            renderCategory(category, groupedCommands[category], getCategoryStartIndex(category))
+          )
         ) : (
-          <div className="p-4 text-center opacity-60 text-sm">No commands found</div>
+          <div className="p-4 text-center text-neutral-500 dark:text-neutral-400 text-sm">No commands found</div>
         )}
       </div>
 
-      <div className="p-2 text-xs opacity-60 flex items-center">
+      <div className="p-2 text-xs text-neutral-500 dark:text-neutral-400 flex items-center border-t border-neutral-100 dark:border-neutral-800">
         <span>Type / on the page</span>
-        <span className="ml-auto px-1 border border-solid rounded text-xs font-mono opacity-40">esc</span>
+        <span className="ml-auto px-1.5 py-0.5 bg-neutral-100 dark:bg-neutral-800 rounded text-xs font-medium">esc</span>
       </div>
     </motion.div>
   )

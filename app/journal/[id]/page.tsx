@@ -13,7 +13,6 @@ export default function JournalEntryPage() {
   const idParam = params.id;
   const { getEntry, updateEntry, initialized } = useJournal();
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [newTag, setNewTag] = useState("");
 
   if (!initialized) {
     return null;
@@ -35,45 +34,19 @@ export default function JournalEntryPage() {
         className="flex-1 min-h-screen transition-all duration-300"
         style={{ marginLeft: sidebarOpen ? SIDEBAR_WIDTH : 0 }}
       >
-        <div className="p-4 flex flex-wrap items-center gap-2 border-b border-gray-200 dark:border-gray-700">
-          {entry.tags?.map((tag) => (
-            <div key={tag} className="flex items-center bg-indigo-100 text-indigo-800 px-2 py-1 rounded">
-              <span>{tag}</span>
-              <button
-                onClick={() => {
-                  const newTags = (entry.tags || []).filter((t) => t !== tag);
-                  updateEntry(idParam, { tags: newTags });
-                }}
-                className="ml-1 text-sm"
-              >
-                &times;
-              </button>
-            </div>
-          ))}
-          <input
-            type="text"
-            placeholder="Add tag..."
-            value={newTag}
-            onChange={(e) => setNewTag(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && newTag.trim()) {
-                const newTags = Array.from(new Set([...(entry.tags || []), newTag.trim()]));
-                updateEntry(idParam, { tags: newTags });
-                setNewTag("");
-              }
-            }}
-            className="border rounded px-2 py-1 text-sm"
-          />
-        </div>
         <Editor
           initialBlocks={entry.blocks}
           title={entry.title}
-          onBlocksChange={(blocks) =>
+          onBlocksChange={(blocks) => 
             updateEntry(idParam, {
               blocks,
-              title: blocks[0]?.content || entry.title,
             })
           }
+          onTitleChange={(newTitle) => {
+            if (newTitle !== entry.title) {
+              updateEntry(idParam, { title: newTitle });
+            }
+          }}
         />
       </main>
     </div>

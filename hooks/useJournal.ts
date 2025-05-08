@@ -26,6 +26,7 @@ export function useJournal() {
     if (!initialized) {
       return
     }
+    
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(entries))
     } catch (e) {
@@ -33,36 +34,60 @@ export function useJournal() {
     }
   }, [entries, initialized])
 
+  // Helper function to safely save entries to localStorage
+  const saveEntries = useCallback((updatedEntries: JournalEntry[]) => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedEntries))
+    } catch (e) {
+      console.error('Failed to persist entries', e)
+    }
+    return updatedEntries
+  }, [])
+
   const createEntry = useCallback((title: string) => {
     const now = new Date().toISOString()
     const id =
       typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
         ? crypto.randomUUID()
         : Math.random().toString(36).substring(2, 9)
+    
+    // Create a more descriptive default title with date
+    const defaultTitle = `Journal - ${new Date().toLocaleDateString()}`
+    
     const newEntry: JournalEntry = {
       id,
-      title,
+      title: title.trim() || defaultTitle,
       blocks: [],
-      tags: [],
       createdAt: now,
       updatedAt: now,
     }
+    
     setEntries(prev => {
       const updated = [newEntry, ...prev]
-      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(updated)) } catch (e) { console.error('Failed to persist entries', e) }
+      // No need to save here, the useEffect will handle it
       return updated
     })
+    
     return newEntry
   }, [])
 
-  const updateEntry = useCallback((id: string, updates: Partial<Pick<JournalEntry, 'title' | 'blocks' | 'tags'>>) => {
+  const updateEntry = useCallback((id: string, updates: Partial<Pick<JournalEntry, 'title' | 'blocks'>>) => {
     setEntries(prev => {
+      // Create a more descriptive default title with date
+      const defaultTitle = `Journal - ${new Date().toLocaleDateString()}`
+      
+      // Ensure title is not empty
+      if (updates.title !== undefined) {
+        updates.title = updates.title.trim() || defaultTitle
+      }
+      
       const updated = prev.map(entry =>
         entry.id === id
           ? { ...entry, ...updates, updatedAt: new Date().toISOString() }
           : entry
       )
-      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(updated)) } catch (e) { console.error('Failed to persist entries', e) }
+      
+      // No need to save here, the useEffect will handle it
       return updated
     })
   }, [])
@@ -70,7 +95,7 @@ export function useJournal() {
   const deleteEntry = useCallback((id: string) => {
     setEntries(prev => {
       const updated = prev.filter(entry => entry.id !== id)
-      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(updated)) } catch (e) { console.error('Failed to persist entries', e) }
+      // No need to save here, the useEffect will handle it
       return updated
     })
   }, [])
@@ -79,12 +104,12 @@ export function useJournal() {
     return entries.find(entry => entry.id === id)
   }, [entries])
 
-
   const searchEntries = useCallback((query: string) => {
-    const lower = query.toLowerCase()
+    const lower = query.toLowerCase().trim()
+    if (!lower) return []
+    
     return entries.filter(entry =>
       entry.title.toLowerCase().includes(lower) ||
-      entry.tags?.some(tag => tag.toLowerCase().includes(lower)) ||
       entry.blocks.some(block => 
         block.content.toLowerCase().includes(lower)
       )
@@ -95,17 +120,16 @@ export function useJournal() {
       )
       
       return {
-        id: entry.id,
-        title: entry.title,
-        // If we have a matching block, provide a preview of it for search results
+        ...entry,
         match: matchingBlock 
           ? { 
               text: matchingBlock.content,
               context: 'content' 
             } 
-          : entry.title.toLowerCase().includes(lower) 
-            ? { text: entry.title, context: 'title' }
-            : { text: entry.tags?.find(t => t.toLowerCase().includes(lower)) || '', context: 'tag' }
+          : { 
+              text: entry.title, 
+              context: 'title' 
+            }
       }
     })
   }, [entries])

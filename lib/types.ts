@@ -31,7 +31,6 @@ export interface JournalEntry {
   id: string
   title: string
   blocks: Block[]
-  tags?: string[]
   createdAt: string
   updatedAt: string
 }

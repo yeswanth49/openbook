@@ -151,20 +151,24 @@ export default function EditorContent({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.1 }}
-        className="group relative block-container"
+        className="group relative block-container pl-16"
       >
         {/* Add a menu indicator at the beginning of each block */}
-        <div className="absolute left-[-48px] top-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center gap-1">
-          <button 
+        <div className="absolute left-[-64px] top-1/2 transform -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center gap-2">
+          <button
             onClick={(e) => {
               e.stopPropagation();
-              // Add block before current block
+              toggleSelection(block.id);
             }}
             className="h-8 w-8 rounded-md flex items-center justify-center hover:bg-neutral-100 dark:hover:bg-neutral-800"
           >
-            <Plus className="h-5 w-5 text-neutral-400" />
+            {selectedBlocks.includes(block.id) ? (
+              <CheckSquare className="h-5 w-5 text-neutral-400" />
+            ) : (
+              <Square className="h-5 w-5 text-neutral-400" />
+            )}
           </button>
-          <button 
+          <button
             onClick={(e) => {
               e.stopPropagation();
               setActiveMenu(activeMenu === block.id ? null : block.id);
@@ -185,7 +189,7 @@ export default function EditorContent({
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ duration: 0.15, ease: 'easeOut' }}
               className="absolute z-40"
-              style={{ top: '24px', left: '-48px' }}
+              style={{ top: '24px', left: '-64px' }}
             >
               <div className="flex bg-white dark:bg-neutral-900 rounded-lg shadow-lg overflow-hidden border border-neutral-200 dark:border-neutral-800" onMouseLeave={() => setSubmenu(null)}>
                 {/* Main commands list */}
@@ -451,5 +455,34 @@ export default function EditorContent({
     }
   }
 
-  return <div className="max-w-2xl mx-auto">{blocks.map((block, index) => renderBlock(block, index))}</div>
+  return (
+    <div className="max-w-2xl mx-auto relative">
+      {selectedBlocks.length > 0 && (
+        <div className="sticky top-0 bg-white dark:bg-neutral-900 flex items-center justify-between px-4 py-2 border-b border-neutral-200 dark:border-neutral-800 z-50">
+          <span className="text-sm text-neutral-600 dark:text-neutral-400">{selectedBlocks.length} selected</span>
+          <button onClick={() => setShowAskModal(true)} className="text-sm text-blue-600 dark:text-blue-400 hover:underline">
+            Ask in spaces
+          </button>
+        </div>
+      )}
+      {blocks.map((block, index) => renderBlock(block, index))}
+      {showAskModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-neutral-900 rounded-lg p-4 w-80">
+            <p className="text-sm text-neutral-800 dark:text-neutral-200">
+              Open a new Spaces conversation with these {selectedBlocks.length} blocks?
+            </p>
+            <div className="mt-4 flex justify-end gap-2">
+              <button onClick={() => setShowAskModal(false)} className="px-3 py-1 text-sm text-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded">
+                Cancel
+              </button>
+              <button onClick={() => { confirmAsk(); }} className="px-3 py-1 text-sm text-white bg-blue-600 dark:bg-blue-500 rounded hover:bg-blue-700">
+                Yes
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
 }

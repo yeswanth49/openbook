@@ -104,7 +104,8 @@ export async function POST(req: Request) {
     const { tools: activeTools, instructions } = await getGroupConfig(group);
 
     console.log("--------------------------------");
-    console.log("Messages: ", messages);
+    console.log("Messages received:", JSON.stringify(messages, null, 2));
+    console.log("Messages count:", messages.length);
     console.log("--------------------------------");
     console.log("Running with model: ", model.trim());
     console.log("Group: ", group);

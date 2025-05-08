@@ -905,6 +905,7 @@ const FormComponent: React.FC<FormComponentProps> = ({
     messages,
     status,
     setHasSubmitted,
+    append,
 }) => {
     const [uploadQueue, setUploadQueue] = useState<Array<string>>([]);
     const isMounted = useRef(true);
@@ -1220,11 +1221,21 @@ const FormComponent: React.FC<FormComponentProps> = ({
             });
             setHasSubmitted(true);
             lastSubmittedQueryRef.current = input.trim();
-
-            handleSubmit(event, {
-                experimental_attachments: attachments,
-            });
-
+            
+            // Instead of using handleSubmit which loses context, use append which preserves it
+            // This is the key change to maintain conversation history
+            append(
+                {
+                    content: input.trim(),
+                    role: 'user'
+                }, 
+                {
+                    experimental_attachments: attachments,
+                }
+            );
+            
+            // Clear input and attachments
+            setInput('');
             setAttachments([]);
             if (fileInputRef.current) {
                 fileInputRef.current.value = '';
@@ -1232,7 +1243,7 @@ const FormComponent: React.FC<FormComponentProps> = ({
         } else {
             toast.error("Please enter a search query or attach an image.");
         }
-    }, [input, attachments, handleSubmit, setAttachments, fileInputRef, lastSubmittedQueryRef, status, selectedModel, setHasSubmitted]);
+    }, [input, attachments, append, setInput, setAttachments, fileInputRef, lastSubmittedQueryRef, status, selectedModel, setHasSubmitted]);
 
     const submitForm = useCallback(() => {
         onSubmit({ preventDefault: () => { }, stopPropagation: () => { } } as React.FormEvent<HTMLFormElement>);

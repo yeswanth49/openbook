@@ -7,6 +7,8 @@ import EditorContent from "./editor-content"
 import EmptyState from "./empty-state"
 import { type Block, BlockType } from '../../../lib/types'
 import { marked } from 'marked'
+import { useSpaces } from "../../../contexts/SpacesContext"
+import { useRouter } from 'next/navigation'
 
 interface EditorProps {
   initialBlocks?: Block[]
@@ -32,6 +34,10 @@ export default function Editor({ initialBlocks, onBlocksChange, title, onTitleCh
   const [isLoading, setIsLoading] = useState(true)
 
   const editorRef = useRef<HTMLDivElement>(null)
+
+  // Spaces integration for 'Ask in spaces'
+  const router = useRouter()
+  const { createSpace, addMessage } = useSpaces()
 
   useEffect(() => {
     // Initialize loading state
@@ -238,6 +244,18 @@ export default function Editor({ initialBlocks, onBlocksChange, title, onTitleCh
     )
   }
 
+  // Spaces integration for 'Ask in spaces'
+  const handleCreateSpaceConversation = (selectedBlocks) => {
+    // Create a new space and navigate to it
+    const spaceName = `Conversation ${new Date().toLocaleTimeString()}`
+    const newSpaceId = createSpace(spaceName)
+    // Compile context and send as initial user message
+    const context = selectedBlocks.map(b => b.content).join("\n\n")
+    addMessage({ role: 'user', content: `Here is the context for your conversation:\n${context}` })
+    // Redirect to the new space conversation
+    router.push(`/space/${newSpaceId}`)
+  }
+
   if (isLoading) {
     return (
       <div className="flex h-full items-center justify-center bg-white text-black dark:bg-black dark:text-white">
@@ -281,6 +299,7 @@ export default function Editor({ initialBlocks, onBlocksChange, title, onTitleCh
                 onDeleteBlock={handleDeleteBlock}
                 onDuplicateBlock={handleDuplicateBlock}
                 onBlocksChange={updateBlocks}
+                onCreateSpaceConversation={handleCreateSpaceConversation}
               />
             </motion.div>
           )}

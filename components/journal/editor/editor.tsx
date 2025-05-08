@@ -234,7 +234,7 @@ export default function Editor({ initialBlocks, onBlocksChange, title, onTitleCh
   const handleCommandSelect = (type: BlockType) => {
     setShowSlashMenu(false)
     updateBlocks(
-      blocks.map((blk) => (blk.id === currentBlockId ? { ...blk, type, content: "" } : blk))
+      blocks.map((blk) => (blk.id === currentBlockId ? { ...blk, type } : blk))
     )
   }
 

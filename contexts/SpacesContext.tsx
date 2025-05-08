@@ -23,7 +23,7 @@ export interface SpacesContextType {
   spaces: Space[];
   currentSpaceId: string;
   currentSpace?: Space;
-  createSpace: (name: string) => void;
+  createSpace: (name: string) => string;
   deleteSpace: (id: string) => void;
   archiveSpace: (id: string) => void;
   renameSpace: (id: string, name: string) => void;
@@ -83,6 +83,7 @@ export const SpacesProvider = ({ children }: { children: ReactNode }) => {
     };
     setSpaces(prev => [...prev, newSpace]);
     setCurrentSpaceId(newSpace.id);
+    return newSpace.id;
   };
 
   const deleteSpace = (id: string) => {

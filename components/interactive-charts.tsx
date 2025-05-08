@@ -1,5 +1,8 @@
 import React from 'react';
-import ReactECharts, { EChartsOption } from 'echarts-for-react';
+import dynamic from 'next/dynamic';
+import type { EChartsOption } from 'echarts';
+// Dynamically load heavy ECharts component to split bundle and avoid SSR
+const ReactECharts = dynamic(() => import('echarts-for-react'), { ssr: false });
 import { Card } from "@/components/ui/card";
 import { useTheme } from 'next-themes';
 import { motion } from 'framer-motion';

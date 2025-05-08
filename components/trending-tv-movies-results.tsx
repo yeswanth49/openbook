@@ -1,5 +1,6 @@
 /* eslint-disable @next/next/no-img-element */
 import React, { useMemo, useState } from 'react';
+import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { Film, Tv, Star, Calendar, ChevronRight, X } from 'lucide-react';
 import { useMediaQuery } from '@/hooks/use-media-query';
@@ -75,10 +76,12 @@ const TrendingResults = ({ result, type }: TrendingResultsProps) => {
         <div className="relative aspect-16/9 sm:aspect-21/9 w-full">
           {selectedItem.backdrop_path ? (
             <>
-              <img
+              <Image
                 src={selectedItem.backdrop_path}
                 alt={selectedItem.title || selectedItem.name}
-                className="w-full h-full object-cover"
+                fill
+                className="object-cover"
+                sizes="100vw"
               />
               <div className="absolute inset-0 bg-linear-to-t from-black via-black/50 to-transparent" />
             </>
@@ -183,10 +186,12 @@ const TrendingResults = ({ result, type }: TrendingResultsProps) => {
           >
             <div className="relative aspect-2/3 rounded-lg sm:rounded-xl overflow-hidden bg-neutral-100 dark:bg-neutral-800">
               {item.poster_path ? (
-                <img
+                <Image
                   src={item.poster_path}
                   alt={item.title || item.name}
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  fill
+                  className="object-cover transition-transform duration-500 group-hover:scale-105"
+                  sizes="(max-width: 768px) 40vw, (max-width: 1024px) 25vw, 20vw"
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center">

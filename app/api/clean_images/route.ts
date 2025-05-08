@@ -13,11 +13,17 @@ export async function GET(req: NextRequest) {
         await deleteAllBlobsInFolder('mplx/');
         return new NextResponse('All images in mplx/ folder were deleted', {
             status: 200,
+            headers: {
+                'Cache-Control': 'public, max-age=0, s-maxage=3600, stale-while-revalidate=86400'
+            }
         });
     } catch (error) {
         console.error('An error occurred:', error);
         return new NextResponse('An error occurred while deleting images', {
             status: 500,
+            headers: {
+                'Cache-Control': 'public, max-age=0, s-maxage=3600, stale-while-revalidate=3600'
+            }
         });
     }
 }

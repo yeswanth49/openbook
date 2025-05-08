@@ -7,6 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "knip:ci": "knip --fail",
+    "analyze": "ANALYZE=true pnpm build",
     "knip": "knip"
   },
   "dependencies": {
@@ -126,7 +128,8 @@
     "postcss": ">=8.4.31",
     "tailwindcss": "^4.1.4",
     "tw-animate-css": "^1.2.8",
-    "typescript": "^5"
+    "typescript": "^5",
+    "@next/bundle-analyzer": "^15.3.1"
   },
   "pnpm": {
     "onlyBuiltDependencies": [

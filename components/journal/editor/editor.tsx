@@ -245,7 +245,7 @@ export default function Editor({ initialBlocks, onBlocksChange, title, onTitleCh
   }
 
   // Spaces integration for 'Ask in spaces'
-  const handleCreateSpaceConversation = (selectedBlocks) => {
+  const handleCreateSpaceConversation = (selectedBlocks: Block[]) => {
     // Create a new space and navigate to it
     const spaceName = `Conversation ${new Date().toLocaleTimeString()}`
     const newSpaceId = createSpace(spaceName)

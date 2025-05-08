@@ -13,7 +13,7 @@ export async function suggestQuestions(history: any[]) {
   console.log(history);
 
   const { object } = await generateObject({
-    model: openai("gpt-4o-mini"),
+    model: google("gemini-2.5-flash-preview-04-17"),
     temperature: 0,
     maxTokens: 300,
     topP: 0.3,

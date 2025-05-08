@@ -15,22 +15,6 @@
         "app/page": "action-browser",
         "app/space/[spaceId]/page": "action-browser"
       }
-    },
-    "4030fd6eae1497a1213a7bd6b2b3de60036532174f": {
-      "workers": {
-        "app/page": {
-          "moduleId": "[project]/.next-internal/server/app/page/actions.js { ACTIONS_MODULE0 => \"[project]/app/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
-        },
-        "app/space/[spaceId]/page": {
-          "moduleId": "[project]/.next-internal/server/app/space/[spaceId]/page/actions.js { ACTIONS_MODULE0 => \"[project]/app/actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false
-        }
-      },
-      "layer": {
-        "app/page": "action-browser",
-        "app/space/[spaceId]/page": "action-browser"
-      }
     }
   },
   "edge": {},

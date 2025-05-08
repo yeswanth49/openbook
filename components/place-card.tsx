@@ -1,5 +1,6 @@
 /* eslint-disable @next/next/no-img-element */
 import React, { useState } from 'react';
+import Image from 'next/image';
 import { DateTime } from 'luxon';
 import { cn } from "@/lib/utils";
 import { Button } from '@/components/ui/button';
@@ -185,10 +186,12 @@ const PlaceCard: React.FC<PlaceCardProps> = ({
                 {/* Image with Price Badge */}
                 {place.photos?.[0]?.medium && (
                     <div className="relative w-20 h-20 rounded-md overflow-hidden shrink-0">
-                        <img
+                        <Image
                             src={place.photos[0].medium}
                             alt={place.name}
-                            className="w-full h-full object-cover"
+                            fill
+                            className="object-cover"
+                            sizes="80px"
                         />
                         {place.price_level && (
                             <div className="absolute top-0 left-0 bg-black/80 text-white px-2 py-0.5 text-xs font-medium">

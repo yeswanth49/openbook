@@ -1,5 +1,8 @@
 import React, { useMemo, useCallback, useEffect, useState } from 'react';
-import ReactECharts, { EChartsOption } from 'echarts-for-react';
+import dynamic from 'next/dynamic';
+import type { EChartsOption } from 'echarts';
+// Dynamically load ECharts to reduce initial bundle size and skip SSR
+const ReactECharts = dynamic(() => import('echarts-for-react'), { ssr: false });
 import { Badge } from "@/components/ui/badge";
 import { useTheme } from 'next-themes';
 import { cn } from '@/lib/utils';

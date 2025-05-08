@@ -59,17 +59,19 @@ import {
 } from 'lucide-react';
 import { Memory, Clock as PhosphorClock, RoadHorizon } from '@phosphor-icons/react';
 
-// Components
+// Components - code-split heavy visualizations/maps and disable SSR for them
+import dynamic from 'next/dynamic';
+const InteractiveChart = dynamic(() => import('@/components/interactive-charts'), { ssr: false });
+const InteractiveStockChart = dynamic(() => import('@/components/interactive-stock-chart'), { ssr: false });
+const WeatherChart = dynamic(() => import('@/components/weather-chart'), { ssr: false });
+const MapComponent = dynamic(() => import('@/components/map-components').then(mod => mod.MapComponent), { ssr: false });
+const MapContainer = dynamic(() => import('@/components/map-components').then(mod => mod.MapContainer), { ssr: false });
 import { FlightTracker } from '@/components/flight-tracker';
-import InteractiveChart from '@/components/interactive-charts';
-import { MapComponent, MapContainer } from '@/components/map-components';
 import TMDBResult from '@/components/movie-info';
 import MultiSearch from '@/components/multi-search';
 import NearbySearchMapView from '@/components/nearby-search-map-view';
 import TrendingResults from '@/components/trending-tv-movies-results';
 import AcademicPapersCard from '@/components/academic-papers';
-import WeatherChart from '@/components/weather-chart';
-import InteractiveStockChart from '@/components/interactive-stock-chart';
 import { CurrencyConverter } from '@/components/currency_conv';
 import ReasonSearch from '@/components/reason-search';
 import MemoryManager from '@/components/memory-manager';
@@ -259,12 +261,14 @@ const YouTubeCard: React.FC<YouTubeCardProps> = ({ video, index }) => {
                 aria-label={`Watch ${video.details?.title || 'YouTube video'}`}
             >
                 {video.details?.thumbnail_url ? (
-                    <img
+                    <Image
                         src={video.details.thumbnail_url}
                         alt=""
                         aria-hidden="true"
-                        className="w-full h-full object-cover"
-                        loading="lazy"
+                        className="object-cover"
+                        fill
+                        sizes="(max-width: 280px) 100vw, 280px"
+                        priority={false}
                     />
                 ) : (
                     <div className="absolute inset-0 flex items-center justify-center">

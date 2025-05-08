@@ -1,4 +1,5 @@
-"use client";
+// This page is statically generated and revalidated every 24 hours
+export const revalidate = 86400;
 
 import * as React from 'react';
 import { Button } from "@/components/ui/button";

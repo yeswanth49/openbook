@@ -1,21 +1,12 @@
 {
-  "/api/upload/route": "app/api/upload/route.js",
   "/_not-found/page": "app/_not-found/page.js",
   "/api/search/route": "app/api/search/route.js",
+  "/apple-icon.png/route": "app/apple-icon.png/route.js",
   "/favicon.ico/route": "app/favicon.ico/route.js",
   "/icon.png/route": "app/icon.png/route.js",
-  "/manifest.webmanifest/route": "app/manifest.webmanifest/route.js",
-  "/apple-icon.png/route": "app/apple-icon.png/route.js",
-  "/api/proxy-image/route": "app/api/proxy-image/route.js",
-  "/opengraph-image.png/route": "app/opengraph-image.png/route.js",
-  "/twitter-image.png/route": "app/twitter-image.png/route.js",
-  "/api/raycast/route": "app/api/raycast/route.js",
-  "/journal/page": "app/journal/page.js",
-  "/new/page": "app/new/page.js",
   "/journal/[id]/page": "app/journal/[id]/page.js",
-  "/about/page": "app/about/page.js",
-  "/search/page": "app/search/page.js",
-  "/space/[spaceId]/page": "app/space/[spaceId]/page.js",
+  "/manifest.webmanifest/route": "app/manifest.webmanifest/route.js",
+  "/opengraph-image.png/route": "app/opengraph-image.png/route.js",
   "/page": "app/page.js",
-  "/api/clean_images/route": "app/api/clean_images/route.js"
+  "/space/[spaceId]/page": "app/space/[spaceId]/page.js"
 }

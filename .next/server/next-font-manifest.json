@@ -1,1 +1,25 @@
-{"pages":{},"app":{"/Users/yeswanth/Documents/Github/openbook/app/layout":["static/media/0acf7bf726cd1ef0-s.p.woff2","static/media/e11418ac562b8ac1-s.p.woff2"],"/Users/yeswanth/Documents/Github/openbook/app/space/[spaceId]/page":["static/media/66f30814ff6d7cdf.p.woff2"],"/Users/yeswanth/Documents/Github/openbook/app/page":["static/media/66f30814ff6d7cdf.p.woff2"]},"appUsingSizeAdjust":true,"pagesUsingSizeAdjust":false}
+{
+  "app": {
+    "[project]/app/_not-found/page": [
+      "static/media/Geist_Variable-s.p.781b491f.woff2",
+      "static/media/8vIH7w4qzmVxm2BL9G78HEY-s.p.32492f67.woff2"
+    ],
+    "[project]/app/journal/[id]/page": [
+      "static/media/Geist_Variable-s.p.781b491f.woff2",
+      "static/media/8vIH7w4qzmVxm2BL9G78HEY-s.p.32492f67.woff2"
+    ],
+    "[project]/app/page": [
+      "static/media/8vIH7w4qzmVxm2BL9G78HEY-s.p.32492f67.woff2",
+      "static/media/Geist_Variable-s.p.781b491f.woff2",
+      "static/media/GeistMono_Variable.p.0ce97b8a.woff2"
+    ],
+    "[project]/app/space/[spaceId]/page": [
+      "static/media/8vIH7w4qzmVxm2BL9G78HEY-s.p.32492f67.woff2",
+      "static/media/Geist_Variable-s.p.781b491f.woff2",
+      "static/media/GeistMono_Variable.p.0ce97b8a.woff2"
+    ]
+  },
+  "appUsingSizeAdjust": true,
+  "pages": {},
+  "pagesUsingSizeAdjust": false
+}

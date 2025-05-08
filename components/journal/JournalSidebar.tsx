@@ -1,8 +1,8 @@
 'use client'
 
 import React, { useState, useMemo } from 'react'
-import { useJournal } from '../../hooks/useJournal'
-import { JournalEntry } from '../../lib/types'
+import { useJournal } from '@/hooks/useJournal'
+import { JournalEntry } from '@/lib/types'
 import { format } from 'date-fns'
 
 interface JournalSidebarProps {
@@ -49,7 +49,7 @@ export const JournalSidebar: React.FC<JournalSidebarProps> = ({ selectedEntryId,
         placeholder="Search..."
         value={searchQuery}
         onChange={e => setSearchQuery(e.target.value)}
-        className="mb-4 w-full rounded border px-2 py-1 text-sm focus:outline-none focus:ring"
+        className="mb-4 w-full rounded border border-gray-300 bg-gray-50 px-2 py-1 text-sm text-gray-900 focus:outline-none focus:ring dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-400"
       />
 
       <div className="mb-4">
@@ -57,7 +57,7 @@ export const JournalSidebar: React.FC<JournalSidebarProps> = ({ selectedEntryId,
         <select
           value={sortBy}
           onChange={e => setSortBy(e.target.value as any)}
-          className="mt-1 w-full rounded border px-2 py-1 text-sm focus:outline-none focus:ring"
+          className="mt-1 w-full rounded border border-gray-300 bg-white px-2 py-1 text-sm text-gray-900 focus:outline-none focus:ring dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
         >
           <option value="updatedAt">Last edited</option>
           <option value="createdAt">Date created</option>

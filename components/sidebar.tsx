@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { BookOpen, ChevronLeft, ChevronRight, Plus, Search, PenLine, ChevronDown, Settings, Crown, MessageSquare, Flag, HelpCircle, LogOut, FolderPlus, Trash2, Edit2, MoreHorizontal } from 'lucide-react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -17,18 +17,38 @@ interface SidebarProps {
 
 export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
   const [showNewMenu, setShowNewMenu] = useState(false);
-  const [journalsOpen, setJournalsOpen] = useState(false);
+  const [journalsOpen, setJournalsOpen] = useState(true);
   const [spacesOpen, setSpacesOpen] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const { spaces, currentSpaceId, createSpace, switchSpace, deleteSpace, renameSpace } = useSpaces();
   const { createEntry, entries, deleteEntry, updateEntry } = useJournal();
   const router = useRouter();
   
-  // Extract current journal ID from the path if we're on a journal page
+  // Get current path and parse current page type and ID
   const pathname = typeof window !== 'undefined' ? window.location.pathname : '';
-  const currentJournalId = pathname.startsWith('/journal/') 
-    ? pathname.split('/journal/')[1].split('?')[0]
-    : '';
+  
+  // Extract IDs directly from pathname - more reliable than using context
+  const currentPageType = pathname.startsWith('/journal/') 
+    ? 'journal' 
+    : pathname.startsWith('/space/') 
+      ? 'space' 
+      : '';
+  
+  const currentPageId = currentPageType === 'journal'
+    ? pathname.split('/journal/')[1]?.split(/[/?#]/)[0] || ''
+    : currentPageType === 'space'
+      ? pathname.split('/space/')[1]?.split(/[/?#]/)[0] || ''
+      : '';
+  
+  // Make sure journals section is open if viewing a journal
+  useEffect(() => {
+    if (currentPageType === 'journal' && !journalsOpen) {
+      setJournalsOpen(true);
+    }
+    if (currentPageType === 'space' && !spacesOpen) {
+      setSpacesOpen(true);
+    }
+  }, [currentPageType, journalsOpen, spacesOpen]);
 
   const handleCreateSpace = () => {
     const name = window.prompt('Enter space name');
@@ -178,40 +198,48 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                     <span>New Journal</span>
                   </button>
                   
-                  {entries.map((entry) => (
-                    <div 
-                      key={entry.id} 
-                      className="group relative flex w-full items-center hover:bg-neutral-100 dark:hover:bg-neutral-800"
-                    >
-                      <button
-                        onClick={() => router.push(`/journal/${entry.id}`)}
+                  {entries.map((entry) => {
+                    const isActive = currentPageType === 'journal' && entry.id === currentPageId;
+                    return (
+                      <div 
+                        key={entry.id} 
                         className={cn(
-                          "flex items-center w-full text-left px-4 py-1.5 text-sm",
-                          entry.id === currentJournalId
-                            ? "text-emerald-600 dark:text-emerald-400 font-medium"
-                            : "text-neutral-600 dark:text-neutral-400"
+                          "group relative flex w-full items-center",
+                          isActive 
+                            ? "bg-emerald-50 dark:bg-emerald-900/20"
+                            : "hover:bg-neutral-100 dark:hover:bg-neutral-800"
                         )}
                       >
-                        <span className="truncate pl-5">{entry.title}</span>
-                      </button>
-                      <div className="absolute right-2 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button 
-                          onClick={(e) => handleRenameJournal(e, entry.id, entry.title)}
-                          className="p-1 rounded hover:bg-neutral-200 dark:hover:bg-neutral-700"
-                          aria-label="Rename journal"
+                        <button
+                          onClick={() => router.push(`/journal/${entry.id}`)}
+                          className={cn(
+                            "flex items-center w-full text-left px-4 py-1.5 text-sm",
+                            isActive
+                              ? "text-emerald-600 dark:text-emerald-400 font-medium"
+                              : "text-neutral-600 dark:text-neutral-400"
+                          )}
                         >
-                          <Edit2 className="h-3 w-3 text-neutral-500 dark:text-neutral-400" />
+                          <span className="truncate pl-5">{entry.title}</span>
                         </button>
-                        <button 
-                          onClick={(e) => handleDeleteJournal(e, entry.id, entry.title)}
-                          className="p-1 rounded hover:bg-neutral-200 dark:hover:bg-neutral-700"
-                          aria-label="Delete journal"
-                        >
-                          <Trash2 className="h-3 w-3 text-neutral-500 dark:text-neutral-400" />
-                        </button>
+                        <div className="absolute right-2 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button 
+                            onClick={(e) => handleRenameJournal(e, entry.id, entry.title)}
+                            className="p-1 rounded hover:bg-neutral-200 dark:hover:bg-neutral-700"
+                            aria-label="Rename journal"
+                          >
+                            <Edit2 className="h-3 w-3 text-neutral-500 dark:text-neutral-400" />
+                          </button>
+                          <button 
+                            onClick={(e) => handleDeleteJournal(e, entry.id, entry.title)}
+                            className="p-1 rounded hover:bg-neutral-200 dark:hover:bg-neutral-700"
+                            aria-label="Delete journal"
+                          >
+                            <Trash2 className="h-3 w-3 text-neutral-500 dark:text-neutral-400" />
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </>
               )}
             </div>
@@ -232,49 +260,57 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                     <span>New Space</span>
                   </button>
                   
-                  {spaces.map((space: SpaceType) => (
-                    <div 
-                      key={space.id}
-                      className="group relative flex w-full items-center hover:bg-neutral-100 dark:hover:bg-neutral-800"
-                    >
-                      <button
-                        onClick={() => {
-                          switchSpace(space.id)
-                          router.push(`/space/${space.id}`)
-                        }}
+                  {spaces.map((space: SpaceType) => {
+                    const isActive = currentPageType === 'space' && space.id === currentPageId;
+                    return (
+                      <div 
+                        key={space.id}
                         className={cn(
-                          "flex items-center w-full text-left px-4 py-1.5 text-sm",
-                          space.id === currentSpaceId
-                            ? "text-emerald-600 dark:text-emerald-400 font-medium"
-                            : "text-neutral-600 dark:text-neutral-400"
+                          "group relative flex w-full items-center",
+                          isActive 
+                            ? "bg-emerald-50 dark:bg-emerald-900/20"
+                            : "hover:bg-neutral-100 dark:hover:bg-neutral-800"
                         )}
                       >
-                        <span className="truncate pl-5">{space.name}</span>
-                      </button>
-                      <div className="absolute right-2 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button 
-                          onClick={(e) => handleRenameSpace(e, space.id, space.name)}
-                          className="p-1 rounded hover:bg-neutral-200 dark:hover:bg-neutral-700"
-                          aria-label="Rename space"
+                        <button
+                          onClick={() => {
+                            switchSpace(space.id)
+                            router.push(`/space/${space.id}`)
+                          }}
+                          className={cn(
+                            "flex items-center w-full text-left px-4 py-1.5 text-sm",
+                            isActive
+                              ? "text-emerald-600 dark:text-emerald-400 font-medium"
+                              : "text-neutral-600 dark:text-neutral-400"
+                          )}
                         >
-                          <Edit2 className="h-3 w-3 text-neutral-500 dark:text-neutral-400" />
+                          <span className="truncate pl-5">{space.name}</span>
                         </button>
-                        <button 
-                          onClick={(e) => handleDeleteSpace(e, space.id, space.name)}
-                          className="p-1 rounded hover:bg-neutral-200 dark:hover:bg-neutral-700"
-                          aria-label="Delete space"
-                          disabled={space.id === currentSpaceId}
-                          title={space.id === currentSpaceId ? "Cannot delete the current space" : "Delete space"}
-                        >
-                          <Trash2 className={cn("h-3 w-3", 
-                            space.id === currentSpaceId 
-                              ? "text-neutral-300 dark:text-neutral-600" 
-                              : "text-neutral-500 dark:text-neutral-400"
-                          )} />
-                        </button>
+                        <div className="absolute right-2 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button 
+                            onClick={(e) => handleRenameSpace(e, space.id, space.name)}
+                            className="p-1 rounded hover:bg-neutral-200 dark:hover:bg-neutral-700"
+                            aria-label="Rename space"
+                          >
+                            <Edit2 className="h-3 w-3 text-neutral-500 dark:text-neutral-400" />
+                          </button>
+                          <button 
+                            onClick={(e) => handleDeleteSpace(e, space.id, space.name)}
+                            className="p-1 rounded hover:bg-neutral-200 dark:hover:bg-neutral-700"
+                            aria-label="Delete space"
+                            disabled={currentPageType === 'space' && space.id === currentPageId}
+                            title={currentPageType === 'space' && space.id === currentPageId ? "Cannot delete the current space" : "Delete space"}
+                          >
+                            <Trash2 className={cn("h-3 w-3", 
+                              currentPageType === 'space' && space.id === currentPageId
+                                ? "text-neutral-300 dark:text-neutral-600" 
+                                : "text-neutral-500 dark:text-neutral-400"
+                            )} />
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </>
               )}
             </div>

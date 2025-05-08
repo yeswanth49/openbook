@@ -30,6 +30,15 @@ export interface SpacesContextType {
   switchSpace: (id: string) => void;
   addMessage: (message: Omit<ChatMessage, 'id' | 'timestamp'>) => void;
   exportSpace: (id: string) => void;
+  searchSpaces: (query: string) => Array<{
+    id: string;
+    name: string;
+    match: {
+      text: string;
+      context: 'message' | 'name';
+      timestamp?: number;
+    };
+  }>;
 }
 
 const SpacesContext = React.createContext<SpacesContextType | undefined>(undefined);
@@ -132,8 +141,68 @@ export const SpacesProvider = ({ children }: { children: ReactNode }) => {
 
   const currentSpace = spaces.find(s => s.id === currentSpaceId);
 
+  const searchSpaces = (query: string): Array<{
+    id: string;
+    name: string;
+    match: {
+      text: string;
+      context: 'message' | 'name';
+      timestamp?: number;
+    };
+  }> => {
+    const lower = query.toLowerCase();
+    return spaces
+      .filter(space => 
+        // Search in space name
+        space.name.toLowerCase().includes(lower) ||
+        // Search in message content
+        space.messages.some(message => 
+          message.content.toLowerCase().includes(lower)
+        )
+      )
+      .map(space => {
+        // Find matching message for context
+        const matchingMessage = space.messages.find(message => 
+          message.content.toLowerCase().includes(lower)
+        );
+        
+        if (matchingMessage) {
+          return {
+            id: space.id,
+            name: space.name,
+            match: { 
+              text: matchingMessage.content,
+              context: 'message' as const,
+              timestamp: matchingMessage.timestamp
+            }
+          };
+        } else {
+          return {
+            id: space.id,
+            name: space.name,
+            match: { 
+              text: space.name, 
+              context: 'name' as const
+            }
+          };
+        }
+      });
+  };
+
   return (
-    <SpacesContext.Provider value={{ spaces, currentSpaceId, currentSpace, createSpace, deleteSpace, archiveSpace, renameSpace, switchSpace, addMessage, exportSpace }}>
+    <SpacesContext.Provider value={{ 
+      spaces, 
+      currentSpaceId, 
+      currentSpace, 
+      createSpace, 
+      deleteSpace, 
+      archiveSpace, 
+      renameSpace, 
+      switchSpace, 
+      addMessage, 
+      exportSpace,
+      searchSpaces
+    }}>
       {children}
     </SpacesContext.Provider>
   );

@@ -79,12 +79,35 @@ export function useJournal() {
     return entries.find(entry => entry.id === id)
   }, [entries])
 
+
   const searchEntries = useCallback((query: string) => {
     const lower = query.toLowerCase()
     return entries.filter(entry =>
       entry.title.toLowerCase().includes(lower) ||
-      entry.tags?.some(tag => tag.toLowerCase().includes(lower))
-    )
+      entry.tags?.some(tag => tag.toLowerCase().includes(lower)) ||
+      entry.blocks.some(block => 
+        block.content.toLowerCase().includes(lower)
+      )
+    ).map(entry => {
+      // Find matching block content for context
+      const matchingBlock = entry.blocks.find(block => 
+        block.content.toLowerCase().includes(lower)
+      )
+      
+      return {
+        id: entry.id,
+        title: entry.title,
+        // If we have a matching block, provide a preview of it for search results
+        match: matchingBlock 
+          ? { 
+              text: matchingBlock.content,
+              context: 'content' 
+            } 
+          : entry.title.toLowerCase().includes(lower) 
+            ? { text: entry.title, context: 'title' }
+            : { text: entry.tags?.find(t => t.toLowerCase().includes(lower)) || '', context: 'tag' }
+      }
+    })
   }, [entries])
 
   return {

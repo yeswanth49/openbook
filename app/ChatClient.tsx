@@ -114,7 +114,7 @@ const HomeContent = () => {
             user_id: userId,
             timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
         },
-        onFinish: async (message, { finishReason }) => {
+        onFinish: async (message: any, { finishReason }: { finishReason: string }) => {
             if (message.content && (finishReason === 'stop' || finishReason === 'length')) {
                 // Persist assistant message to current space
                 addMessage({ role: 'assistant', content: message.content });
@@ -147,6 +147,17 @@ const HomeContent = () => {
         error,
     } = useChat(chatOptions);
 
+    // Wrap append to persist user messages to current space
+    const appendWithPersist = useCallback(async (message: any, options: any = {}): Promise<any> => {
+        // First append to internal chat state
+        const result = await append(message, options);
+        // Then persist user messages to the current space
+        if (message.role === 'user') {
+            addMessage({ role: message.role, content: message.content });
+        }
+        return result;
+    }, [append, addMessage]);
+
     // Sync chat internal messages when switching spaces
     useEffect(() => {
         setMessages(currentSpace?.messages ?? []);
@@ -156,12 +167,12 @@ const HomeContent = () => {
         if (!initializedRef.current && initialState.query && !messages.length) {
             initializedRef.current = true;
             console.log("[initial query]:", initialState.query);
-            append({
+            appendWithPersist({
                 content: initialState.query,
                 role: 'user'
             });
         }
-    }, [initialState.query, append, setInput, messages.length]);
+    }, [initialState.query, appendWithPersist, setInput, messages.length]);
 
     // Wrap setMessages to satisfy MessagesProps (only array setter)
     const updateMessages = useCallback((msgs: any[]) => {
@@ -354,7 +365,7 @@ const HomeContent = () => {
         const handleDateTimeClick = useCallback(() => {
             if (status !== 'ready') return;
 
-            append({
+            appendWithPersist({
                 content: `What's the current date and time?`,
                 role: 'user'
             });
@@ -433,7 +444,7 @@ const HomeContent = () => {
                                         inputRef={inputRef}
                                         stop={stop}
                                         messages={messages as any}
-                                        append={append}
+                                        append={appendWithPersist}
                                         selectedModel={selectedModel}
                                         setSelectedModel={handleModelChange}
                                         resetSuggestedQuestions={resetSuggestedQuestions}
@@ -467,7 +478,7 @@ const HomeContent = () => {
                                 setIsEditingMessage={setIsEditingMessage}
                                 setEditingMessageIndex={setEditingMessageIndex}
                                 setMessages={updateMessages}
-                                append={append}
+                                append={appendWithPersist}
                                 reload={reload}
                                 suggestedQuestions={suggestedQuestions}
                                 setSuggestedQuestions={setSuggestedQuestions}
@@ -506,7 +517,7 @@ const HomeContent = () => {
                                             inputRef={inputRef}
                                             stop={stop}
                                             messages={messages as any}
-                                            append={append}
+                                            append={appendWithPersist}
                                             selectedModel={selectedModel}
                                             setSelectedModel={handleModelChange}
                                             resetSuggestedQuestions={resetSuggestedQuestions}

@@ -22,152 +22,235 @@ This document outlines the plan to implement and enhance the journaling function
 
 ## In Progress Tasks
 
-- [ ] Implement journal templates for different entry types
-- [ ] Add tagging system for journal entries
-- [ ] Create journal stats and insights dashboard
-- [ ] Add journal entry sharing capabilities
-- [ ] Implement journal entry version history
+- [ ] Enhancing editor block functionality
+  - [ ] Enable content persistence across page loads
+  - [ ] Implement improved block navigation with keyboard shortcuts
+  - [ ] Add block drag-and-drop reordering
 
 ## Future Tasks
 
-- [ ] Add AI-assisted journal reflection insights
-- [ ] Implement mood tracking in journal entries
-- [ ] Create weekly and monthly journal summary views
+- [ ] Add AI-assisted journal 
+  - [ ] Implement "Explain Selected Blocks" feature with AI integration
+  - [ ] Create "Ask in Space" direct conversation feature 
+  - [ ] Develop "Ask AI to Fill This Block" functionality
 - [ ] Add image and attachment support for journal entries
 - [ ] Implement journal entry export functionality
-- [ ] Add journal prompts and writing suggestions
-- [ ] Create journal habit tracking integration
+- [ ] Implement journal templates for different entry types
+- [ ] Add tagging system for journal entries
 
-## Implementation Plan for Journal Templates
+## Implementation Plan
 
-1. **Template Selection Interface**:
-   - Create template selection modal for new journal entries
-   - Implement visual preview for different templates
-   - Add template category filtering
+### 1. Block Editor Enhancements
 
-2. **Template Types to Implement**:
-   - Daily reflection template
-   - Gratitude journal template
-   - Goal setting template
-   - Project planning template
-   - Free writing template
+- [ ] Extend current editor component
+  - [ ] Implement persistent state for editor blocks
+  - [ ] Add autosave to localStorage
+  - [ ] Create block-level undo/redo functionality
+- [ ] Improve navigation
+  - [ ] Add keyboard shortcuts for navigating between blocks
+  - [ ] Implement tab-based indentation for nested lists
+  - [ ] Create keyboard shortcuts guide
+- [ ] Add drag-and-drop functionality
+  - [ ] Implement visual indicators for drag operations
+  - [ ] Add block position tracking
+  - [ ] Enable smooth animations for reordering
 
-3. **User Experience Improvements**:
-   - Allow saving custom templates
-   - Implement template favorites
-   - Add quick-select for recently used templates
-   - Create keyboard shortcuts for template selection
+### 2. AI-Assisted Journal Implementation
 
-4. **Technical Implementation**:
-   - Create template data structure
-   - Implement template rendering component
-   - Add template selection modal
-   - Create template management in user settings
+#### A. Preparation Phase
 
-## Implementation Summary
+- [ ] Set up API integration
+  - [ ] Create API service for AI requests
+  - [ ] Implement authentication and API key management
+  - [ ] Add rate limiting and error handling
+- [ ] Design UI components
+  - [ ] Create AI assistant panel component
+  - [ ] Design selection highlighting system
+  - [ ] Implement response rendering with markdown support
 
-We've successfully implemented a complete journaling interface in the OpenBook application. The implementation includes:
+#### B. "Explain Selected Blocks" Feature
 
-1. **Daily Entries**: Calendar-based navigation for daily journal entries
-2. **Rich Editing**: Full markdown support with preview and formatting tools
-3. **Auto-Save**: Automatic saving of journal entries as they're written
-4. **Search**: Full-text search across all journal entries
-5. **Metadata**: Tracking of entry creation time, update time, and word count
-6. **Mobile Support**: Responsive design for journaling on any device
-7. **Minimalistic Sidebar**: Clean, focused interface for journal navigation
-8. **Date Navigation**: Intuitive date-based filtering and browsing
+- [ ] Implement text selection handling
+  - [ ] Add selection detection in journal editor
+  - [ ] Create context menu for selected text
+  - [ ] Implement selection highlighting
+- [ ] Build explanation request system
+  - [ ] Create prompt template for explanations
+  - [ ] Add streaming response handling
+  - [ ] Implement error states and fallbacks
+- [ ] Design explanation display
+  - [ ] Create modal component for explanations
+  - [ ] Add copy/save functionality
+  - [ ] Implement loading states
 
-### Completed Enhancements
+#### C. "Ask in Space" Conversation Feature
 
-1. **Journal Metadata**:
-   - Track creation and modification timestamps
-   - Count words and reading time estimates
-   - Record entry titles and summaries
-   - Track writing streaks and consistency
+- [ ] Integrate with existing Spaces API
+  - [ ] Update SpacesContext to support journal conversations
+  - [ ] Create conversation state management
+  - [ ] Add journal context attachment to conversations
+- [ ] Build conversation UI
+  - [ ] Extend existing conversation components
+  - [ ] Add journal-specific conversation templates
+  - [ ] Create smooth transitions between journal and conversation
 
-2. **Mobile Responsiveness**:
-   - Optimized journal editor for small screens
-   - Simplified calendar view for mobile devices
-   - Touch-friendly controls for navigation
-   - Adaptive layouts for all screen sizes
+#### D. "Ask AI to Fill This Block" Functionality
 
-3. **Minimalistic Sidebar UI**:
-   - Reduced visual complexity with clean styling
-   - Compact display of journal entry dates
-   - Semi-transparent backgrounds and hover effects
-   - Subtle visual indicators for today's entry
-   - Consistent spacing and alignment
-   - Smooth transitions and animations
+- [ ] Implement block-level assistance
+  - [ ] Create context-aware prompt generation
+  - [ ] Add surrounding block context collection
+  - [ ] Build content insertion system
+- [ ] Add user controls
+  - [ ] Create tone/style selection component
+  - [ ] Add length control options
+  - [ ] Implement content type selection
 
-### Components Created/Updated
+### 3. Image and Attachment Support
 
-1. **Journal Editor Component**:
-   - Created new `journal-editor.tsx` component with markdown support
-   - Added formatting toolbar with common actions
-   - Implemented auto-save functionality
-   - Added word count and reading time display
+- [ ] Extend Block system
+  - [ ] Add image block type
+  - [ ] Create attachment block type
+  - [ ] Update editor to handle media blocks
+- [ ] Implement media handling
+  - [ ] Add image upload functionality
+  - [ ] Create file attachment system
+  - [ ] Implement image resizing and alignment
+- [ ] Add storage solution
+  - [ ] Implement client-side storage for small files
+  - [ ] Add cloud storage option for larger files
+  - [ ] Create media library management
 
-2. **Calendar Navigation Component**:
-   - Created `journal-calendar.tsx` for date-based navigation
-   - Implemented month view with day highlighting
-   - Added quick navigation to current day
-   - Created visual indicators for days with entries
+### 4. Export Functionality
 
-3. **Journal Entry Metadata**:
-   - Created new `journal-metadata.tsx` component
-   - Added writing streak tracking
-   - Implemented compact metadata for sidebar
-   - Created expandable detailed metadata view
+- [ ] Design export options
+  - [ ] Implement Markdown export
+  - [ ] Add PDF export capability
+  - [ ] Create HTML export option
+- [ ] Build export UI
+  - [ ] Create export settings component
+  - [ ] Add format selection interface
+  - [ ] Implement progress indicators
+- [ ] Add sharing options
+  - [ ] Implement direct link sharing
+  - [ ] Add social media integration
+  - [ ] Create email sharing capability
 
-4. **Journal Context Updates**:
-   - Added entry management and persistence
-   - Implemented search functionality
-   - Created filtering capabilities
-   - Added metadata tracking
+### 5. Journal Templates
 
-5. **Sidebar Integration**:
-   - Updated sidebar to display recent journal entries
-   - Added date-based sorting and filtering
-   - Implemented minimalistic journal entry display
-   - Created hover effects for additional information
+- [ ] Design template system
+  - [ ] Create template data structure
+  - [ ] Add template management UI
+  - [ ] Implement template preview
+- [ ] Build core templates
+  - [ ] Daily reflection template
+  - [ ] Gratitude journal template
+  - [ ] Goal planning template
+  - [ ] Project tracking template
+- [ ] Add customization
+  - [ ] Create template editor
+  - [ ] Implement custom field support
+  - [ ] Add template import/export
 
-## Technical Implementation Details
+### 6. Tagging System
 
-### Journal Editor
+- [ ] Design tag architecture
+  - [ ] Create tag data structure
+  - [ ] Implement tag storage
+  - [ ] Add tag management system
+- [ ] Build tagging UI
+  - [ ] Add tag creation interface
+  - [ ] Implement tag assignment to entries
+  - [ ] Create tag visualization
+- [ ] Implement tag functionality
+  - [ ] Add tag-based filtering
+  - [ ] Create tag search capability
+  - [ ] Implement tag statistics
 
-Created a rich editing experience that:
-- Supports full markdown syntax
-- Provides real-time preview
-- Includes formatting shortcuts
-- Automatically saves while typing
-- Tracks cursor position for continuing entries
+## Technical Components
 
-### Calendar Navigation
+### Core Components to Update
 
-Implemented a calendar interface that:
-- Shows an overview of the current month
-- Highlights days with existing entries
-- Provides quick navigation to any date
-- Indicates the current day visually
-- Supports month and year navigation
+1. **Journal Hook (`useJournal.ts`)**
+   - Add support for block-level persistence
+   - Implement tagging functionality
+   - Add template support
 
-### Journal Search
+2. **Journal Editor (`components/journal/editor/editor.tsx`)**
+   - Extend with drag-and-drop capabilities
+   - Add AI integration points
+   - Implement image/attachment handling
 
-Created a search system that:
-- Indexes all journal content for quick searching
-- Highlights matching terms in results
-- Provides filtering by date range
-- Orders results by relevance or date
-- Shows context snippets in search results
+3. **Journal Sidebar (`components/journal/JournalSidebar.tsx`)**
+   - Add tag filtering
+   - Implement template selection
+   - Create AI assistant access point
 
-### Minimalistic UI
+4. **Types (`lib/types.ts`)**
+   - Extend Block types for media content
+   - Add tag-related types
+   - Create template interfaces
 
-Implemented a clean, minimalistic styling for the journal interface that:
-- Uses subtle, semi-transparent backgrounds
-- Reduces visual clutter with focused design
-- Implements consistent typography
-- Shows minimal metadata with improved hover states
-- Maintains clear visual hierarchy and readability
+### New Components to Create
+
+1. **AI Integration Components**
+   - `components/journal/ai-assistant/selection-handler.tsx`
+   - `components/journal/ai-assistant/explanation-modal.tsx`
+   - `components/journal/ai-assistant/block-assistant.tsx`
+
+2. **Media Components**
+   - `components/journal/media/image-block.tsx`
+   - `components/journal/media/attachment-block.tsx`
+   - `components/journal/media/media-picker.tsx`
+
+3. **Template System**
+   - `components/journal/templates/template-selector.tsx`
+   - `components/journal/templates/template-editor.tsx`
+   - `components/journal/templates/template-preview.tsx`
+
+4. **Export and Sharing**
+   - `components/journal/export/export-modal.tsx`
+   - `components/journal/export/format-selector.tsx`
+   - `components/journal/export/share-options.tsx`
+
+5. **Tagging System**
+   - `components/journal/tags/tag-manager.tsx`
+   - `components/journal/tags/tag-selector.tsx`
+   - `components/journal/tags/tag-filter.tsx`
+
+## Implementation Approach
+
+### Phase 1: Core Improvements (2-3 weeks)
+Focus on enhancing the existing editor with better block handling, drag-and-drop, and persistence to create a solid foundation for future features.
+
+### Phase 2: AI Integration (3-4 weeks)
+Implement AI capabilities to enhance the journaling experience while ensuring all functionality degrades gracefully when AI is unavailable.
+
+### Phase 3: Media Support and Export (2-3 weeks)
+Add support for images, attachments, and export functionality to improve the versatility of journal entries.
+
+### Phase 4: Templates and Tags (2-3 weeks)
+Implement template system and tagging to enhance organization and provide structured journaling options.
+
+## Development Guidelines
+
+1. **Progressive Enhancement**
+   - Ensure all features work without AI before adding AI capabilities
+   - Implement features incrementally with working milestones
+
+2. **Performance Focus**
+   - Prioritize client-side performance for large journal entries
+   - Use virtualization for long entries with many blocks
+   - Implement efficient persistence strategies
+
+3. **Accessibility**
+   - Ensure keyboard navigation throughout the journal interface
+   - Maintain ARIA attributes for screen readers
+   - Test with various assistive technologies
+
+4. **Mobile-First**
+   - Design all new features with mobile compatibility in mind
+   - Test on various device sizes throughout development
+   - Optimize touch interactions for block manipulation
 
 ## Modified Files
 

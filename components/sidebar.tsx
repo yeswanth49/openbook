@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from 'react';
-import { BookOpen, ChevronLeft, ChevronRight, Plus, Search, PenLine, ChevronDown, Settings, Crown, MessageSquare, Flag, HelpCircle, LogOut, FolderPlus, Trash2, Edit2, MoreHorizontal, X } from 'lucide-react';
+import { BookOpen, ChevronLeft, ChevronRight, Plus, Search, PenLine, ChevronDown, Settings, Crown, MessageSquare, Flag, HelpCircle, LogOut, FolderPlus, Trash2, Edit2, MoreHorizontal, X, Pin, PinOff, RefreshCw, Clock } from 'lucide-react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import Link from 'next/link';
@@ -9,6 +9,9 @@ import { useSpaces, Space as SpaceType } from '@/contexts/SpacesContext';
 import { useRouter } from 'next/navigation';
 import { useJournal } from '@/hooks/useJournal';
 import { cn } from '@/lib/utils';
+import { ConversationMetadata } from '@/components/conversation-metadata';
+import { ConversationNameDisplay, NameLoading } from '@/components/name-loading';
+import { format } from 'date-fns';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -28,7 +31,8 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
   }>({ journals: [], spaces: [] });
   const searchInputRef = useRef<HTMLInputElement>(null);
   const searchResultsRef = useRef<HTMLDivElement>(null);
-  const { spaces, currentSpaceId, createSpace, switchSpace, deleteSpace, renameSpace } = useSpaces();
+  const focusInputRef = useRef<HTMLInputElement>(null);
+  const { spaces, currentSpaceId, createSpace, switchSpace, deleteSpace, renameSpace, togglePinSpace, resetToAutoNaming } = useSpaces();
   const { createEntry, entries, deleteEntry, updateEntry } = useJournal();
   const router = useRouter();
 
@@ -270,6 +274,201 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
     setShowDeleteConfirm(true);
   };
 
+  // Find the SpacesList component or section and update it
+  const SpacesList = () => {
+    const { 
+      spaces, 
+      currentSpaceId, 
+      switchSpace, 
+      renameSpace, 
+      deleteSpace,
+      togglePinSpace,
+      resetToAutoNaming
+    } = useSpaces();
+    const router = useRouter();
+    const [editingSpaceId, setEditingSpaceId] = useState<string | null>(null);
+    const [editingSpaceName, setEditingSpaceName] = useState('');
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [itemToDelete, setItemToDelete] = useState<{ id: string; name: string; type: 'journal' | 'space' } | null>(null);
+    const [newlyCreatedSpaceId, setNewlyCreatedSpaceId] = useState<string | null>(null);
+    
+    // Get active spaces (not archived)
+    const activeSpaces = spaces.filter(space => !space.archived);
+    
+    // Sort spaces: pinned first, then by last updated
+    const sortedSpaces = [...activeSpaces].sort((a, b) => {
+      // First by pinned status
+      if (a.metadata?.pinned && !b.metadata?.pinned) return -1;
+      if (!a.metadata?.pinned && b.metadata?.pinned) return 1;
+      
+      // Then by updated date (most recent first)
+      return b.updatedAt - a.updatedAt;
+    });
+
+    const handleSpaceClick = (e: React.MouseEvent, spaceId: string) => {
+      e.preventDefault();
+      switchSpace(spaceId);
+      router.push(`/space/${spaceId}`);
+    };
+    
+    const handleRenameSpace = (e: React.MouseEvent, spaceId: string, currentName: string) => {
+      e.stopPropagation();
+      setEditingSpaceId(spaceId);
+      setEditingSpaceName(currentName);
+    };
+    
+    const handleFinishRename = (spaceId: string) => {
+      if (editingSpaceName.trim()) {
+        renameSpace(spaceId, editingSpaceName.trim(), true); // Mark as manually renamed
+      }
+      setEditingSpaceId(null);
+      setEditingSpaceName('');
+    };
+    
+    const handleDeleteSpace = (e: React.MouseEvent, spaceId: string, spaceName: string) => {
+      e.stopPropagation();
+      setItemToDelete({ id: spaceId, name: spaceName, type: 'space' });
+      setShowDeleteConfirm(true);
+    };
+    
+    const handleTogglePin = (e: React.MouseEvent, spaceId: string) => {
+      e.stopPropagation();
+      togglePinSpace(spaceId);
+    };
+    
+    const focusInputRef = useRef<HTMLInputElement>(null);
+    
+    // Focus input on edit
+    useEffect(() => {
+      if (editingSpaceId && focusInputRef.current) {
+        focusInputRef.current.focus();
+      }
+    }, [editingSpaceId]);
+    
+    return (
+      <div className="space-y-0.5 mt-1">
+        {sortedSpaces.map(space => (
+          <div
+            key={space.id}
+            className="group relative"
+          >
+            <div
+              className={cn(
+                "flex w-full items-center",
+                space.id === currentSpaceId
+                  ? "bg-emerald-50 dark:bg-emerald-900/20"
+                  : ""
+              )}
+              onClick={e => handleSpaceClick(e, space.id)}
+            >
+              {editingSpaceId === space.id ? (
+                // Editing name
+                <div className="flex items-center w-full px-4 py-1">
+                  <input
+                    ref={focusInputRef}
+                    value={editingSpaceName}
+                    onChange={e => setEditingSpaceName(e.target.value)}
+                    className="w-full px-1 py-0.5 text-sm bg-white dark:bg-neutral-800 border border-emerald-400/60 rounded focus:outline-none"
+                    autoFocus
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        handleFinishRename(space.id);
+                      } else if (e.key === 'Escape') {
+                        setEditingSpaceId(null);
+                      }
+                    }}
+                    onBlur={() => handleFinishRename(space.id)}
+                  />
+                </div>
+              ) : (
+                // Display name
+                <button
+                  className="w-full text-left px-4 py-1.5 text-sm flex items-center"
+                  style={{ 
+                    color: space.id === currentSpaceId 
+                      ? 'var(--tw-color-emerald-600)' 
+                      : 'var(--tw-color-neutral-600)' 
+                  }}
+                >
+                  <div className="flex items-center truncate pl-5">
+                    {space.metadata?.pinned && (
+                      <Pin className="h-3 w-3 mr-1.5 flex-shrink-0 text-blue-400" />
+                    )}
+                    <ConversationNameDisplay
+                      name={space.name}
+                      isLoading={space.metadata?.isGeneratingName}
+                      isAutoNamed={!space.metadata?.manuallyRenamed}
+                      className="truncate font-medium"
+                    />
+                  </div>
+                </button>
+              )}
+              
+              {!editingSpaceId && (
+                <div className="absolute right-2 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                  {!space.metadata?.isGeneratingName && space.metadata?.manuallyRenamed && space.messages.length > 0 && (
+                    <button
+                      className="p-1 rounded hover:bg-neutral-200 dark:hover:bg-neutral-700"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        resetToAutoNaming(space.id);
+                      }}
+                      title="Reset to auto naming"
+                    >
+                      <RefreshCw className="h-3 w-3 text-neutral-500 dark:text-neutral-400" />
+                    </button>
+                  )}
+                  <button
+                    className="p-1 rounded hover:bg-neutral-200 dark:hover:bg-neutral-700"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      togglePinSpace(space.id);
+                    }}
+                    title={space.metadata?.pinned ? "Unpin space" : "Pin space"}
+                  >
+                    {space.metadata?.pinned ? 
+                      <PinOff className="h-3 w-3 text-neutral-500 dark:text-neutral-400" /> : 
+                      <Pin className="h-3 w-3 text-neutral-500 dark:text-neutral-400" />
+                    }
+                  </button>
+                  <button
+                    className="p-1 rounded hover:bg-neutral-200 dark:hover:bg-neutral-700"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleRenameSpace(e, space.id, space.name);
+                    }}
+                    title="Rename space"
+                  >
+                    <Edit2 className="h-3 w-3 text-neutral-500 dark:text-neutral-400" />
+                  </button>
+                  <button
+                    className="p-1 rounded hover:bg-neutral-200 dark:hover:bg-neutral-700"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDeleteSpace(e, space.id, space.name);
+                    }}
+                    title="Delete space"
+                  >
+                    <Trash2 className="h-3 w-3 text-neutral-500 dark:text-neutral-400" />
+                  </button>
+                </div>
+              )}
+            </div>
+            
+            {/* Metadata with hover effect */}
+            {space.messages.length > 0 && (
+              <div 
+                className="ml-9 px-4 mt-0 pb-0.5 overflow-hidden transition-all duration-300 max-h-0 opacity-0 transform translate-y-[-5px] group-hover:opacity-100 group-hover:max-h-8 group-hover:mt-0.5 group-hover:translate-y-0"
+              >
+                <ConversationMetadata space={space} compact={true} className="text-neutral-500 dark:text-neutral-400" />
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    );
+  };
+
   return (
     <>
       {/* Add keyframes animations for the modal */}
@@ -458,7 +657,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                           )}
                           
                           {!isEditing && (
-                            <div className="absolute right-2 flex items-center gap-0.5 opacity-0 group-hover:opacity-100">
+                            <div className="absolute right-2 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                               <button 
                                 onClick={(e) => {
                                   e.stopPropagation();
@@ -479,6 +678,16 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                               </button>
                             </div>
                           )}
+                        </div>
+
+                        {/* Timestamp with hover effect */}
+                        <div 
+                          className="ml-9 px-4 mt-0 pb-0.5 overflow-hidden transition-all duration-300 max-h-0 opacity-0 transform translate-y-[-5px] group-hover:opacity-100 group-hover:max-h-8 group-hover:mt-0.5 group-hover:translate-y-0"
+                        >
+                          <div className="flex items-center gap-1.5 text-xs text-neutral-500 dark:text-neutral-400">
+                            <Clock className="h-2.5 w-2.5 mr-0.5" />
+                            <span>{format(new Date(entry.updatedAt), 'MMM d, yyyy')}</span>
+                          </div>
                         </div>
                       </div>
                     );
@@ -511,96 +720,136 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                 "overflow-hidden transition-all duration-200 ease-in-out",
                 spacesOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
               )}>
-                <div className="mt-1 space-y-0.5 pb-1">                  
-                  {spaces.map((space: SpaceType) => {
-                    const isActive = currentPageType === 'space' && space.id === currentPageId;
-                    const isEditing = space.id === editingSpaceId;
-                    
-                    return (
-                      <div key={space.id} className="group relative">
-                        <div className={cn(
-                          "flex w-full items-center",
-                          isActive ? "bg-emerald-50 dark:bg-emerald-900/20" : ""
-                        )}>
-                          {isEditing ? (
-                            // Show input field when editing
+                <div className="space-y-0.5 mt-1">
+                  {/* Filter non-archived spaces and sort them */}
+                  {spaces
+                    .filter(space => !space.archived)
+                    .sort((a, b) => {
+                      // Sort by pinned status first
+                      if (a.metadata?.pinned && !b.metadata?.pinned) return -1;
+                      if (!a.metadata?.pinned && b.metadata?.pinned) return 1;
+                      // Then by updated date
+                      return b.updatedAt - a.updatedAt;
+                    })
+                    .map(space => (
+                      <div 
+                        key={space.id}
+                        className="group relative"
+                      >
+                        <div
+                          className={cn(
+                            "flex w-full items-center",
+                            space.id === currentPageId
+                              ? "bg-emerald-50 dark:bg-emerald-900/20"
+                              : ""
+                          )}
+                          onClick={() => {
+                            if (currentPageType !== 'space' || currentPageId !== space.id) {
+                              switchSpace(space.id);
+                              router.push(`/space/${space.id}`);
+                            }
+                          }}
+                        >
+                          {editingSpaceId === space.id ? (
                             <div className="flex items-center w-full px-4 py-1">
                               <input
-                                type="text"
-                                className="w-full px-1 py-0.5 text-sm bg-white dark:bg-neutral-800 border border-emerald-400/60 rounded focus:outline-none"
+                                ref={editingSpaceId === space.id && newlyCreatedSpaceId === space.id ? focusInputRef : null}
                                 value={editingSpaceName}
                                 onChange={(e) => setEditingSpaceName(e.target.value)}
-                                autoFocus
-                                onKeyDown={(e) => {
-                                  if (e.key === 'Enter') {
-                                    if (editingSpaceName.trim() && editingSpaceName.trim() !== '') {
-                                      renameSpace(space.id, editingSpaceName.trim());
-                                      if (newlyCreatedSpaceId === space.id) {
-                                        switchSpace(space.id);
-                                        router.push(`/space/${space.id}`);
-                                        setNewlyCreatedSpaceId(null);
-                                      }
-                                    }
-                                    setEditingSpaceId(null);
-                                  } else if (e.key === 'Escape') {
-                                    setEditingSpaceId(null);
-                                  }
-                                }}
                                 onBlur={() => {
-                                  if (editingSpaceName.trim() && editingSpaceName.trim() !== '') {
-                                    renameSpace(space.id, editingSpaceName.trim());
-                                    if (newlyCreatedSpaceId === space.id) {
-                                      switchSpace(space.id);
-                                      router.push(`/space/${space.id}`);
-                                      setNewlyCreatedSpaceId(null);
-                                    }
+                                  if (editingSpaceName.trim()) {
+                                    renameSpace(space.id, editingSpaceName.trim(), true); // Mark as manually renamed
                                   }
                                   setEditingSpaceId(null);
                                 }}
+                                className="w-full px-1 py-0.5 text-sm bg-white dark:bg-neutral-800 border border-emerald-400/60 rounded focus:outline-none"
+                                autoFocus
                               />
                             </div>
                           ) : (
-                            // Show regular button when not editing
                             <button
-                              onClick={() => {
-                                switchSpace(space.id)
-                                router.push(`/space/${space.id}`)
-                              }}
                               className="w-full text-left px-4 py-1.5 text-sm flex items-center"
-                              style={{ color: isActive ? 'var(--tw-color-emerald-600)' : 'var(--tw-color-neutral-600)' }}
+                              style={{ 
+                                color: space.id === currentPageId 
+                                  ? 'var(--tw-color-emerald-600)' 
+                                  : 'var(--tw-color-neutral-600)' 
+                              }}
                             >
-                              <span className="truncate pl-5 font-medium">{space.name}</span>
+                              <div className="flex items-center truncate pl-5">
+                                {space.metadata?.pinned && (
+                                  <Pin className="h-3 w-3 mr-1.5 flex-shrink-0 text-blue-400" />
+                                )}
+                                <ConversationNameDisplay
+                                  name={space.name}
+                                  isLoading={space.metadata?.isGeneratingName}
+                                  isAutoNamed={!space.metadata?.manuallyRenamed}
+                                  className="truncate font-medium"
+                                />
+                              </div>
                             </button>
                           )}
                           
-                          {!isEditing && (
-                            <div className="absolute right-2 flex items-center gap-0.5 opacity-0 group-hover:opacity-100">
-                              <button 
-                                onClick={(e) => handleRenameSpace(e, space.id, space.name)}
+                          {!editingSpaceId && (
+                            <div className="absolute right-2 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                              {!space.metadata?.isGeneratingName && space.metadata?.manuallyRenamed && space.messages.length > 0 && (
+                                <button
+                                  className="p-1 rounded hover:bg-neutral-200 dark:hover:bg-neutral-700"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    resetToAutoNaming(space.id);
+                                  }}
+                                  title="Reset to auto naming"
+                                >
+                                  <RefreshCw className="h-3 w-3 text-neutral-500 dark:text-neutral-400" />
+                                </button>
+                              )}
+                              <button
                                 className="p-1 rounded hover:bg-neutral-200 dark:hover:bg-neutral-700"
-                                aria-label="Rename space"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  togglePinSpace(space.id);
+                                }}
+                                title={space.metadata?.pinned ? "Unpin space" : "Pin space"}
+                              >
+                                {space.metadata?.pinned ? 
+                                  <PinOff className="h-3 w-3 text-neutral-500 dark:text-neutral-400" /> : 
+                                  <Pin className="h-3 w-3 text-neutral-500 dark:text-neutral-400" />
+                                }
+                              </button>
+                              <button
+                                className="p-1 rounded hover:bg-neutral-200 dark:hover:bg-neutral-700"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleRenameSpace(e, space.id, space.name);
+                                }}
+                                title="Rename space"
                               >
                                 <Edit2 className="h-3 w-3 text-neutral-500 dark:text-neutral-400" />
                               </button>
-                              <button 
-                                onClick={(e) => handleDeleteSpace(e, space.id, space.name)}
+                              <button
                                 className="p-1 rounded hover:bg-neutral-200 dark:hover:bg-neutral-700"
-                                aria-label="Delete space"
-                                disabled={currentPageType === 'space' && space.id === currentPageId}
-                                title={currentPageType === 'space' && space.id === currentPageId ? "Cannot delete the current space" : "Delete space"}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteSpace(e, space.id, space.name);
+                                }}
+                                title="Delete space"
                               >
-                                <Trash2 className={cn("h-3 w-3", 
-                                  currentPageType === 'space' && space.id === currentPageId 
-                                    ? "text-neutral-300 dark:text-neutral-600" 
-                                    : "text-neutral-500 dark:text-neutral-400"
-                                )} />
+                                <Trash2 className="h-3 w-3 text-neutral-500 dark:text-neutral-400" />
                               </button>
                             </div>
                           )}
                         </div>
+                        
+                        {/* Metadata with hover effect */}
+                        {space.messages.length > 0 && (
+                          <div 
+                            className="ml-9 px-4 mt-0 pb-0.5 overflow-hidden transition-all duration-300 max-h-0 opacity-0 transform translate-y-[-5px] group-hover:opacity-100 group-hover:max-h-8 group-hover:mt-0.5 group-hover:translate-y-0"
+                          >
+                            <ConversationMetadata space={space} compact={true} className="text-neutral-500 dark:text-neutral-400" />
+                          </div>
+                        )}
                       </div>
-                    );
-                  })}
+                    ))}
                 </div>
               </div>
             </div>

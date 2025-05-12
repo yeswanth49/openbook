@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import type { ReactNode } from 'react';
+import { generateConversationName, shouldUpdateConversationName } from '@/lib/conversation-utils';
 
 export type ChatMessage = {
   id: string;
@@ -17,6 +18,12 @@ export type Space = {
   archived: boolean;
   createdAt: number;
   updatedAt: number;
+  metadata?: {
+    manuallyRenamed: boolean;
+    pinned?: boolean;
+    lastAutoNameUpdate?: number;
+    isGeneratingName?: boolean;
+  };
 };
 
 export interface SpacesContextType {
@@ -26,10 +33,12 @@ export interface SpacesContextType {
   createSpace: (name: string) => string;
   deleteSpace: (id: string) => void;
   archiveSpace: (id: string) => void;
-  renameSpace: (id: string, name: string) => void;
+  renameSpace: (id: string, name: string, isManualRename?: boolean) => void;
   switchSpace: (id: string) => void;
   addMessage: (message: Omit<ChatMessage, 'id' | 'timestamp'>) => void;
   exportSpace: (id: string) => void;
+  togglePinSpace: (id: string) => void;
+  resetToAutoNaming: (id: string) => void;
   searchSpaces: (query: string) => Array<{
     id: string;
     name: string;
@@ -54,7 +63,17 @@ export const SpacesProvider = ({ children }: { children: ReactNode }) => {
     if (stored) {
       try {
         const parsed = JSON.parse(stored) as { spaces: Space[]; currentSpaceId: string };
-        setSpaces(parsed.spaces);
+        
+        // Add metadata field to any spaces that don't have it
+        const spacesWithMetadata = parsed.spaces.map(space => ({
+          ...space,
+          metadata: space.metadata || { 
+            manuallyRenamed: false,
+            isGeneratingName: false
+          }
+        }));
+        
+        setSpaces(spacesWithMetadata);
         setCurrentSpaceId(parsed.currentSpaceId);
         return;
       } catch {
@@ -69,6 +88,10 @@ export const SpacesProvider = ({ children }: { children: ReactNode }) => {
       archived: false,
       createdAt: Date.now(),
       updatedAt: Date.now(),
+      metadata: {
+        manuallyRenamed: true, // Default space is considered manually renamed
+        isGeneratingName: false
+      }
     };
     setSpaces([defaultSpace]);
     setCurrentSpaceId(defaultSpace.id);
@@ -81,6 +104,104 @@ export const SpacesProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [spaces, currentSpaceId]);
 
+  // Simulate a delay for name generation (for better UX)
+  const generateNameWithDelay = React.useCallback((space: Space): Promise<string> => {
+    return new Promise((resolve) => {
+      // Generate a name based on conversation content
+      const generatedName = generateConversationName(space);
+      
+      // Add a small delay to make the loading state visible
+      // This helps users understand that something is happening
+      setTimeout(() => {
+        resolve(generatedName);
+      }, 1500);
+    });
+  }, []);
+
+  // Auto-update conversation names
+  React.useEffect(() => {
+    // Don't run this effect immediately on first render
+    if (spaces.length === 0) return;
+    
+    // Find spaces that need name updates
+    const spacesToUpdate = spaces.filter(space => {
+      // Skip spaces that have been manually renamed
+      if (space.metadata?.manuallyRenamed) return false;
+      
+      // Skip spaces already in loading state
+      if (space.metadata?.isGeneratingName) return false;
+      
+      // Skip spaces that were recently auto-named (within last 5 minutes)
+      const lastUpdate = space.metadata?.lastAutoNameUpdate || 0;
+      if (Date.now() - lastUpdate < 5 * 60 * 1000) return false;
+      
+      // Check if this space qualifies for auto-naming
+      return shouldUpdateConversationName(space);
+    });
+    
+    if (spacesToUpdate.length === 0) return;
+    
+    // First, mark these spaces as loading
+    setSpaces(prevSpaces => prevSpaces.map(space => {
+      const needsUpdate = spacesToUpdate.some(s => s.id === space.id);
+      if (!needsUpdate) return space;
+      
+      return {
+        ...space,
+        metadata: {
+          ...(space.metadata || { manuallyRenamed: false }),
+          isGeneratingName: true
+        }
+      };
+    }));
+    
+    // Process each space sequentially to avoid multiple UI updates
+    const processSpaces = async () => {
+      const updatedSpaces = [...spaces];
+      let hasChanges = false;
+      
+      for (const space of spacesToUpdate) {
+        const spaceIndex = updatedSpaces.findIndex(s => s.id === space.id);
+        if (spaceIndex === -1) continue;
+        
+        // Generate name with simulated delay
+        const newName = await generateNameWithDelay(space);
+        
+        // Only update if the name has actually changed
+        if (newName !== space.name) {
+          updatedSpaces[spaceIndex] = {
+            ...updatedSpaces[spaceIndex],
+            name: newName,
+            metadata: {
+              ...(updatedSpaces[spaceIndex].metadata || { manuallyRenamed: false }),
+              lastAutoNameUpdate: Date.now(),
+              isGeneratingName: false
+            }
+          };
+          hasChanges = true;
+        } else {
+          // Still update the metadata to mark it as no longer generating
+          updatedSpaces[spaceIndex] = {
+            ...updatedSpaces[spaceIndex],
+            metadata: {
+              ...(updatedSpaces[spaceIndex].metadata || { manuallyRenamed: false }),
+              lastAutoNameUpdate: Date.now(),
+              isGeneratingName: false
+            }
+          };
+          hasChanges = true;
+        }
+      }
+      
+      // Only update state if changes were made
+      if (hasChanges) {
+        setSpaces(updatedSpaces);
+      }
+    };
+    
+    processSpaces();
+  }, [spaces, generateNameWithDelay]);
+  
   const createSpace = (name: string) => {
     const newSpace: Space = {
       id: crypto.randomUUID(),
@@ -89,6 +210,10 @@ export const SpacesProvider = ({ children }: { children: ReactNode }) => {
       archived: false,
       createdAt: Date.now(),
       updatedAt: Date.now(),
+      metadata: {
+        manuallyRenamed: false, // Default to auto-naming for new spaces
+        isGeneratingName: false
+      }
     };
     setSpaces(prev => [...prev, newSpace]);
     setCurrentSpaceId(newSpace.id);
@@ -111,8 +236,57 @@ export const SpacesProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const renameSpace = (id: string, name: string) => {
-    setSpaces(prev => prev.map(s => s.id === id ? { ...s, name, updatedAt: Date.now() } : s));
+  const renameSpace = (id: string, name: string, isManualRename = true) => {
+    setSpaces(prev => prev.map(s => s.id === id ? { 
+      ...s, 
+      name, 
+      updatedAt: Date.now(),
+      metadata: {
+        ...s.metadata,
+        manuallyRenamed: isManualRename,  // Mark if this was a manual rename
+        isGeneratingName: false           // Not generating if manually renamed
+      }
+    } : s));
+  };
+
+  const resetToAutoNaming = (id: string) => {
+    // Find the space
+    const space = spaces.find(s => s.id === id);
+    if (!space) return;
+    
+    // Set it to generating state
+    setSpaces(prev => prev.map(s => s.id === id ? { 
+      ...s, 
+      metadata: {
+        ...(s.metadata || {}),
+        manuallyRenamed: false,
+        isGeneratingName: true
+      }
+    } : s));
+    
+    // Generate a new name
+    generateNameWithDelay(space).then(newName => {
+      setSpaces(prev => prev.map(s => s.id === id ? { 
+        ...s, 
+        name: newName,
+        metadata: {
+          ...(s.metadata || {}),
+          manuallyRenamed: false,
+          isGeneratingName: false,
+          lastAutoNameUpdate: Date.now()
+        }
+      } : s));
+    });
+  };
+
+  const togglePinSpace = (id: string) => {
+    setSpaces(prev => prev.map(s => s.id === id ? { 
+      ...s, 
+      metadata: {
+        ...(s.metadata || { manuallyRenamed: false }),
+        pinned: !(s.metadata?.pinned)
+      }
+    } : s));
   };
 
   const switchSpace = (id: string) => {
@@ -120,10 +294,35 @@ export const SpacesProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const addMessage = (message: Omit<ChatMessage, 'id' | 'timestamp'>) => {
-    setSpaces(prev => prev.map(s => s.id === currentSpaceId
-      ? { ...s, messages: [...s.messages, { ...message, id: crypto.randomUUID(), timestamp: Date.now() } ], updatedAt: Date.now() }
-      : s
-    ));
+    const now = Date.now();
+    setSpaces(prev => prev.map(s => {
+      if (s.id !== currentSpaceId) return s;
+      
+      // For the current space, add the message
+      const updatedSpace = {
+        ...s,
+        messages: [...s.messages, { ...message, id: crypto.randomUUID(), timestamp: now }],
+        updatedAt: now
+      };
+      
+      // If this is the first user message and the space has auto-naming, 
+      // mark it as generating a name
+      if (
+        message.role === 'user' && 
+        updatedSpace.messages.filter(m => m.role === 'user').length === 1 &&
+        !updatedSpace.metadata?.manuallyRenamed
+      ) {
+        return {
+          ...updatedSpace,
+          metadata: {
+            ...(updatedSpace.metadata || { manuallyRenamed: false }),
+            isGeneratingName: true
+          }
+        };
+      }
+      
+      return updatedSpace;
+    }));
   };
 
   const exportSpace = (id: string) => {
@@ -201,6 +400,8 @@ export const SpacesProvider = ({ children }: { children: ReactNode }) => {
       switchSpace, 
       addMessage, 
       exportSpace,
+      togglePinSpace,
+      resetToAutoNaming,
       searchSpaces
     }}>
       {children}

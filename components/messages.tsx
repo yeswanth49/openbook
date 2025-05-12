@@ -10,6 +10,9 @@ import { MarkdownRenderer, preprocessLaTeX } from '@/components/markdown';
 import ToolInvocationListView from '@/components/tool-invocation-list-view';
 import { motion, AnimatePresence } from "framer-motion";
 import { MessageLoading, TypingIndicator, StreamingProgress } from '@/components/message-loading';
+import { TypingMessage } from '@/components/message-typing';
+import { CancelButton, FloatingCancelButton } from '@/components/cancel-button';
+import { AIProgressIndicator, WordCountIndicator } from '@/components/progress-indicators';
 
 // Define MessagePart type
 type MessagePart = TextUIPart | ReasoningUIPart | ToolInvocationUIPart | SourceUIPart;
@@ -82,6 +85,17 @@ const Messages: React.FC<MessagesProps> = ({
   const streamStartTime = useRef<number | null>(null);
   const estimatedStreamDuration = 15000; // Estimated 15 seconds for complete generation
   
+  // Add state for typing animation
+  const [useTypingAnimation, setUseTypingAnimation] = useState<boolean>(true);
+  const [typingCompleted, setTypingCompleted] = useState<boolean>(false);
+  
+  // Add token counting for progress indicator
+  const [tokenCount, setTokenCount] = useState<number>(0);
+  const [estimatedTokens, setEstimatedTokens] = useState<number>(500);
+  
+  // Add state for advanced progress
+  const [showAdvancedProgress, setShowAdvancedProgress] = useState<boolean>(false);
+  
   // Update thinking duration counter
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -142,6 +156,33 @@ const Messages: React.FC<MessagesProps> = ({
       if (interval) clearInterval(interval);
     };
   }, [isStreaming, status]);
+  
+  // Update token count during streaming
+  useEffect(() => {
+    if (isStreaming) {
+      // Estimate token count based on most recent assistant message
+      const lastAssistantMessage = messages.findLast(m => m.role === 'assistant');
+      if (lastAssistantMessage?.content) {
+        // Rough estimation: ~1.3 tokens per word
+        const words = lastAssistantMessage.content.trim().split(/\s+/).length;
+        setTokenCount(Math.round(words * 1.3));
+        
+        // Update estimated total based on current progress
+        const elapsed = streamStartTime.current ? Date.now() - streamStartTime.current : 0;
+        if (elapsed > 2000) { // Only estimate after 2 seconds to avoid wild guesses
+          // Estimate total tokens based on current rate and 80% of expected duration
+          const tokensPerMs = tokenCount / elapsed;
+          setEstimatedTokens(Math.max(500, Math.round(tokensPerMs * estimatedStreamDuration * 0.8)));
+        }
+      }
+    } else if (status === 'ready') {
+      // Reset after completion
+      setTimeout(() => {
+        setTokenCount(0);
+        setEstimatedTokens(500);
+      }, 1000);
+    }
+  }, [isStreaming, messages, status, tokenCount]);
   
   // Filter messages to only show the ones we want to display
   const memoizedMessages = useMemo(() => {
@@ -390,6 +431,24 @@ const Messages: React.FC<MessagesProps> = ({
     });
   }, [messages, reasoningTimings]);
   
+  // Add timeout to show advanced progress for long-running requests
+  useEffect(() => {
+    let timeout: NodeJS.Timeout;
+    
+    if (isLoading) {
+      // Show advanced progress after 5 seconds of loading
+      timeout = setTimeout(() => {
+        setShowAdvancedProgress(true);
+      }, 5000);
+    } else {
+      setShowAdvancedProgress(false);
+    }
+    
+    return () => {
+      if (timeout) clearTimeout(timeout);
+    };
+  }, [isLoading]);
+  
   if (memoizedMessages.length === 0) {
     return null;
   }
@@ -415,6 +474,32 @@ const Messages: React.FC<MessagesProps> = ({
     await reload();
   };
 
+  // Handle cancel request
+  const handleCancel = () => {
+    // Stop ongoing request
+    if (status === 'submitted' || status === 'streaming') {
+      stop();
+      
+      // Remove incomplete assistant message if exists
+      const newMessages = [...messages];
+      if (newMessages.length > 0 && newMessages[newMessages.length - 1].role === 'assistant') {
+        // Only remove if it seems incomplete (no content or very short)
+        const lastMessage = newMessages[newMessages.length - 1];
+        if (!lastMessage.content || lastMessage.content.length < 20) {
+          newMessages.pop();
+          setMessages(newMessages);
+        }
+      }
+      
+      // Reset states
+      thinkingStartTime.current = null;
+      streamStartTime.current = null;
+      setThinkingDuration(0);
+      setStreamProgress(0);
+      setShowAdvancedProgress(false);
+    }
+  };
+
   // Generate loading text based on thinking duration
   const getLoadingText = () => {
     if (thinkingDuration <= 3) return "Thinking...";
@@ -423,31 +508,67 @@ const Messages: React.FC<MessagesProps> = ({
     if (thinkingDuration <= 25) return "Gathering relevant details...";
     return "This is taking longer than usual...";
   };
+  
+  // Helper to render messages with typing animation if enabled
+  const renderMessageContent = (message: any, key: string) => {
+    if (message.role !== 'assistant' || !message.content) {
+      return null;
+    }
+    
+    // Only animate the most recent assistant message when streaming
+    const isLatestAssistantMessage = message === messages.findLast(m => m.role === 'assistant');
+    const shouldAnimate = useTypingAnimation && isLatestAssistantMessage && isStreaming && !typingCompleted;
+    
+    if (shouldAnimate) {
+      return (
+        <TypingMessage 
+          key={key} 
+          content={message.content} 
+          onComplete={() => setTypingCompleted(true)}
+          speed={15}
+        />
+      );
+    }
+    
+    return null;
+  };
 
   return (
     <div className="space-y-6 pb-24">
       {memoizedMessages.length > 0 ? (
         memoizedMessages.map((message, index) => (
-          <Message
-            key={`${message.id || index}`}
-            message={message}
-            index={index}
-            lastUserMessageIndex={lastUserMessageIndex}
-            isEditingMessage={isEditingMessage}
-            editingMessageIndex={editingMessageIndex}
-            input={input}
-            setInput={setInput}
-            setIsEditingMessage={setIsEditingMessage}
-            setEditingMessageIndex={setEditingMessageIndex}
-            renderPart={renderPart}
-            status={status}
-            messages={messages}
-            setMessages={setMessages}
-            append={append}
-            reload={reload}
-            setSuggestedQuestions={setSuggestedQuestions}
-            suggestedQuestions={suggestedQuestions}
-          />
+          <React.Fragment key={`${message.id || index}`}>
+            <Message
+              message={message}
+              index={index}
+              lastUserMessageIndex={lastUserMessageIndex}
+              isEditingMessage={isEditingMessage}
+              editingMessageIndex={editingMessageIndex}
+              input={input}
+              setInput={setInput}
+              setIsEditingMessage={setIsEditingMessage}
+              setEditingMessageIndex={setEditingMessageIndex}
+              renderPart={renderPart}
+              status={status}
+              messages={messages}
+              setMessages={setMessages}
+              append={append}
+              reload={reload}
+              setSuggestedQuestions={setSuggestedQuestions}
+              suggestedQuestions={suggestedQuestions}
+            />
+            
+            {/* Render typing animation for this message if needed */}
+            {renderMessageContent(message, `typing-${index}`)}
+            
+            {/* Show word count for completed messages */}
+            {message.role === 'assistant' && message.content && status === 'ready' && (
+              <WordCountIndicator 
+                text={message.content} 
+                isVisible={index === memoizedMessages.length - 1}
+              />
+            )}
+          </React.Fragment>
         ))
       ) : (
         <div className="py-12">
@@ -474,13 +595,22 @@ const Messages: React.FC<MessagesProps> = ({
             transition={{ duration: 0.3 }}
           >
             <MessageLoading showThinking={true} loadingText={getLoadingText()} />
+            
+            {/* Cancel button during thinking phase */}
+            <div className="flex justify-center mt-2">
+              <CancelButton
+                onCancel={handleCancel}
+                isLoading={isJustThinking}
+                status={status}
+              />
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
       
       {/* Skeleton loader for streaming content */}
       <AnimatePresence>
-        {isStreaming && !error && !messages.some(m => m.role === 'assistant' && m.content) && (
+        {isStreaming && !error && !typingCompleted && !messages.some(m => m.role === 'assistant' && m.content) && (
           <motion.div
             key="streaming"
             initial={{ opacity: 0, y: 10 }}
@@ -492,13 +622,34 @@ const Messages: React.FC<MessagesProps> = ({
             {streamProgress > 0 && streamProgress < 100 && (
               <StreamingProgress progress={streamProgress} />
             )}
+            
+            {/* Cancel button during streaming phase */}
+            <div className="flex justify-center mt-2">
+              <CancelButton
+                onCancel={handleCancel}
+                isLoading={isStreaming}
+                status={status}
+              />
+            </div>
           </motion.div>
+        )}
+      </AnimatePresence>
+      
+      {/* Advanced progress indicator for long-running requests */}
+      <AnimatePresence>
+        {showAdvancedProgress && isLoading && (
+          <AIProgressIndicator
+            status={status}
+            startTime={isJustThinking ? thinkingStartTime.current : streamStartTime.current}
+            tokenCount={tokenCount}
+            estimatedTokens={estimatedTokens}
+          />
         )}
       </AnimatePresence>
       
       {/* Typing indicator during streaming */}
       <AnimatePresence>
-        {isStreaming && (
+        {isStreaming && !typingCompleted && (
           <motion.div 
             key="typing"
             initial={{ opacity: 0, y: 20 }}
@@ -509,6 +660,18 @@ const Messages: React.FC<MessagesProps> = ({
           >
             <TypingIndicator />
           </motion.div>
+        )}
+      </AnimatePresence>
+      
+      {/* Floating cancel button for mobile */}
+      <AnimatePresence>
+        {isLoading && (
+          <FloatingCancelButton
+            onCancel={handleCancel}
+            isLoading={isLoading}
+            status={status}
+            className="sm:hidden" // Only show on mobile
+          />
         )}
       </AnimatePresence>
       

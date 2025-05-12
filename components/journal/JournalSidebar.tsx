@@ -5,6 +5,7 @@ import { useJournal } from '@/hooks/useJournal'
 import { JournalEntry } from '@/lib/types'
 import { format } from 'date-fns'
 import { PlusCircle, Search, ChevronDown, Clock, Calendar, AlignLeft } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 interface JournalSidebarProps {
   selectedEntryId?: string
@@ -124,17 +125,34 @@ export const JournalSidebar: React.FC<JournalSidebarProps> = ({ selectedEntryId,
             <li
               key={entry.id}
               onClick={() => onSelect(entry.id)}
-              className={`flex flex-col p-2 rounded-md cursor-pointer ${
+              className={cn(
+                "group relative cursor-pointer",
                 entry.id === selectedEntryId
-                  ? 'bg-neutral-100 dark:bg-neutral-800'
-                  : 'hover:bg-neutral-50 dark:hover:bg-neutral-800/50'
-              }`}
+                  ? "bg-emerald-50 dark:bg-emerald-900/20"
+                  : ""
+              )}
             >
-              <span className="font-medium text-sm truncate text-neutral-800 dark:text-neutral-200">
-                {entry.title}
-              </span>
-              <div className="flex items-center text-xs text-neutral-500 dark:text-neutral-400 mt-1">
-                <span>{format(new Date(entry.updatedAt), 'MMM d, yyyy')}</span>
+              <div className="flex w-full items-center py-1.5 px-4">
+                <span 
+                  className="font-medium text-sm truncate pl-5"
+                  style={{ 
+                    color: entry.id === selectedEntryId 
+                      ? 'var(--tw-color-emerald-600)' 
+                      : 'var(--tw-color-neutral-600)' 
+                  }}
+                >
+                  {entry.title}
+                </span>
+              </div>
+              
+              {/* Timestamp with hover effect */}
+              <div 
+                className="ml-9 px-4 mt-0 pb-0.5 overflow-hidden transition-all duration-300 max-h-0 opacity-0 transform translate-y-[-5px] group-hover:opacity-100 group-hover:max-h-8 group-hover:mt-0.5 group-hover:translate-y-0"
+              >
+                <div className="flex items-center gap-1.5 text-xs text-neutral-500 dark:text-neutral-400">
+                  <Clock className="h-2.5 w-2.5 mr-0.5" />
+                  <span>{format(new Date(entry.updatedAt), 'MMM d, yyyy')}</span>
+                </div>
               </div>
             </li>
           ))}

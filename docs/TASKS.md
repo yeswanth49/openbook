@@ -14,11 +14,21 @@ Brief description: Ensure messages display in the correct order even after page 
 
 ## In Progress Tasks
 
-// No tasks in progress
+- [ ] Refine state management and context
+- [ ] Enhance advanced search functionality
+- [ ] Complete research tools implementation
+- [ ] Improve streaming response capability
+- [ ] Develop multi-source research capabilities
 
 ## Future Tasks
 
-// No future tasks
+- [ ] Implement complete model capability detection system
+- [ ] Optimize academic paper search functionality
+- [ ] Refine LaTeX support for mathematical notation
+- [ ] Implement comprehensive error handling
+- [ ] Add unit and integration tests
+- [ ] Perform performance optimization
+- [ ] Create comprehensive documentation
 
 ## Implementation Plan
 

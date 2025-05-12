@@ -8,7 +8,8 @@ import { RefreshCw, AlertCircle } from 'lucide-react';
 import { CopyButton } from '@/components/markdown';
 import { MarkdownRenderer, preprocessLaTeX } from '@/components/markdown';
 import ToolInvocationListView from '@/components/tool-invocation-list-view';
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
+import { MessageLoading, TypingIndicator, StreamingProgress } from '@/components/message-loading';
 
 // Define MessagePart type
 type MessagePart = TextUIPart | ReasoningUIPart | ToolInvocationUIPart | SourceUIPart;
@@ -66,7 +67,82 @@ const Messages: React.FC<MessagesProps> = ({
   const [reasoningFullscreenMap, setReasoningFullscreenMap] = useState<Record<string, boolean>>({});
   const [reasoningTimings, setReasoningTimings] = useState<Record<string, ReasoningTiming>>({});
   const reasoningScrollRef = useRef<HTMLDivElement>(null);
-
+  
+  // State to track how long the AI has been thinking
+  const [thinkingDuration, setThinkingDuration] = useState<number>(0);
+  const thinkingStartTime = useRef<number | null>(null);
+  
+  // Track loading states
+  const isLoading = status === 'submitted' || status === 'streaming';
+  const isJustThinking = status === 'submitted';
+  const isStreaming = status === 'streaming';
+  
+  // Track streaming progress
+  const [streamProgress, setStreamProgress] = useState<number>(0);
+  const streamStartTime = useRef<number | null>(null);
+  const estimatedStreamDuration = 15000; // Estimated 15 seconds for complete generation
+  
+  // Update thinking duration counter
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    
+    if (isJustThinking) {
+      // Start thinking timer
+      if (!thinkingStartTime.current) {
+        thinkingStartTime.current = Date.now();
+      }
+      
+      interval = setInterval(() => {
+        if (thinkingStartTime.current) {
+          const elapsed = Math.floor((Date.now() - thinkingStartTime.current) / 1000);
+          setThinkingDuration(elapsed);
+        }
+      }, 1000);
+    } else {
+      // Reset when not thinking
+      thinkingStartTime.current = null;
+      setThinkingDuration(0);
+    }
+    
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [isJustThinking]);
+  
+  // Update streaming progress
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    
+    if (isStreaming) {
+      // Start streaming timer
+      if (!streamStartTime.current) {
+        streamStartTime.current = Date.now();
+        setStreamProgress(5); // Start with 5% progress
+      }
+      
+      interval = setInterval(() => {
+        if (streamStartTime.current) {
+          const elapsed = Date.now() - streamStartTime.current;
+          // Calculate progress as a percentage of estimated duration, capped at 95%
+          const progress = Math.min(95, Math.floor((elapsed / estimatedStreamDuration) * 100));
+          setStreamProgress(progress);
+        }
+      }, 300);
+    } else if (status === 'ready') {
+      // Complete progress when finished
+      setStreamProgress(100);
+      // Reset after animation completes
+      setTimeout(() => {
+        streamStartTime.current = null;
+        setStreamProgress(0);
+      }, 1000);
+    }
+    
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [isStreaming, status]);
+  
   // Filter messages to only show the ones we want to display
   const memoizedMessages = useMemo(() => {
     return messages.filter((message) => {
@@ -195,9 +271,15 @@ const Messages: React.FC<MessagesProps> = ({
             duration = ((timing.endTime - timing.startTime) / 1000).toFixed(3);
           }
         }
-        const parallelTool = hasParallelToolInvocation 
-          ? (parts.find((p: MessagePart) => p.type === 'tool-invocation')?.toolInvocation?.toolName ?? null) 
-          : null;
+        
+        // Safely access the tool invocation data with proper type handling
+        let parallelTool = null;
+        if (hasParallelToolInvocation) {
+          const toolPart = parts.find((p: MessagePart) => p.type === 'tool-invocation') as ToolInvocationUIPart | undefined;
+          if (toolPart && toolPart.toolInvocation) {
+            parallelTool = toolPart.toolInvocation.toolName || null;
+          }
+        }
 
         // Separate expanded and fullscreen states
         const isExpanded = reasoningVisibilityMap[sectionKey] ?? !isComplete;
@@ -314,19 +396,40 @@ const Messages: React.FC<MessagesProps> = ({
 
   // Render error message if there is an error
   const handleRetry = async () => {
+    const lastUserMessage = messages.findLast(m => m.role === 'user');
+    if (!lastUserMessage) return;
+
+    // Remove the last assistant message if it exists
+    const newMessages = [...messages];
+    if (newMessages.length > 0 && newMessages[newMessages.length - 1].role === 'assistant') {
+      newMessages.pop();
+    }
+    setMessages(newMessages);
+    setSuggestedQuestions([]);
+
+    // Reset thinking timer
+    thinkingStartTime.current = null;
+    setThinkingDuration(0);
+
+    // Resubmit the last user message
     await reload();
   };
 
+  // Generate loading text based on thinking duration
+  const getLoadingText = () => {
+    if (thinkingDuration <= 3) return "Thinking...";
+    if (thinkingDuration <= 8) return "Analyzing your request...";
+    if (thinkingDuration <= 15) return "Processing information...";
+    if (thinkingDuration <= 25) return "Gathering relevant details...";
+    return "This is taking longer than usual...";
+  };
+
   return (
-    <div className="space-y-4 sm:space-y-6 mb-32">
-      {memoizedMessages.map((message, index) => (
-        <div key={message.id} className={`${
-          // Add border only if this is an assistant message AND there's a next message
-          message.role === 'assistant' && index < memoizedMessages.length - 1
-            ? 'mb-8! pb-8 border-b border-neutral-200 dark:border-neutral-800'
-            : ''
-          }`}>
+    <div className="space-y-6 pb-24">
+      {memoizedMessages.length > 0 ? (
+        memoizedMessages.map((message, index) => (
           <Message
+            key={`${message.id || index}`}
             message={message}
             index={index}
             lastUserMessageIndex={lastUserMessageIndex}
@@ -343,62 +446,108 @@ const Messages: React.FC<MessagesProps> = ({
             append={append}
             reload={reload}
             setSuggestedQuestions={setSuggestedQuestions}
-            suggestedQuestions={index === memoizedMessages.length - 1 ? suggestedQuestions : []}
+            suggestedQuestions={suggestedQuestions}
           />
+        ))
+      ) : (
+        <div className="py-12">
+          <div className="flex flex-col items-center justify-center space-y-2">
+            <Image src="/openbook.png" alt="Openbook" className='size-24 mb-4 invert dark:invert-0' width={100} height={100} unoptimized quality={100} />
+            <h2 className="text-xl font-medium text-neutral-800 dark:text-neutral-200">
+              Welcome to Neuman
+            </h2>
+            <p className="text-neutral-500 dark:text-neutral-400 max-w-md text-center">
+              Start a conversation by typing your message below.
+            </p>
+          </div>
         </div>
-      ))}
-
-      {/* Display error message with retry button */}
-      {error && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: 20 }}
-          transition={{ duration: 0.3 }}
-          className="mt-6"
-        >
-          <div className="rounded-lg border border-red-200 dark:border-red-800 bg-white dark:bg-neutral-900 shadow-sm overflow-hidden">
-            <div className="bg-red-50 dark:bg-red-900/30 px-4 py-3 border-b border-red-200 dark:border-red-800 flex items-start gap-3">
-              <div className="mt-0.5">
-                <div className="bg-red-100 dark:bg-red-700/50 p-1.5 rounded-full">
-                  <AlertCircle className="h-4 w-4 text-red-500 dark:text-red-300" />
-                </div>
-              </div>
-              <div>
-                <h3 className="font-medium text-red-700 dark:text-red-300">
-                  An error occurred with your request
-                </h3>
-                <p className="text-sm text-red-600/80 dark:text-red-400/80 mt-0.5">
-                  {error.message || "Something went wrong while processing your message"}
-                </p>
-              </div>
+      )}
+      
+      {/* Loading indicator for initial response */}
+      <AnimatePresence>
+        {isJustThinking && lastUserMessageIndex >= 0 && (
+          <motion.div
+            key="thinking"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.3 }}
+          >
+            <MessageLoading showThinking={true} loadingText={getLoadingText()} />
+          </motion.div>
+        )}
+      </AnimatePresence>
+      
+      {/* Skeleton loader for streaming content */}
+      <AnimatePresence>
+        {isStreaming && !error && !messages.some(m => m.role === 'assistant' && m.content) && (
+          <motion.div
+            key="streaming"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <MessageLoading showThinking={false} />
+            {streamProgress > 0 && streamProgress < 100 && (
+              <StreamingProgress progress={streamProgress} />
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+      
+      {/* Typing indicator during streaming */}
+      <AnimatePresence>
+        {isStreaming && (
+          <motion.div 
+            key="typing"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            transition={{ duration: 0.3 }}
+            className="fixed bottom-[80px] left-1/2 transform -translate-x-1/2 z-10"
+          >
+            <TypingIndicator />
+          </motion.div>
+        )}
+      </AnimatePresence>
+      
+      {/* Error display */}
+      <AnimatePresence>
+        {error && (
+          <motion.div
+            key="error"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.3 }}
+            className="rounded-lg bg-red-50 dark:bg-red-900/20 p-4 flex items-start gap-3 mt-4"
+          >
+            <div className="flex-shrink-0 text-red-500 dark:text-red-400">
+              <AlertCircle className="h-5 w-5" />
             </div>
-            
-            <div className="px-4 py-3 text-sm">
-              {error.cause && (
-                <div className="p-3 bg-neutral-50 dark:bg-neutral-800 rounded-md border border-neutral-200 dark:border-neutral-700 font-mono text-xs text-neutral-700 dark:text-neutral-300 overflow-x-auto">
-                  {error.cause.toString()}
-                </div>
-              )}
-              
-              <div className="mt-4 flex items-center justify-between">
-                <p className="text-neutral-500 dark:text-neutral-400 text-xs">
-                  You can retry your request or try a different prompt
+            <div className="flex-1">
+              <h3 className="text-sm font-medium text-red-800 dark:text-red-300">Error</h3>
+              <div className="mt-1 text-sm text-red-700 dark:text-red-400">
+                <p>
+                  {error.message || "An error occurred while processing your request."}
                 </p>
+              </div>
+              <div className="mt-3">
                 <Button 
-                  onClick={handleRetry} 
-                  className="bg-red-600 hover:bg-red-700 text-white"
-                  size="sm"
+                  size="sm" 
+                  onClick={handleRetry}
+                  className="flex items-center gap-1 text-xs"
                 >
-                  <RefreshCw className="mr-2 h-3.5 w-3.5" />
+                  <RefreshCw className="h-3 w-3" />
                   Retry
                 </Button>
               </div>
             </div>
-          </div>
-        </motion.div>
-      )}
-
+          </motion.div>
+        )}
+      </AnimatePresence>
+      
       <div ref={reasoningScrollRef} />
     </div>
   );

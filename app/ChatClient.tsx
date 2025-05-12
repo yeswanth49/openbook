@@ -78,7 +78,7 @@ const HomeContent = () => {
     const [q] = useQueryState('q', parseAsString.withDefault(''))
 
     // Conversation spaces context
-    const { currentSpace, switchSpace, addMessage } = useSpaces();
+    const { currentSpace, currentSpaceId, switchSpace, addMessage } = useSpaces();
     // Use localStorage hook directly for model selection with a default
     const [selectedModel, setSelectedModel] = useLocalStorage('neuman-selected-model', 'neuman-default');
 
@@ -149,19 +149,26 @@ const HomeContent = () => {
 
     // Wrap append to persist user messages to current space
     const appendWithPersist = useCallback(async (message: any, options: any = {}): Promise<any> => {
-        // First append to internal chat state
-        const result = await append(message, options);
-        // Then persist user messages to the current space
+        // Persist user messages to the current space BEFORE sending to AI
+        // This ensures the user message timestamp is earlier than the AI response timestamp.
         if (message.role === 'user') {
             addMessage({ role: message.role, content: message.content });
         }
+        // Then append to internal chat state and send to AI service
+        const result = await append(message, options);
         return result;
     }, [append, addMessage]);
 
-    // Sync chat internal messages when switching spaces
+    // Sync chat internal messages when switching spaces (only on space change, not on every message addition)
     useEffect(() => {
-        setMessages(currentSpace?.messages ?? []);
-    }, [currentSpace, setMessages]);
+        if (currentSpace?.messages) {
+            // Sort messages by timestamp to ensure correct order on refresh
+            const sortedMessages = [...currentSpace.messages].sort((a, b) => a.timestamp - b.timestamp);
+            setMessages(sortedMessages);
+        }
+        // Only run this effect when the space ID changes
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [currentSpaceId]);
 
     useEffect(() => {
         if (!initializedRef.current && initialState.query && !messages.length) {

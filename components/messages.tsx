@@ -320,7 +320,7 @@ const Messages: React.FC<MessagesProps> = ({
   return (
     <div className="space-y-4 sm:space-y-6 mb-32">
       {memoizedMessages.map((message, index) => (
-        <div key={index} className={`${
+        <div key={message.id} className={`${
           // Add border only if this is an assistant message AND there's a next message
           message.role === 'assistant' && index < memoizedMessages.length - 1
             ? 'mb-8! pb-8 border-b border-neutral-200 dark:border-neutral-800'

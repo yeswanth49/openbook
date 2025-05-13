@@ -1037,7 +1037,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
             
             <div className="p-4">
               <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-4">
-                Delete "{itemToDelete?.name}"? This cannot be undone.
+                Delete &quot;{itemToDelete?.name}&quot;? This cannot be undone.
               </p>
               
               <div className="flex justify-end gap-2">

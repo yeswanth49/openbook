@@ -1,14 +1,9 @@
 import React from 'react';
 import { MarkdownRenderer } from '@/components/markdown';
-
-interface ToolInvocation {
-  toolName: string;
-  toolInput: any;
-  toolOutput?: string;
-}
+import type { ToolInvocation as UIToolInvocation } from '@ai-sdk/ui-utils';
 
 interface ToolInvocationListViewProps {
-  toolInvocations: ToolInvocation[];
+  toolInvocations: UIToolInvocation[];
   message: any;
 }
 
@@ -31,8 +26,8 @@ const ToolInvocationListView: React.FC<ToolInvocationListViewProps> = ({
             {invocation.toolName}
           </div>
           <div className="p-4 text-sm">
-            {invocation.toolOutput && (
-              <MarkdownRenderer content={invocation.toolOutput} />
+            {'result' in invocation && invocation.result != null && (
+              <MarkdownRenderer content={String(invocation.result)} />
             )}
           </div>
         </div>

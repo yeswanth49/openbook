@@ -5,6 +5,7 @@ import { serverEnv } from '@/env/server';
 import { SearchGroupId } from '@/lib/utils';
 import { openai } from '@ai-sdk/openai';
 import { generateObject } from 'ai';
+import { google } from '@ai-sdk/google';
 import { z } from 'zod';
 
 export async function suggestQuestions(history: any[]) {

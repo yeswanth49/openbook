@@ -60,7 +60,7 @@ This document outlines the plan to implement and enhance the journaling function
 #### A. Preparation Phase
 
 - [ ] Set up API integration
-  - [ ] Create API service for AI requests
+  - [ ] Create API service for AI requests (use google ai sdk, groq api)
   - [ ] Implement authentication and API key management
   - [ ] Add rate limiting and error handling
 - [ ] Design UI components

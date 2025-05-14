@@ -497,8 +497,8 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
         }}
       >
         {isOpen ? 
-          <ChevronLeft className="h-5 w-5 text-neutral-600 dark:text-neutral-400" /> :
-          <ChevronRight className="h-5 w-5 text-neutral-600 dark:text-neutral-400" />
+          <X className="h-5 w-5 text-neutral-600 dark:text-neutral-400" /> :
+          <Menu className="h-5 w-5 text-neutral-600 dark:text-neutral-400" />
         }
       </button>
       

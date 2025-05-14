@@ -1,152 +1,152 @@
 # Input Content Box Implementation
 
-This document tracks the implementation of a simplified input content box component.
+This document tracks the implementation of a simplified input content box component using terminal-chat components.
 
 ## Objectives
 - Set the default model to Google Gemini 2.5 Flash
-- Simplify the existing form component to a minimal version with:
+- Replace the existing form-component with terminal-chat components to create a minimal input interface with:
   - Single-line input field
   - Send button
   - Upload button
 
 ## Implementation Plan
 
-### Phase 1: Default Model Setting
-- Modify the models configuration in `form-component.tsx` to set Google Gemini 2.5 Flash as the default model
-- Update any related model selection logic
+### Phase 1: Terminal-Chat Component Integration
+- Copy the necessary components from terminal-chat project to our project
+- Adapt these components to work with our existing application logic
 
-### Phase 2: Input Component Simplification
-- Simplify the existing form component's structure
-- Remove unnecessary features while maintaining core functionality
-- Keep only input field, send button, and upload button
-- Ensure compatibility with existing message handling system
+### Phase 2: Default Model Setting
+- Modify the model configuration to set Google Gemini 2.5 Flash as the default model
 
-### Relevant Files
-- `components/ui/form-component.tsx` - Main component to be modified
-- `components/ui/input.tsx` - May be used for the simplified input field
-- `components/ui/button.tsx` - Used for send and upload buttons
+### Phase 3: Cleanup
+- Remove terminal-chat files after successful integration
 
 ## Tasks
 
 ### In Progress Tasks
+- [ ] Copy required terminal-chat components to our project
+- [ ] Adapt components to work with our existing application
 - [ ] Set Google Gemini 2.5 Flash as the default model
-- [ ] Simplify form component to basic input line with send and upload buttons
 - [ ] Ensure compatibility with existing file upload functionality
-- [ ] Test simplified component with the application
-
-### Technical Details
-
-#### Component Structure
-The simplified component will:
-1. Use a single-line input rather than the current textarea
-2. Maintain file upload capability
-3. Keep send button functionality
-4. Remove excess UI elements while preserving core functionality
-
-#### API Compatibility
-The component should maintain the same props interface to ensure it works with the existing application:
-```tsx
-interface FormComponentProps {
-    input: string;
-    setInput: (input: string) => void;
-    attachments: Array<Attachment>;
-    setAttachments: React.Dispatch<React.SetStateAction<Array<Attachment>>>;
-    handleSubmit: (event?: {preventDefault?: () => void}, chatRequestOptions?: ChatRequestOptions) => void;
-    fileInputRef: React.RefObject<HTMLInputElement>;
-    inputRef: React.RefObject<HTMLTextAreaElement>;
-    // Other required props...
-}
-```
+- [ ] Test the integrated components
+- [ ] Clean up by removing terminal-chat files after integration
 
 ## Step-by-Step Action Plan
 
-1. **Set Default Model to Google Gemini 2.5 Flash**
-   - Locate the models array in `components/ui/form-component.tsx`
-   - Update default model ordering to place "neuman-google" (Gemini 2.5 Flash) first in the models array
-   - Verify any model selection logic is updated accordingly
-
-2. **Create Backup of Existing Component**
-   - Create a backup of the current `form-component.tsx` file before making changes
+1. **Create Backup of Existing Components**
+   - Create backups of the current `form-component.tsx` file and any other files that will be modified
    - This allows for easy reversal if needed
 
-3. **Remove Unnecessary UI Elements**
-   - Remove group selector UI and related functionality
-   - Remove model switcher dropdown from UI while preserving the model selection logic
-   - Remove any unnecessary containers and wrappers
-   - Preserve essential functionality like text input and file uploads
+2. **Copy Required Terminal-Chat Components**
+   - Copy the following files from the terminal-chat project:
+     - `terminal-chat/components/terminal-input.tsx` → `components/terminal-input.tsx`
+     - `terminal-chat/components/chat-message.tsx` → `components/chat-message.tsx`
+     - `terminal-chat/components/command-panel.tsx` → `components/command-panel.tsx`
+   - Copy any additional component files needed (clear-confirmation.tsx, help-panel.tsx, etc.)
 
-4. **Simplify the Input Field**
-   - Modify the textarea component to be more compact
-   - Consider replacing textarea with a single-line input if appropriate
-   - Maintain key event handlers (e.g., for Enter key submission)
+3. **Modify Terminal-Input Component**
+   - Update the `terminal-input.tsx` component to:
+     - Add file upload button similar to the existing form component
+     - Integrate with our existing attachment handling logic
+     - Update styling to match our application design
 
-5. **Simplify Button Layout**
-   - Maintain the send button with its existing functionality
-   - Keep the file upload button with its functionality
-   - Arrange these in a clean, minimal layout
+4. **Create Integration Component**
+   - Create a new component that will replace form-component.tsx
+   - This component will integrate terminal-input with our existing application
+   - Ensure it maintains the same props interface as the current FormComponentProps
+   - Example structure:
+     ```tsx
+     import { TerminalInput } from "./terminal-input";
+     
+     const FormComponent: React.FC<FormComponentProps> = ({
+       input,
+       setInput,
+       attachments,
+       setAttachments,
+       handleSubmit,
+       fileInputRef,
+       // ...other props
+     }) => {
+       // Integration logic
+       return (
+         <div className="terminal-form-wrapper">
+           <TerminalInput 
+             value={input}
+             onChange={setInput}
+             onSubmit={handleSubmit}
+             // ...pass other required props
+           />
+           {/* File upload button */}
+         </div>
+       );
+     };
+     ```
 
-6. **Refine Styling**
-   - Update CSS/Tailwind classes for a more minimalist appearance
-   - Ensure responsive behavior on different screen sizes
+5. **Update Model Configuration**
+   - Locate the models array definition (likely in the terminal-input component or a related file)
+   - Modify the order to place "neuman-google" (Gemini 2.5 Flash) as the first/default model
+   - Update any related model selection logic
+
+6. **Styling and UI Refinements**
+   - Update the styling of the terminal-input to match our application
+   - Ensure responsive design on different screen sizes
    - Maintain accessibility features
 
-7. **Testing**
-   - Test that model selection works correctly with default set to Gemini 2.5 Flash
-   - Verify that all essential functionality works:
-     - Text input and submission
-     - File uploads
-     - Message handling
-   - Test on different screen sizes to ensure responsive design
+7. **Connect to Existing Application Logic**
+   - Update how the new components interact with message state
+   - Ensure file upload functionality works correctly
+   - Make sure the command system integrates with our existing application
 
-8. **Documentation**
-   - Update this document with completed tasks
-   - Document any changes to component interface or behavior
+8. **Testing**
+   - Test that model selection works correctly with Gemini 2.5 Flash as default
+   - Verify that text input and submission work
+   - Test file uploads
+   - Ensure commands work correctly
+   - Test on different screen sizes to verify responsive design
+
+9. **Cleanup: Remove Terminal-Chat Files**
+   - After successful integration and testing, remove the original terminal-chat files
+   - This step ensures we don't have duplicate code in the project
+   - Files to consider removing:
+     - Original terminal-chat directory if it's no longer needed
+     - Any temporary files created during the integration process
+   - Ensure dependencies are updated if necessary
 
 ## File Modifications Required
 
-1. **components/ui/form-component.tsx**
-   - Primary file to modify
-   - Reorder models array to set Gemini 2.5 Flash as default
-   - Simplify component structure
-   - Update styling for minimalist appearance
+1. **New Files to Create:**
+   - `components/terminal-input.tsx` - Adapted from the reference project
+   - `components/chat-message.tsx` - For message rendering
+   - `components/command-panel.tsx` - For command handling
+   - Additional support components (help-panel, clear-confirmation, etc.)
 
-2. **No new files needed**
-   - This implementation will modify existing components rather than creating new ones
-   - Will leverage existing UI components like `button.tsx` and `input.tsx`
+2. **Files to Modify:**
+   - `components/ui/form-component.tsx` - Either replace completely or modify to use new components
 
-## Project Structure Comparison
+3. **Implementation Approach:**
+   - Create all necessary new files first
+   - Adapt them to work with our existing application
+   - Then update or replace form-component.tsx
+   - After successful integration, remove original terminal-chat files
 
-### Reference Project Structure
-The reference project has a well-organized structure with:
-- App router approach with `app/` directory
-- Separate `components/` and `components/ui/` directories
-- Well-defined UI component library including:
-  - Basic form controls (input, textarea, button)
-  - Layout components (accordion, card, dialog)
-  - Navigation components (breadcrumb, menu)
-  - Interactive elements (dropdown, command)
-- Shared hooks in a dedicated `hooks/` directory
-- Global styling in `styles/globals.css`
+## File Integration Details
 
-### Our Project Structure
-Our project shares similar organization:
-- Components in `components/` with UI components in `components/ui/`
-- UI components match many of those in the reference project (button, input, textarea, dialog)
-- We have hooks in a separate `hooks/` directory
+### terminal-input.tsx
+```tsx
+// Key adaptations needed:
+// 1. Add file upload button
+// 2. Connect to existing message state
+// 3. Maintain compatibility with FormComponentProps interface
+```
 
-### Component Compatibility
-The reference project includes:
-- `terminal-input.tsx` - Possibly a specialized input for terminal-like commands
-- `terminal-chat.tsx` - Potentially handling terminal-style chat interfaces
+### chat-message.tsx
+```tsx
+// Will need to adapt this to work with our message format
+// Ensure styling matches our application
+```
 
-Our project uses:
-- `form-component.tsx` - A complex form component we need to simplify
-- Standard UI components like `input.tsx` and `button.tsx`
-
-### Implementation Strategy
-Based on the comparison:
-1. We don't need to add any new files from the reference project
-2. We can leverage our existing UI components to achieve the simplified design
-3. Our implementation will focus on modifying the existing `form-component.tsx` rather than creating new components
-
-This strategy aligns with our project structure while achieving the goal of simplifying the input form to a clean, minimal interface with just input field, send button, and upload button. 
+### command-panel.tsx
+```tsx
+// Needs to integrate with our existing command handling
+// May need to add additional commands for our specific application
+``` 

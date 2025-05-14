@@ -12,11 +12,11 @@ import { Providers } from './providers';
 import { SpacesProvider } from '../contexts/SpacesContext';
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://openbook.pecup.in"),
+  metadataBase: new URL("https://goopenbook.in"),
   title: "OpenBook",
   description: "Your learning, your way.",
   openGraph: {
-    url: "https://openbook.pecup.in",
+    url: "https://goopenbook.in",
     siteName: "OpenBook",
     title: "OpenBook - Your learning, your way.",
     description: "An AI-powered knowledge exploration platform for information search, AI conversations, and academic research.",
@@ -31,12 +31,47 @@ export const metadata: Metadata = {
     locale: 'en_US',
     type: 'website',
   },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'OpenBook - Your learning, your way.',
+    description: 'An AI-powered knowledge exploration platform for information search, AI conversations, and academic research.',
+    images: ['/screenshots/main-interface.png'],
+    creator: '@OpenBook',
+    site: '@OpenBook',
+  },
   keywords: [
     "OpenBook",
     "openbook",
     "Open Book",
     "AI Integrated Book",
-  ]
+  ],
+  icons: {
+    icon: [
+      { url: '/images/favicon.ico' },
+      { url: '/images/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
+      { url: '/images/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
+    ],
+    apple: [
+      { url: '/images/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
+    ],
+    other: [
+      {
+        rel: 'mask-icon',
+        url: '/safari-pinned-tab.svg',
+        color: '#000000',
+      },
+      {
+        rel: 'apple-touch-startup-image',
+        url: '/screenshots/main-interface.png',
+        media: '(device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3)',
+      },
+    ],
+  },
+  appleWebApp: {
+    capable: true,
+    title: 'OpenBook',
+    statusBarStyle: 'black-translucent',
+  },
 };
 
 export const viewport: Viewport = {

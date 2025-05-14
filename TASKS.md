@@ -7,6 +7,7 @@
 - [x] Set Google Gemini 2.5 Flash as the default model
 - [x] Integrate the new TerminalInput component with our existing application
 - [x] Simplify input component UI for a cleaner, more minimal design
+- [x] Update manifest.ts with proper icons and screenshots for PWA support
 
 ## In Progress Tasks
 - [ ] Ensure compatibility with existing file upload functionality
@@ -21,6 +22,7 @@
 - app/ChatClient.tsx - Updated to use the new TerminalInput component
 - components/terminal/terminal-input.tsx - New terminal-style input component
 - components/ui/form-component.tsx - Removed (backed up as form-component.tsx.backup-removal)
+- app/manifest.ts - Updated with proper icons and screenshots for PWA support
 
 ### Component Structure
 The new input component has:

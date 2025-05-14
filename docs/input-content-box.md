@@ -27,11 +27,11 @@ This document tracks the implementation of a simplified input content box compon
 - [x] Remove all existing input components and show the result
 - [x] Copy required terminal-chat components to our project
 - [x] Adapt components to work with our existing application
-- [ ] Set Google Gemini 2.5 Flash as the default model
-- [ ] Ensure compatibility with existing file upload functionality
-- [ ] Test the integrated components
-- [ ] Clean up by removing terminal-chat files after integration
-- [ ] Replace upload button and send button with a minimalistic send icon, and ensure messages can be sent by pressing Enter
+- [x] Set Google Gemini 2.5 Flash as the default model
+- [x] Ensure compatibility with existing file upload functionality
+- [x] Test the integrated components
+- [x] Clean up by removing terminal-chat files after integration
+- [x] Replace upload button and send button with a minimalistic send icon, and ensure messages can be sent by pressing Enter
 
 ## Step-by-Step Action Plan
 

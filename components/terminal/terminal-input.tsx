@@ -355,18 +355,6 @@ export function TerminalInput({
         </div>
         
         <div className="flex gap-1">
-          {/* File upload button */}
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            onClick={handleFileUpload}
-            className="h-7 w-7 rounded-full hover:bg-neutral-100 dark:hover:bg-neutral-800"
-            disabled={isProcessing}
-          >
-            <Upload className="h-3.5 w-3.5 text-neutral-500 dark:text-neutral-400" />
-          </Button>
-          
           {/* Hidden file input */}
           <input 
             ref={fileInputRef}
@@ -376,21 +364,28 @@ export function TerminalInput({
             accept="image/*,.pdf,.txt,.md,.csv"
           />
           
-          {/* Send or Stop button */}
+          {/* Send or Stop button with minimalist icon */}
           <Button
             type="button"
             onClick={isProcessing ? onStop : handleSubmit}
             disabled={!value.trim() && attachments.length === 0 && !isProcessing}
             variant="ghost"
-            size="sm"
+            size="icon"
             className={cn(
-              "h-7 rounded-full px-2",
+              "h-7 w-7 rounded-full hover:bg-neutral-100 dark:hover:bg-neutral-800",
               isProcessing 
                 ? "text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20" 
                 : "text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white"
             )}
           >
-            {isProcessing ? "Stop" : "Send"}
+            {isProcessing ? (
+              <span className="text-sm">■</span>
+            ) : (
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="m5 12 14-9v18L5 12z"></path>
+              </svg>
+            )}
+            <span className="sr-only">{isProcessing ? "Stop" : "Send"}</span>
           </Button>
         </div>
       </div>

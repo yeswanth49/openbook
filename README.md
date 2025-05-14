@@ -4,6 +4,12 @@
   <img src="./public/screenshots/openbook.png" alt="OpenBook Logo" width="350" />
 </p>
 
+<p align="center">
+  <a href="https://deepwiki.com/yeswanth49/openbook">
+    <img src="https://deepwiki.com/badge.svg" alt="Ask DeepWiki" />
+  </a>
+</p>
+
 An AI-powered knowledge exploration platform providing an interactive interface for information search, AI conversations, and academic research.
 
 <p align="center">

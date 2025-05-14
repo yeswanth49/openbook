@@ -1,0 +1,6 @@
+{
+    "extends": ["plugin:import/recommended"],
+    "rules": {
+      "import/no-unresolved": "error"
+    }
+  }

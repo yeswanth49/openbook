@@ -1,0 +1,102 @@
+---
+description: This rule defines how the AI agent should manage and utilize memory improve coding consistency.
+globs: *
+alwaysApply: false
+---
+# AI Memory Rule
+
+This rule defines how the AI should manage and utilize its "memory" regarding this specific project, including user preferences, learned facts, and project-specific conventions.
+
+## Purpose
+
+The AI's memory helps maintain consistency and adapt to specific project needs or user preferences discovered during interactions. It prevents the AI from repeatedly asking for the same information or making suggestions contrary to established patterns.
+
+## Storage
+
+All learned project-specific knowledge and preferences should be stored in markdown files within the `ai_docs/memory/` directory, organized into the following subdirectories:
+
+- `ai_docs/memory/preferences/` - User and project preferences
+- `ai_docs/memory/knowledge/` - Project knowledge and patterns
+- `ai_docs/memory/decisions/` - Technical decisions and rationale
+- `ai_docs/memory/interactions/` - Insights from past conversations
+
+A README.md in the memory directory explains the structure and usage guidelines.
+
+## Memory File Format
+
+Each memory entry should be stored as a separate markdown file with YAML frontmatter for metadata:
+
+```markdown
+---
+id: "unique-identifier"
+type: "preference|knowledge|decision|pattern"
+source: "user|inference"
+confidence: 0.95
+created: "YYYY-MM-DDTHH:MM:SSZ"
+updated: "YYYY-MM-DDTHH:MM:SSZ"
+accessed: "YYYY-MM-DDTHH:MM:SSZ"
+contexts: ["context1", "context2"]
+---
+
+# Title of Memory Entry
+
+Brief description of the memory content.
+
+## Details
+
+- Additional details
+- Supporting information
+- Examples or references
+```
+
+## Updating Memory
+
+When new information relevant to the project's conventions, user preferences, or specific technical details is learned (either explicitly told by the user or inferred through conversation), the AI should:
+
+1. **Identify Key Information:** Determine the core piece of knowledge to be stored.
+2. **Determine Category:** Decide which subdirectory the information belongs in.
+3. **Check Existing Files:** Look for existing files that might contain related information.
+4. **Create or Update File:** Either create a new markdown file or update an existing one with the new information.
+5. **Update Timestamps:** Ensure the metadata timestamps are updated appropriately.
+
+## Using Memory
+
+Before proposing solutions, code changes, or answering questions, the AI should:
+
+1. **Search Relevant Files:** Look for files in the memory directory that might contain relevant information.
+2. **Apply Remembered Knowledge:** Ensure responses align with the stored preferences and knowledge.
+3. **Update Access Timestamp:** When using information from a memory file, update its `accessed` timestamp.
+
+## Example Scenario
+
+**User:** "We've decided to use Tailwind v4 for this project, not v3."
+
+**AI Action:**
+
+1. Recognize this as a project-specific technical decision.
+2. Check for existing files related to styling or Tailwind in the memory directory.
+3. Create or update a file in `ai_docs/memory/preferences/styling.md`:
+
+```markdown
+---
+id: "pref-tailwind-version"
+type: "preference"
+source: "user"
+confidence: 0.95
+created: "2023-10-10T14:30:00Z"
+updated: "2023-10-10T14:30:00Z"
+contexts: ["styling", "tailwind", "css"]
+---
+
+# Tailwind CSS Version Preference
+
+Using Tailwind v4 for this project instead of v3.
+
+## Details
+
+- Follow v4 documentation for implementation
+- Use CSS variables with `@theme` directive
+- Be aware of v4-specific syntax changes from v3
+```
+
+4. In subsequent interactions involving Tailwind, the AI will refer to this file and consult v4 documentation if necessary.

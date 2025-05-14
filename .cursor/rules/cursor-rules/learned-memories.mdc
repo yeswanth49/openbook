@@ -1,0 +1,68 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Project Memory
+
+This file stores project-specific knowledge, conventions, and user preferences learned by the AI assistant.
+
+## Technical Decisions
+
+- **Conversations Naming Strategy:** Auto-generate conversation names based on first user message or key topics extracted from content. Show loading indicators during generation. Allow manual renaming with option to revert to auto-naming.
+
+- **Loading States Design:** All loading indicators use a combination of skeletons, progress bars, and contextual messages that adapt to duration. Mobile views use simplified layouts.
+
+## Project Conventions
+
+- **Naming Components:** Loading-related components should include their purpose in the name (e.g., `MessageLoading`, `NameLoading`).
+
+- **State Management:** Conversation metadata is stored in context and persisted to localStorage. Loading states should be tracked in the relevant component's state.
+
+- **Transition Animations:** Use Framer Motion for smooth transitions between loading and loaded states. Ensure animations are subtle and don't disrupt user experience.
+
+## Implementation Patterns
+
+### Conversation Auto-Naming
+
+The project employs a sophisticated auto-naming system for conversations:
+
+1. **Generation Strategy:**
+   - Extract subject from first user message as initial title
+   - Fallback to key terms extraction if first message is unclear
+   - Respect manually set names with visual indicator for auto-named conversations
+
+2. **Loading States:**
+   - Show "Generating title..." with rotating messages during processing
+   - Use small loading spinner and faded text for visual feedback
+   - Provide smooth transitions when name is generated
+
+3. **Technical Implementation:**
+   - Track naming state in conversation metadata (`isGeneratingName`)
+   - Add cooldown period (5 min) between auto-naming attempts
+   - Support manual override with option to reset to auto-naming
+
+### Loading Indicators
+
+The project uses a multi-level approach to loading indicators:
+
+1. **Message Loading:**
+   - Skeleton loading that matches the structure of actual messages
+   - Dynamic loading text that adapts based on thinking duration
+   - Progress bars for streaming content with estimated completion
+
+2. **Visual Design:**
+   - Consistent styling between loading states and final content
+   - Responsive layouts that adapt to mobile screens
+   - Subtle animations that don't cause layout shifts
+
+3. **Technical Details:**
+   - Use Framer Motion for animations
+   - Create dedicated components for each loading state
+   - Track timing and progress with stateful updates
+
+## User Preferences
+
+- **Preserve user manual edits:** When a user manually renames a conversation, the system respects this choice and disables automatic naming.
+
+- **Mobile responsiveness:** Loading states are optimized for mobile with simpler layouts and appropriate text truncation.

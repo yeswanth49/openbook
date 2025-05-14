@@ -35,7 +35,6 @@ import React, {
 } from 'react';
 
 import { Button } from '@/components/ui/button';
-import FormComponent from '@/components/ui/form-component';
 import { InstallPrompt } from '@/components/InstallPrompt';
 import { useLocalStorage } from '@/hooks/use-local-storage';
 import { cn, getUserId, SearchGroupId } from '@/lib/utils';
@@ -44,6 +43,7 @@ import Messages from '@/components/messages';
 import { Input } from "@/components/ui/input";
 import Sidebar from '@/components/sidebar';
 import { useSpaces } from '@/contexts/SpacesContext';
+import { TerminalInput } from '@/components/terminal/terminal-input';
 
 interface Attachment {
     name: string;
@@ -79,8 +79,8 @@ const HomeContent = () => {
 
     // Conversation spaces context
     const { currentSpace, currentSpaceId, switchSpace, addMessage } = useSpaces();
-    // Use localStorage hook directly for model selection with a default
-    const [selectedModel, setSelectedModel] = useLocalStorage('neuman-selected-model', 'neuman-default');
+    // Set Google Gemini 2.5 Flash as the default model
+    const [selectedModel, setSelectedModel] = useLocalStorage('neuman-selected-model', 'neuman-google');
 
     const initialState = useMemo(() => ({
         query: query || q,
@@ -439,28 +439,24 @@ const HomeContent = () => {
                                     initial={{ opacity: 1, y: 0 }}
                                     exit={{ opacity: 0, y: 20 }}
                                     transition={{ duration: 0.5 }}
-                                    className={cn('mt-4!')}
+                                    className={cn('mt-4! bg-white/60 dark:bg-neutral-900/60 backdrop-blur-sm rounded-md p-1')}
                                 >
-                                    <FormComponent
-                                        input={input}
-                                        setInput={setInput}
+                                    <TerminalInput
+                                        value={input}
+                                        onChange={setInput}
+                                        onSubmit={() => {
+                                            lastSubmittedQueryRef.current = input;
+                                            handleSubmit();
+                                            setHasManuallyScrolled(false);
+                                            bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+                                        }}
+                                        selectedModel={selectedModel}
+                                        setSelectedModel={setSelectedModel}
+                                        fileInputRef={fileInputRef}
                                         attachments={attachments}
                                         setAttachments={setAttachments}
-                                        handleSubmit={handleSubmit}
-                                        fileInputRef={fileInputRef}
-                                        inputRef={inputRef}
-                                        stop={stop}
-                                        messages={messages as any}
-                                        append={appendWithPersist}
-                                        selectedModel={selectedModel}
-                                        setSelectedModel={handleModelChange}
-                                        resetSuggestedQuestions={resetSuggestedQuestions}
-                                        lastSubmittedQueryRef={lastSubmittedQueryRef}
-                                        selectedGroup={selectedGroup}
-                                        setSelectedGroup={setSelectedGroup}
-                                        showExperimentalModels={true}
+                                        onStop={stop}
                                         status={status}
-                                        setHasSubmitted={setHasSubmitted}
                                     />
                                 </motion.div>
                             )}
@@ -513,27 +509,21 @@ const HomeContent = () => {
                                     transition={{ duration: 0.5 }}
                                     className="max-w-[26rem] sm:max-w-2xl mx-auto px-4 pointer-events-auto"
                                 >
-                                    <div className="bg-white/80 dark:bg-neutral-900/80 backdrop-blur-md rounded-lg shadow-lg p-2">
-                                        <FormComponent
-                                            input={input}
-                                            setInput={setInput}
+                                    <div className="bg-white/60 dark:bg-neutral-900/60 backdrop-blur-sm rounded-md p-1">
+                                        <TerminalInput
+                                            value={input}
+                                            onChange={setInput}
+                                            onSubmit={() => {
+                                                lastSubmittedQueryRef.current = input;
+                                                handleSubmit();
+                                            }}
+                                            selectedModel={selectedModel}
+                                            setSelectedModel={setSelectedModel}
+                                            fileInputRef={fileInputRef}
                                             attachments={attachments}
                                             setAttachments={setAttachments}
-                                            handleSubmit={handleSubmit}
-                                            fileInputRef={fileInputRef}
-                                            inputRef={inputRef}
-                                            stop={stop}
-                                            messages={messages as any}
-                                            append={appendWithPersist}
-                                            selectedModel={selectedModel}
-                                            setSelectedModel={handleModelChange}
-                                            resetSuggestedQuestions={resetSuggestedQuestions}
-                                            lastSubmittedQueryRef={lastSubmittedQueryRef}
-                                            selectedGroup={selectedGroup}
-                                            setSelectedGroup={setSelectedGroup}
-                                            showExperimentalModels={false}
+                                            onStop={stop}
                                             status={status}
-                                            setHasSubmitted={setHasSubmitted}
                                         />
                                     </div>
                                 </motion.div>

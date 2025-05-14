@@ -42,7 +42,7 @@ export function InstallPrompt() {
         >
           <div className="flex items-start justify-between gap-3">
             {/* App Icon */}
-            <Image src="/apple-icon.png" alt="App Icon" width={40} height={40} className="rounded-md flex-shrink-0 mt-0.5" />
+            <Image src="/images/apple-touch-icon.png" alt="App Icon" width={40} height={40} className="rounded-md flex-shrink-0 mt-0.5" />
 
             <div className="flex-grow">
               <p className="text-sm font-semibold text-foreground">

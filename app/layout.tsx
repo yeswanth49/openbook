@@ -18,6 +18,18 @@ export const metadata: Metadata = {
   openGraph: {
     url: "https://openbook.pecup.in",
     siteName: "OpenBook",
+    title: "OpenBook - Your learning, your way.",
+    description: "An AI-powered knowledge exploration platform for information search, AI conversations, and academic research.",
+    images: [
+      {
+        url: '/screenshots/main-interface.png',
+        width: 1200,
+        height: 630,
+        alt: 'OpenBook Interface'
+      }
+    ],
+    locale: 'en_US',
+    type: 'website',
   },
   keywords: [
     "OpenBook",

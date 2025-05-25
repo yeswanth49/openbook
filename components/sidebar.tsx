@@ -14,6 +14,7 @@ import { ConversationMetadata } from '@/components/conversation-metadata';
 import { ConversationNameDisplay, NameLoading } from '@/components/name-loading';
 import { format } from 'date-fns';
 import SidebarNotebook from '@/components/SidebarNotebook';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -307,21 +308,77 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
           <div className="flex-1 overflow-y-auto py-2">
             {/* Notebooks section */}
             <div className="mb-2">
-              <div className="px-4 py-1.5 flex items-center justify-between">
-                <h3 className="text-xs font-medium text-neutral-500 dark:text-neutral-400 tracking-wider">NOTEBOOKS</h3>
-              </div>
-              
-              {/* Notebooks list */}
-              <div className="space-y-1">
-                {notebooks.map(notebook => (
-                  <SidebarNotebook
-                    key={notebook.id}
-                    notebook={notebook}
-                    currentPageType={currentPageType}
-                    currentPageId={currentPageId}
-                  />
-                ))}
-              </div>
+              <AnimatePresence mode="wait">
+                {/* Check if any notebook is expanded */}
+                {notebooks.some(notebook => notebook.isExpanded) ? (
+                  // Show only the expanded notebook with animation
+                  <motion.div
+                    key="expanded"
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.3, ease: "easeInOut" }}
+                  >
+                    {notebooks
+                      .filter(notebook => notebook.isExpanded)
+                      .map(notebook => (
+                        <SidebarNotebook
+                          key={notebook.id}
+                          notebook={notebook}
+                          currentPageType={currentPageType}
+                          currentPageId={currentPageId}
+                        />
+                      ))}
+                  </motion.div>
+                ) : (
+                  // Show all notebooks when none are expanded with animation
+                  <motion.div
+                    key="collapsed"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 10 }}
+                    transition={{ duration: 0.3, ease: "easeInOut" }}
+                  >
+                    <div className="px-4 py-1.5 flex items-center justify-between">
+                      <h3 className="text-xs font-medium text-neutral-500 dark:text-neutral-400 tracking-wider">NOTEBOOKS</h3>
+                    </div>
+                    
+                    {/* Notebooks list */}
+                    <div className="space-y-0.5">
+                      {notebooks.map((notebook, index) => (
+                        <motion.div
+                          key={notebook.id}
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ 
+                            duration: 0.2, 
+                            delay: index * 0.05,
+                            ease: "easeOut" 
+                          }}
+                        >
+                          <SidebarNotebook
+                            notebook={notebook}
+                            currentPageType={currentPageType}
+                            currentPageId={currentPageId}
+                          />
+                        </motion.div>
+                      ))}
+                    </div>
+                    
+                    {/* New Notebook button */}
+                    <motion.button
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.2, delay: notebooks.length * 0.05 + 0.1 }}
+                      onClick={handleCreateNotebook}
+                      className="w-full flex items-center gap-2 text-left px-4 py-1.5 mt-1 text-sm text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors duration-200"
+                    >
+                      <BookOpen className="h-3.5 w-3.5 text-neutral-400" />
+                      <span>New Notebook</span>
+                    </motion.button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           </div>
 

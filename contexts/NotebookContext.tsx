@@ -106,7 +106,7 @@ export const NotebookProvider = ({ children }: { children: ReactNode }) => {
     setNotebooks(prev => prev.map(notebook => 
       notebook.id === id 
         ? { ...notebook, isExpanded: !notebook.isExpanded, updatedAt: Date.now() }
-        : notebook
+        : { ...notebook, isExpanded: false, updatedAt: Date.now() }
     ));
   };
 

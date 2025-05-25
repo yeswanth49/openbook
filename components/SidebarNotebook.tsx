@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useRef, useEffect } from 'react';
-import { ChevronDown, ChevronRight, BookOpen, Edit2, Trash2, PenLine, FolderPlus, Pin, PinOff, RefreshCw, Clock } from 'lucide-react';
+import { ChevronDown, ChevronRight, BookOpen, Edit2, Trash2, PenLine, FolderPlus, Pin, PinOff, RefreshCw, Clock, ChevronLeft } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { Notebook } from '@/lib/types';
 import { useNotebooks } from '@/contexts/NotebookContext';
@@ -18,7 +19,7 @@ interface SidebarNotebookProps {
 }
 
 export default function SidebarNotebook({ notebook, currentPageType, currentPageId }: SidebarNotebookProps) {
-  const { toggleNotebookExpansion, renameNotebook, deleteNotebook } = useNotebooks();
+  const { toggleNotebookExpansion, renameNotebook, deleteNotebook, notebooks } = useNotebooks();
   const { spaces, currentSpaceId, createSpace, switchSpace, deleteSpace, renameSpace, togglePinSpace, resetToAutoNaming } = useSpaces();
   const { createEntry, entries, deleteEntry, updateEntry } = useJournal();
   const router = useRouter();
@@ -142,276 +143,341 @@ export default function SidebarNotebook({ notebook, currentPageType, currentPage
   }, [editingNotebookName]);
 
   return (
-    <div className="mb-4">
-      {/* Notebook Header */}
-      <div className="group relative">
-        <div className="flex items-center justify-between px-4 py-2 hover:bg-neutral-50 dark:hover:bg-neutral-800/50 rounded-md">
-          <div className="flex items-center flex-1 min-w-0">
-            <button
-              onClick={handleNotebookToggle}
-              className="flex items-center gap-2 flex-1 min-w-0"
-            >
-              {notebook.isExpanded ? (
-                <ChevronDown className="h-4 w-4 text-neutral-400 flex-shrink-0" />
-              ) : (
-                <ChevronRight className="h-4 w-4 text-neutral-400 flex-shrink-0" />
-              )}
-              <BookOpen className="h-4 w-4 text-neutral-500 dark:text-neutral-400 flex-shrink-0" />
-              {editingNotebookName ? (
-                <input
-                  ref={focusInputRef}
-                  value={notebookName}
-                  onChange={(e) => setNotebookName(e.target.value)}
-                  onBlur={handleFinishNotebookRename}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') handleFinishNotebookRename();
-                    if (e.key === 'Escape') setEditingNotebookName(false);
-                  }}
-                  className="flex-1 px-1 py-0.5 text-sm font-medium bg-white dark:bg-neutral-800 border border-emerald-400/60 rounded focus:outline-none"
-                />
-              ) : (
-                <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300 truncate">
-                  {notebook.name}
-                </span>
-              )}
-            </button>
-          </div>
-          
-          {!editingNotebookName && (
-            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-              <button
-                onClick={handleNotebookRename}
-                className="p-1 rounded hover:bg-neutral-200 dark:hover:bg-neutral-700"
-                title="Rename notebook"
-              >
-                <Edit2 className="h-3 w-3 text-neutral-500 dark:text-neutral-400" />
-              </button>
-              <button
-                onClick={() => deleteNotebook(notebook.id)}
-                className="p-1 rounded hover:bg-neutral-200 dark:hover:bg-neutral-700"
-                title="Delete notebook"
-              >
-                <Trash2 className="h-3 w-3 text-neutral-500 dark:text-neutral-400" />
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Notebook Content */}
+    <div className="mb-2">
+      {/* Back button and Notebook Header when expanded */}
       {notebook.isExpanded && (
-        <div className="ml-6 space-y-2">
-          {/* Journals Section */}
-          <div>
-            <div className="px-4 py-1.5 flex items-center justify-between cursor-pointer" onClick={() => setJournalsOpen(!journalsOpen)}>
-              <h4 className="text-xs font-medium text-neutral-500 dark:text-neutral-400 tracking-wider">JOURNALS</h4>
-              <ChevronDown className={cn(
-                "h-3 w-3 text-neutral-400 transition-transform duration-200 ease-in-out",
-                journalsOpen ? "rotate-180" : ""
-              )} />
-            </div>
-            
-            <button
-              onClick={handleCreateJournal}
-              className="w-full flex items-center gap-2 text-left px-4 py-1.5 text-sm text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 mt-1"
+        <motion.div 
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+          transition={{ duration: 0.2, ease: "easeOut" }}
+          className="px-4 py-2 border-b border-neutral-100 dark:border-neutral-800 mb-2"
+        >
+          <div className="flex items-center gap-2">
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={handleNotebookToggle}
+              className="p-1 rounded hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors duration-150"
+              title="Back to notebooks"
             >
-              <PenLine className="h-3.5 w-3.5 text-neutral-400" />
-              <span>New Journal</span>
-            </button>
-
-            {journalsOpen && (
-              <div className="space-y-0.5 mt-1">
-                {sortedEntries.map(entry => (
-                  <div key={entry.id} className="group relative">
-                    <div
-                      className={cn(
-                        "flex w-full items-center cursor-pointer",
-                        currentPageType === 'journal' && currentPageId === entry.id
-                          ? "bg-emerald-50 dark:bg-emerald-900/20"
-                          : ""
-                      )}
-                      onClick={() => handleJournalClick(entry.id)}
-                    >
-                      {editingJournalId === entry.id ? (
-                        <div className="flex items-center w-full px-4 py-1">
-                          <input
-                            value={editingJournalTitle}
-                            onChange={(e) => setEditingJournalTitle(e.target.value)}
-                            onBlur={() => handleFinishJournalRename(entry.id)}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') handleFinishJournalRename(entry.id);
-                              if (e.key === 'Escape') setEditingJournalId(null);
-                            }}
-                            className="w-full px-1 py-0.5 text-sm bg-white dark:bg-neutral-800 border border-emerald-400/60 rounded focus:outline-none"
-                            autoFocus
-                          />
-                        </div>
-                      ) : (
-                        <button
-                          className="w-full text-left px-4 py-1.5 text-sm flex items-center"
-                          style={{ 
-                            color: currentPageType === 'journal' && currentPageId === entry.id
-                              ? 'var(--tw-color-emerald-600)' 
-                              : 'var(--tw-color-neutral-600)' 
-                          }}
-                        >
-                          <div className="flex items-center truncate pl-5">
-                            <span className="truncate font-medium">{entry.title}</span>
-                          </div>
-                        </button>
-                      )}
-                      
-                      {!editingJournalId && (
-                        <div className="absolute right-2 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                          <button
-                            className="p-1 rounded hover:bg-neutral-200 dark:hover:bg-neutral-700"
-                            onClick={(e) => handleRenameJournal(e, entry.id, entry.title)}
-                            title="Rename journal"
-                          >
-                            <Edit2 className="h-3 w-3 text-neutral-500 dark:text-neutral-400" />
-                          </button>
-                          <button
-                            className="p-1 rounded hover:bg-neutral-200 dark:hover:bg-neutral-700"
-                            onClick={(e) => handleDeleteJournal(e, entry.id, entry.title)}
-                            title="Delete journal"
-                          >
-                            <Trash2 className="h-3 w-3 text-neutral-500 dark:text-neutral-400" />
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                    
-                    <div className="ml-9 px-4 mt-0 pb-0.5 overflow-hidden transition-all duration-300 max-h-0 opacity-0 transform translate-y-[-5px] group-hover:opacity-100 group-hover:max-h-8 group-hover:mt-0.5 group-hover:translate-y-0">
-                      <div className="flex items-center gap-1.5 text-xs text-neutral-500 dark:text-neutral-400">
-                        <Clock className="h-2.5 w-2.5 mr-0.5" />
-                        <span>{format(new Date(entry.updatedAt), 'MMM d, yyyy')}</span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
+              <ChevronLeft className="h-4 w-4 text-neutral-400" />
+            </motion.button>
+            <BookOpen className="h-4 w-4 text-neutral-500 dark:text-neutral-400" />
+            {editingNotebookName ? (
+              <input
+                ref={focusInputRef}
+                value={notebookName}
+                onChange={(e) => setNotebookName(e.target.value)}
+                onBlur={handleFinishNotebookRename}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleFinishNotebookRename();
+                  if (e.key === 'Escape') setEditingNotebookName(false);
+                }}
+                className="flex-1 px-1 py-0.5 text-sm font-medium bg-white dark:bg-neutral-800 border border-emerald-400/60 rounded focus:outline-none"
+              />
+            ) : (
+              <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300 flex-1">
+                {notebook.name}
+              </span>
+            )}
+            {!editingNotebookName && (
+              <div className="flex items-center gap-1">
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={handleNotebookRename}
+                  className="p-1 rounded hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors duration-150"
+                  title="Rename notebook"
+                >
+                  <Edit2 className="h-3 w-3 text-neutral-500 dark:text-neutral-400" />
+                </motion.button>
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => deleteNotebook(notebook.id)}
+                  className="p-1 rounded hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors duration-150"
+                  title="Delete notebook"
+                >
+                  <Trash2 className="h-3 w-3 text-neutral-500 dark:text-neutral-400" />
+                </motion.button>
               </div>
             )}
           </div>
+        </motion.div>
+      )}
 
-          {/* Spaces Section */}
-          <div>
-            <div className="px-4 py-1.5 flex items-center justify-between cursor-pointer" onClick={() => setSpacesOpen(!spacesOpen)}>
-              <h4 className="text-xs font-medium text-neutral-500 dark:text-neutral-400 tracking-wider">SPACES</h4>
-              <ChevronDown className={cn(
-                "h-3 w-3 text-neutral-400 transition-transform duration-200 ease-in-out",
-                spacesOpen ? "rotate-180" : ""
-              )} />
+      {/* Collapsed notebook view */}
+      {!notebook.isExpanded && (
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.95 }}
+          transition={{ duration: 0.2, ease: "easeOut" }}
+          className="group relative"
+        >
+          <div className="flex items-center justify-between px-4 py-2 hover:bg-neutral-50 dark:hover:bg-neutral-800/50 rounded-md transition-colors duration-150">
+            <div className="flex items-center flex-1 min-w-0">
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={handleNotebookToggle}
+                className="flex items-center gap-2 flex-1 min-w-0"
+              >
+                <ChevronRight className="h-4 w-4 text-neutral-400 flex-shrink-0" />
+                <BookOpen className="h-4 w-4 text-neutral-500 dark:text-neutral-400 flex-shrink-0" />
+                <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300 truncate">
+                  {notebook.name}
+                </span>
+              </motion.button>
             </div>
             
-            <button
-              onClick={handleCreateSpace}
-              className="w-full flex items-center gap-2 text-left px-4 py-1.5 text-sm text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 mt-1"
-            >
-              <FolderPlus className="h-3.5 w-3.5 text-neutral-400" />
-              <span>New Space</span>
-            </button>
+            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={handleNotebookRename}
+                className="p-1 rounded hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors duration-150"
+                title="Rename notebook"
+              >
+                <Edit2 className="h-3 w-3 text-neutral-500 dark:text-neutral-400" />
+              </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => deleteNotebook(notebook.id)}
+                className="p-1 rounded hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors duration-150"
+                title="Delete notebook"
+              >
+                <Trash2 className="h-3 w-3 text-neutral-500 dark:text-neutral-400" />
+              </motion.button>
+            </div>
+          </div>
+        </motion.div>
+      )}
 
-            {spacesOpen && (
-              <div className="space-y-0.5 mt-1">
-                {sortedSpaces.map(space => (
-                  <div key={space.id} className="group relative">
-                    <div
-                      className={cn(
-                        "flex w-full items-center cursor-pointer",
-                        currentPageType === 'space' && currentPageId === space.id
-                          ? "bg-emerald-50 dark:bg-emerald-900/20"
-                          : ""
-                      )}
-                      onClick={() => handleSpaceClick(space.id)}
-                    >
-                      {editingSpaceId === space.id ? (
-                        <div className="flex items-center w-full px-4 py-1">
-                          <input
-                            value={editingSpaceName}
-                            onChange={(e) => setEditingSpaceName(e.target.value)}
-                            onBlur={() => handleFinishSpaceRename(space.id)}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') handleFinishSpaceRename(space.id);
-                              if (e.key === 'Escape') setEditingSpaceId(null);
-                            }}
-                            className="w-full px-1 py-0.5 text-sm bg-white dark:bg-neutral-800 border border-emerald-400/60 rounded focus:outline-none"
-                            autoFocus
-                          />
-                        </div>
-                      ) : (
-                        <button
-                          className="w-full text-left px-4 py-1.5 text-sm flex items-center"
-                          style={{ 
-                            color: currentPageType === 'space' && currentPageId === space.id
-                              ? 'var(--tw-color-emerald-600)' 
-                              : 'var(--tw-color-neutral-600)' 
-                          }}
-                        >
-                          <div className="flex items-center truncate pl-5">
-                            {space.metadata?.pinned && (
-                              <Pin className="h-3 w-3 mr-1.5 flex-shrink-0 text-blue-400" />
-                            )}
-                            <ConversationNameDisplay
-                              name={space.name}
-                              isLoading={space.metadata?.isGeneratingName}
-                              isAutoNamed={!space.metadata?.manuallyRenamed}
-                              className="truncate font-medium"
+      {/* Notebook Content - only show when expanded */}
+      <AnimatePresence>
+        {notebook.isExpanded && (
+          <motion.div 
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
+            className="space-y-2 overflow-hidden"
+          >
+            {/* Journals Section */}
+            <div>
+              <div className="px-4 py-1.5 flex items-center justify-between cursor-pointer" onClick={() => setJournalsOpen(!journalsOpen)}>
+                <h4 className="text-xs font-medium text-neutral-500 dark:text-neutral-400 tracking-wider">JOURNALS</h4>
+                <ChevronDown className={cn(
+                  "h-3 w-3 text-neutral-400 transition-transform duration-200 ease-in-out",
+                  journalsOpen ? "rotate-180" : ""
+                )} />
+              </div>
+              
+              <button
+                onClick={handleCreateJournal}
+                className="w-full flex items-center gap-2 text-left px-4 py-1.5 text-sm text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 mt-1"
+              >
+                <PenLine className="h-3.5 w-3.5 text-neutral-400" />
+                <span>New Journal</span>
+              </button>
+
+              {journalsOpen && (
+                <div className="space-y-0.5 mt-1">
+                  {sortedEntries.map(entry => (
+                    <div key={entry.id} className="group relative">
+                      <div
+                        className={cn(
+                          "flex w-full items-center cursor-pointer",
+                          currentPageType === 'journal' && currentPageId === entry.id
+                            ? "bg-emerald-50 dark:bg-emerald-900/20"
+                            : ""
+                        )}
+                        onClick={() => handleJournalClick(entry.id)}
+                      >
+                        {editingJournalId === entry.id ? (
+                          <div className="flex items-center w-full px-4 py-1">
+                            <input
+                              value={editingJournalTitle}
+                              onChange={(e) => setEditingJournalTitle(e.target.value)}
+                              onBlur={() => handleFinishJournalRename(entry.id)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') handleFinishJournalRename(entry.id);
+                                if (e.key === 'Escape') setEditingJournalId(null);
+                              }}
+                              className="w-full px-1 py-0.5 text-sm bg-white dark:bg-neutral-800 border border-emerald-400/60 rounded focus:outline-none"
+                              autoFocus
                             />
                           </div>
-                        </button>
-                      )}
+                        ) : (
+                          <button
+                            className="w-full text-left px-4 py-1.5 text-sm flex items-center"
+                            style={{ 
+                              color: currentPageType === 'journal' && currentPageId === entry.id
+                                ? 'var(--tw-color-emerald-600)' 
+                                : 'var(--tw-color-neutral-600)' 
+                            }}
+                          >
+                            <div className="flex items-center truncate pl-5">
+                              <span className="truncate font-medium">{entry.title}</span>
+                            </div>
+                          </button>
+                        )}
+                        
+                        {!editingJournalId && (
+                          <div className="absolute right-2 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                            <button
+                              className="p-1 rounded hover:bg-neutral-200 dark:hover:bg-neutral-700"
+                              onClick={(e) => handleRenameJournal(e, entry.id, entry.title)}
+                              title="Rename journal"
+                            >
+                              <Edit2 className="h-3 w-3 text-neutral-500 dark:text-neutral-400" />
+                            </button>
+                            <button
+                              className="p-1 rounded hover:bg-neutral-200 dark:hover:bg-neutral-700"
+                              onClick={(e) => handleDeleteJournal(e, entry.id, entry.title)}
+                              title="Delete journal"
+                            >
+                              <Trash2 className="h-3 w-3 text-neutral-500 dark:text-neutral-400" />
+                            </button>
+                          </div>
+                        )}
+                      </div>
                       
-                      {!editingSpaceId && (
-                        <div className="absolute right-2 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                          {!space.metadata?.isGeneratingName && space.metadata?.manuallyRenamed && space.messages.length > 0 && (
+                      <div className="ml-9 px-4 mt-0 pb-0.5 overflow-hidden transition-all duration-300 max-h-0 opacity-0 transform translate-y-[-5px] group-hover:opacity-100 group-hover:max-h-8 group-hover:mt-0.5 group-hover:translate-y-0">
+                        <div className="flex items-center gap-1.5 text-xs text-neutral-500 dark:text-neutral-400">
+                          <Clock className="h-2.5 w-2.5 mr-0.5" />
+                          <span>{format(new Date(entry.updatedAt), 'MMM d, yyyy')}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Spaces Section */}
+            <div>
+              <div className="px-4 py-1.5 flex items-center justify-between cursor-pointer" onClick={() => setSpacesOpen(!spacesOpen)}>
+                <h4 className="text-xs font-medium text-neutral-500 dark:text-neutral-400 tracking-wider">SPACES</h4>
+                <ChevronDown className={cn(
+                  "h-3 w-3 text-neutral-400 transition-transform duration-200 ease-in-out",
+                  spacesOpen ? "rotate-180" : ""
+                )} />
+              </div>
+              
+              <button
+                onClick={handleCreateSpace}
+                className="w-full flex items-center gap-2 text-left px-4 py-1.5 text-sm text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 mt-1"
+              >
+                <FolderPlus className="h-3.5 w-3.5 text-neutral-400" />
+                <span>New Space</span>
+              </button>
+
+              {spacesOpen && (
+                <div className="space-y-0.5 mt-1">
+                  {sortedSpaces.map(space => (
+                    <div key={space.id} className="group relative">
+                      <div
+                        className={cn(
+                          "flex w-full items-center cursor-pointer",
+                          currentPageType === 'space' && currentPageId === space.id
+                            ? "bg-emerald-50 dark:bg-emerald-900/20"
+                            : ""
+                        )}
+                        onClick={() => handleSpaceClick(space.id)}
+                      >
+                        {editingSpaceId === space.id ? (
+                          <div className="flex items-center w-full px-4 py-1">
+                            <input
+                              value={editingSpaceName}
+                              onChange={(e) => setEditingSpaceName(e.target.value)}
+                              onBlur={() => handleFinishSpaceRename(space.id)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') handleFinishSpaceRename(space.id);
+                                if (e.key === 'Escape') setEditingSpaceId(null);
+                              }}
+                              className="w-full px-1 py-0.5 text-sm bg-white dark:bg-neutral-800 border border-emerald-400/60 rounded focus:outline-none"
+                              autoFocus
+                            />
+                          </div>
+                        ) : (
+                          <button
+                            className="w-full text-left px-4 py-1.5 text-sm flex items-center"
+                            style={{ 
+                              color: currentPageType === 'space' && currentPageId === space.id
+                                ? 'var(--tw-color-emerald-600)' 
+                                : 'var(--tw-color-neutral-600)' 
+                            }}
+                          >
+                            <div className="flex items-center truncate pl-5">
+                              {space.metadata?.pinned && (
+                                <Pin className="h-3 w-3 mr-1.5 flex-shrink-0 text-blue-400" />
+                              )}
+                              <ConversationNameDisplay
+                                name={space.name}
+                                isLoading={space.metadata?.isGeneratingName}
+                                isAutoNamed={!space.metadata?.manuallyRenamed}
+                                className="truncate font-medium"
+                              />
+                            </div>
+                          </button>
+                        )}
+                        
+                        {!editingSpaceId && (
+                          <div className="absolute right-2 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                            {!space.metadata?.isGeneratingName && space.metadata?.manuallyRenamed && space.messages.length > 0 && (
+                              <button
+                                className="p-1 rounded hover:bg-neutral-200 dark:hover:bg-neutral-700"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  resetToAutoNaming(space.id);
+                                }}
+                                title="Reset to auto naming"
+                              >
+                                <RefreshCw className="h-3 w-3 text-neutral-500 dark:text-neutral-400" />
+                              </button>
+                            )}
                             <button
                               className="p-1 rounded hover:bg-neutral-200 dark:hover:bg-neutral-700"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                resetToAutoNaming(space.id);
+                                togglePinSpace(space.id);
                               }}
-                              title="Reset to auto naming"
+                              title={space.metadata?.pinned ? "Unpin space" : "Pin space"}
                             >
-                              <RefreshCw className="h-3 w-3 text-neutral-500 dark:text-neutral-400" />
+                              {space.metadata?.pinned ? 
+                                <PinOff className="h-3 w-3 text-neutral-500 dark:text-neutral-400" /> : 
+                                <Pin className="h-3 w-3 text-neutral-500 dark:text-neutral-400" />
+                              }
                             </button>
-                          )}
-                          <button
-                            className="p-1 rounded hover:bg-neutral-200 dark:hover:bg-neutral-700"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              togglePinSpace(space.id);
-                            }}
-                            title={space.metadata?.pinned ? "Unpin space" : "Pin space"}
-                          >
-                            {space.metadata?.pinned ? 
-                              <PinOff className="h-3 w-3 text-neutral-500 dark:text-neutral-400" /> : 
-                              <Pin className="h-3 w-3 text-neutral-500 dark:text-neutral-400" />
-                            }
-                          </button>
-                          <button
-                            className="p-1 rounded hover:bg-neutral-200 dark:hover:bg-neutral-700"
-                            onClick={(e) => handleRenameSpace(e, space.id, space.name)}
-                            title="Rename space"
-                          >
-                            <Edit2 className="h-3 w-3 text-neutral-500 dark:text-neutral-400" />
-                          </button>
-                          <button
-                            className="p-1 rounded hover:bg-neutral-200 dark:hover:bg-neutral-700"
-                            onClick={(e) => handleDeleteSpace(e, space.id, space.name)}
-                            title="Delete space"
-                          >
-                            <Trash2 className="h-3 w-3 text-neutral-500 dark:text-neutral-400" />
-                          </button>
-                        </div>
-                      )}
+                            <button
+                              className="p-1 rounded hover:bg-neutral-200 dark:hover:bg-neutral-700"
+                              onClick={(e) => handleRenameSpace(e, space.id, space.name)}
+                              title="Rename space"
+                            >
+                              <Edit2 className="h-3 w-3 text-neutral-500 dark:text-neutral-400" />
+                            </button>
+                            <button
+                              className="p-1 rounded hover:bg-neutral-200 dark:hover:bg-neutral-700"
+                              onClick={(e) => handleDeleteSpace(e, space.id, space.name)}
+                              title="Delete space"
+                            >
+                              <Trash2 className="h-3 w-3 text-neutral-500 dark:text-neutral-400" />
+                            </button>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+                  ))}
+                </div>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Delete Confirmation Dialog */}
       {showDeleteConfirm && (

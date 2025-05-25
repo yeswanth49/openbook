@@ -303,8 +303,6 @@ const HomeContent = () => {
                     </Link>
                 </div>
                 <div className='flex items-center space-x-4'>
-                    <Switch />
-                    <AboutButton />
                     <ThemeToggle />
                 </div>
             </div>

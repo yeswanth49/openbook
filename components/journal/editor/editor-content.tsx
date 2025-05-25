@@ -4,7 +4,8 @@ import type React from "react"
 import { useEffect, useRef, useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { type Block, BlockType } from "../../../lib/types"
-import { GripVertical, Plus, Trash2, Copy, MoveVertical, Palette, Check, ArrowUp, ArrowDown, Link, Type, Heading1, Heading2, Code, List, CheckSquare, Quote, Minus, ChevronRight, Edit2, Cpu, Repeat, Square } from "lucide-react"
+import { GripVertical, Plus, Trash2, Copy, MoveVertical, Palette, Check, ArrowUp, ArrowDown, Link, Type, Heading1, Heading2, Code, List, CheckSquare, Quote, Minus, ChevronRight, Edit2, Cpu, Repeat, Square, Sparkles } from "lucide-react"
+import AIAssistant from "../ai/ai-assistant"
 
 interface EditorContentProps {
   blocks: Block[]
@@ -33,6 +34,8 @@ export default function EditorContent({
   const [showAskModal, setShowAskModal] = useState(false)
   const [submenu, setSubmenu] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState<string>("")
+  const [showAIAssistant, setShowAIAssistant] = useState(false)
+  const [currentBlockForAI, setCurrentBlockForAI] = useState<Block | null>(null)
   const toggleSelection = (id: string) => {
     setSelectedBlocks(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id])
   }
@@ -41,6 +44,22 @@ export default function EditorContent({
     onCreateSpaceConversation?.(selected)
     setShowAskModal(false)
     setSelectedBlocks([])
+  }
+
+  const handleAIBlockUpdate = (blockId: string, content: string) => {
+    onChange(blockId, content)
+  }
+
+  const handleAICreateBlock = (content: string, type: BlockType = BlockType.Text) => {
+    const newBlock: Block = {
+      id: Date.now().toString(),
+      type,
+      content,
+      isFocused: false
+    }
+    
+    const updatedBlocks = [...blocks, newBlock]
+    onBlocksChange?.(updatedBlocks)
   }
   const menuRef = useRef<HTMLDivElement>(null)
 
@@ -84,6 +103,13 @@ export default function EditorContent({
     setActiveMenu(null)
     
     switch (action) {
+      case 'ai-assistant':
+        const block = blocks.find(b => b.id === blockId)
+        if (block) {
+          setCurrentBlockForAI(block)
+          setShowAIAssistant(true)
+        }
+        break
       case 'delete':
         onDeleteBlock?.(blockId)
         break
@@ -206,23 +232,13 @@ export default function EditorContent({
                   </div>
                   <div className="p-1 flex flex-col">
                     <button
-                      onClick={() => { /* Suggest action */ setActiveMenu(null); }}
+                      onClick={() => handleBlockAction('ai-assistant', block.id)}
                       onMouseEnter={() => setSubmenu(null)}
                       className="flex items-center justify-between w-full px-3 py-1 text-sm hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded"
                     >
                       <span className="flex items-center gap-2">
-                        <Edit2 className="h-4 w-4 text-neutral-500" />
-                        <span>Suggest</span>
-                      </span>
-                    </button>
-                    <button
-                      onClick={() => { /* Ask AI action */ setActiveMenu(null); }}
-                      onMouseEnter={() => setSubmenu(null)}
-                      className="flex items-center justify-between w-full px-3 py-1 text-sm hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded"
-                    >
-                      <span className="flex items-center gap-2">
-                        <Cpu className="h-4 w-4 text-neutral-500" />
-                        <span>Ask AI</span>
+                        <Sparkles className="h-4 w-4 text-purple-500" />
+                        <span>AI Assistant</span>
                       </span>
                     </button>
                     <button
@@ -483,6 +499,21 @@ export default function EditorContent({
           </div>
         </div>
       )}
+      
+      <AnimatePresence>
+        {showAIAssistant && (
+          <AIAssistant
+            selectedBlocks={blocks.filter(b => selectedBlocks.includes(b.id))}
+            currentBlock={currentBlockForAI || undefined}
+            onBlockUpdate={handleAIBlockUpdate}
+            onCreateBlock={handleAICreateBlock}
+            onClose={() => {
+              setShowAIAssistant(false)
+              setCurrentBlockForAI(null)
+            }}
+          />
+        )}
+      </AnimatePresence>
     </div>
   )
 }

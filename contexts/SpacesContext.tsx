@@ -25,6 +25,11 @@ export type Space = {
     lastAutoNameUpdate?: number;
     isGeneratingName?: boolean;
   };
+  studyMode?: {
+    framework: 'memory-palace' | 'feynman-technique' | 'spaced-repetition' | 'extreme-mode' | null;
+    settings?: Record<string, any>;
+    activatedAt?: number;
+  };
 };
 
 export interface SpacesContextType {

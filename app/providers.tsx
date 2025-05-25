@@ -5,6 +5,7 @@ import { ThemeProvider } from "next-themes";
 import posthog from 'posthog-js';
 import { PostHogProvider } from 'posthog-js/react';
 import { ReactNode } from "react";
+import { StudyModeProvider } from "@/contexts/StudyModeContext";
 
 if (typeof window !== 'undefined') {
   posthog.init(clientEnv.NEXT_PUBLIC_POSTHOG_KEY!, {
@@ -22,8 +23,10 @@ export function Providers({ children }: { children: ReactNode }) {
         enableSystem
         disableTransitionOnChange
       >
-        {children}
+        <StudyModeProvider>
+          {children}
+        </StudyModeProvider>
       </ThemeProvider>
     </PostHogProvider>
   )
-}
+} 

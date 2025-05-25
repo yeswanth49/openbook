@@ -44,6 +44,9 @@ import { Input } from "@/components/ui/input";
 import Sidebar from '@/components/sidebar';
 import { useSpaces } from '@/contexts/SpacesContext';
 import { TerminalInput } from '@/components/terminal/terminal-input';
+import { useStudyMode } from '@/contexts/StudyModeContext';
+import { StudyModeBadge } from '@/components/study/study-mode-badge';
+import { StudyFramework } from '@/lib/types';
 
 interface Attachment {
     name: string;
@@ -79,6 +82,8 @@ const HomeContent = () => {
 
     // Conversation spaces context
     const { currentSpace, currentSpaceId, switchSpace, addMessage } = useSpaces();
+    // Study mode context
+    const { getStudyModeForSpace, setStudyMode } = useStudyMode();
     // Set Google Gemini 2.5 Flash as the default model
     const [selectedModel, setSelectedModel] = useLocalStorage('neuman-selected-model', 'neuman-google');
 
@@ -104,16 +109,49 @@ const HomeContent = () => {
     // Get stored user ID
     const userId = useMemo(() => getUserId(), []);
 
-    const chatOptions: UseChatOptions = useMemo(() => ({
-        api: '/api/search',
-        experimental_throttle: 500,
-        maxSteps: 5,
-        body: {
-            model: selectedModel,
-            group: selectedGroup,
-            user_id: userId,
-            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-        },
+    // Get current study mode for the active space
+    const currentStudyMode = useMemo(() => {
+        return currentSpaceId ? getStudyModeForSpace(currentSpaceId) : null;
+    }, [currentSpaceId, getStudyModeForSpace]);
+
+    // Handle framework selection
+    const handleFrameworkSelect = useCallback((frameworkString: string) => {
+        if (!currentSpaceId) return;
+        
+        const framework = frameworkString as StudyFramework;
+        setStudyMode(framework, currentSpaceId);
+        
+        // Dispatch space change event for StudyModeContext
+        window.dispatchEvent(new CustomEvent('spaceChanged', { 
+            detail: { spaceId: currentSpaceId } 
+        }));
+    }, [currentSpaceId, setStudyMode]);
+
+    // Handle study mode badge click (to change or disable mode)
+    const handleStudyModeBadgeClick = useCallback(() => {
+        if (!currentSpaceId) return;
+        
+        // For now, just clear the study mode. Later we can show a selector.
+        setStudyMode(null, currentSpaceId);
+        toast.info('Study mode disabled');
+    }, [currentSpaceId, setStudyMode]);
+
+    const chatOptions: UseChatOptions = useMemo(() => {
+        // Determine API endpoint based on study mode
+        const apiEndpoint = currentStudyMode?.framework 
+            ? `/api/study/${currentStudyMode.framework}`
+            : '/api/search';
+
+        return {
+            api: apiEndpoint,
+            experimental_throttle: 500,
+            maxSteps: 5,
+            body: {
+                model: selectedModel,
+                group: selectedGroup,
+                user_id: userId,
+                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+            },
         onFinish: async (message: any, { finishReason }: { finishReason: string }) => {
             if (message.content && (finishReason === 'stop' || finishReason === 'length')) {
                 // Persist assistant message to current space
@@ -126,13 +164,14 @@ const HomeContent = () => {
                 setSuggestedQuestions(questions);
             }
         },
-        onError: (error) => {
-            console.error("Chat error:", error.cause, error.message);
-            toast.error("An error occurred.", {
-                description: `Oops! An error occurred while processing your request. ${error.message}`,
-            });
-        },
-    }), [selectedModel, selectedGroup, userId, addMessage]);
+            onError: (error) => {
+                console.error("Chat error:", error.cause, error.message);
+                toast.error("An error occurred.", {
+                    description: `Oops! An error occurred while processing your request. ${error.message}`,
+                });
+            },
+        };
+    }, [selectedModel, selectedGroup, userId, addMessage, currentStudyMode]);
 
     const {
         input,
@@ -314,6 +353,12 @@ const HomeContent = () => {
                     </Link>
                 </div>
                 <div className='flex items-center space-x-4'>
+                    {currentStudyMode?.framework && (
+                        <StudyModeBadge 
+                            framework={currentStudyMode.framework as StudyFramework}
+                            onClick={handleStudyModeBadgeClick}
+                        />
+                    )}
                     <ThemeToggle />
                 </div>
             </div>
@@ -492,6 +537,7 @@ const HomeContent = () => {
                                         setAttachments={setAttachments}
                                         onStop={stop}
                                         status={status}
+                                        onFrameworkSelect={handleFrameworkSelect}
                                     />
                                 </motion.div>
                             )}
@@ -559,6 +605,7 @@ const HomeContent = () => {
                                             setAttachments={setAttachments}
                                             onStop={stop}
                                             status={status}
+                                            onFrameworkSelect={handleFrameworkSelect}
                                         />
                                     </div>
                                 </motion.div>

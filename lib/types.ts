@@ -48,3 +48,33 @@ export interface JournalEntry {
   updatedAt: string
   notebook_id?: string
 }
+
+export enum StudyFramework {
+  MemoryPalace = 'memory-palace',
+  FeynmanTechnique = 'feynman-technique',
+  SpacedRepetition = 'spaced-repetition',
+  ExtremeMode = 'extreme-mode'
+}
+
+export interface StudyModeSettings {
+  framework: StudyFramework | null;
+  activatedAt: number;
+  settings: {
+    memoryPalace?: {
+      currentLocation?: string;
+      stations?: Array<{ id: string; name: string; concept: string; }>;
+    };
+    feynman?: {
+      currentConcept?: string;
+      simplificationLevel?: number;
+    };
+    spacedRepetition?: {
+      reviewSchedule?: Array<{ concept: string; nextReview: number; interval: number; }>;
+    };
+    extremeMode?: {
+      sessionStartTime?: number;
+      targetDuration?: number;
+      combinedTechniques?: StudyFramework[];
+    };
+  };
+}

@@ -18,6 +18,7 @@ export type Space = {
   archived: boolean;
   createdAt: number;
   updatedAt: number;
+  notebook_id?: string;
   metadata?: {
     manuallyRenamed: boolean;
     pinned?: boolean;
@@ -30,7 +31,7 @@ export interface SpacesContextType {
   spaces: Space[];
   currentSpaceId: string;
   currentSpace?: Space;
-  createSpace: (name: string) => string;
+  createSpace: (name: string, notebook_id?: string) => string;
   deleteSpace: (id: string) => void;
   archiveSpace: (id: string) => void;
   renameSpace: (id: string, name: string, isManualRename?: boolean) => void;
@@ -202,7 +203,7 @@ export const SpacesProvider = ({ children }: { children: ReactNode }) => {
     processSpaces();
   }, [spaces, generateNameWithDelay]);
   
-  const createSpace = (name: string) => {
+  const createSpace = (name: string, notebook_id?: string) => {
     const newSpace: Space = {
       id: crypto.randomUUID(),
       name,
@@ -210,6 +211,7 @@ export const SpacesProvider = ({ children }: { children: ReactNode }) => {
       archived: false,
       createdAt: Date.now(),
       updatedAt: Date.now(),
+      notebook_id,
       metadata: {
         manuallyRenamed: false, // Default to auto-naming for new spaces
         isGeneratingName: false

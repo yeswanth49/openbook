@@ -27,10 +27,24 @@ export interface Block {
   metadata?: Record<string, any>
 }
 
+export interface Notebook {
+  id: string
+  name: string
+  order: number
+  createdAt: number
+  updatedAt: number
+  isExpanded?: boolean
+  metadata?: {
+    icon?: string
+    color?: string
+  }
+}
+
 export interface JournalEntry {
   id: string
   title: string
   blocks: Block[]
   createdAt: string
   updatedAt: string
+  notebook_id?: string
 }

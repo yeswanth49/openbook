@@ -6,12 +6,14 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import Link from 'next/link';
 import { useSpaces, Space as SpaceType } from '@/contexts/SpacesContext';
+import { useNotebooks } from '@/contexts/NotebookContext';
 import { useRouter } from 'next/navigation';
 import { useJournal } from '@/hooks/useJournal';
 import { cn } from '@/lib/utils';
 import { ConversationMetadata } from '@/components/conversation-metadata';
 import { ConversationNameDisplay, NameLoading } from '@/components/name-loading';
 import { format } from 'date-fns';
+import SidebarNotebook from '@/components/SidebarNotebook';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -20,20 +22,21 @@ interface SidebarProps {
 
 export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
   const [showNewMenu, setShowNewMenu] = useState(false);
-  const [journalsOpen, setJournalsOpen] = useState(true);
-  const [spacesOpen, setSpacesOpen] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [initialExpansionDone, setInitialExpansionDone] = useState(false);
   const [showSearchResults, setShowSearchResults] = useState(false);
+  const [showSearchModal, setShowSearchModal] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<{ id: string; name: string; type: 'journal' | 'space' } | null>(null);
   const [searchResults, setSearchResults] = useState<{
     journals: { id: string; title: string; preview?: string; matchType: string }[];
     spaces: { id: string; name: string; preview?: string; matchType: string }[];
   }>({ journals: [], spaces: [] });
   const searchInputRef = useRef<HTMLInputElement>(null);
   const searchResultsRef = useRef<HTMLDivElement>(null);
-  const focusInputRef = useRef<HTMLInputElement>(null);
-  const { spaces, currentSpaceId, createSpace, switchSpace, deleteSpace, renameSpace, togglePinSpace, resetToAutoNaming } = useSpaces();
-  const { createEntry, entries, deleteEntry, updateEntry } = useJournal();
+  const { notebooks, createNotebook } = useNotebooks();
+  const { entries, deleteEntry } = useJournal();
+  const { spaces, switchSpace, deleteSpace } = useSpaces();
   const router = useRouter();
 
   // Get current path and parse current page type and ID
@@ -55,13 +58,6 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
   // Only expand sections on initial page load, not when manually collapsed
   useEffect(() => {
     if (!initialExpansionDone) {
-      // Only auto-expand on the first load
-      if (currentPageType === 'journal') {
-        setJournalsOpen(true);
-      }
-      if (currentPageType === 'space') {
-        setSpacesOpen(true);
-      }
       setInitialExpansionDone(true);
     }
   }, [currentPageType, initialExpansionDone]);
@@ -181,16 +177,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
   const [editingJournalId, setEditingJournalId] = useState<string | null>(null);
   const [editingJournalTitle, setEditingJournalTitle] = useState('');
   const [editingSpaceId, setEditingSpaceId] = useState<string | null>(null);
-  const [editingSpaceName, setEditingSpaceName] = useState('');
-  const [newlyCreatedJournalId, setNewlyCreatedJournalId] = useState<string | null>(null);
-  const [newlyCreatedSpaceId, setNewlyCreatedSpaceId] = useState<string | null>(null);
 
-  // Add these new states:
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [itemToDelete, setItemToDelete] = useState<{ id: string; name: string; type: 'journal' | 'space' } | null>(null);
-
-  // Add a state for controlling the search popup modal visibility
-  const [showSearchModal, setShowSearchModal] = useState(false);
 
   // Add useEffect for keyboard shortcut near the other useEffect hooks
   useEffect(() => {
@@ -213,261 +200,15 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
     };
   }, [showSearchModal]);
 
-  // Update handleCreateJournal
-  const handleCreateJournal = () => {
+  // Update handleCreateNotebook
+  const handleCreateNotebook = () => {
     setShowNewMenu(false);
-    
-    // Create entry with a more descriptive default name
-    const defaultTitle = `Journal - ${new Date().toLocaleDateString()}`;
-    const newEntry = createEntry(defaultTitle);
-    
-    // Set this new entry to be in editing mode immediately
-    setEditingJournalId(newEntry.id);
-    setEditingJournalTitle(defaultTitle);
-    
-    // Track that this is a newly created journal
-    setNewlyCreatedJournalId(newEntry.id);
-    
-    // Open the journals section if it's closed
-    if (!journalsOpen) {
-      setJournalsOpen(true);
-    }
+    const defaultName = `Notebook ${notebooks.length + 1}`;
+    createNotebook(defaultName);
   };
 
-  // Update handleCreateSpace
-  const handleCreateSpace = () => {
-    setShowNewMenu(false);
-    // Create space with descriptive default name
-    const defaultTitle = `Space - ${new Date().toLocaleDateString()}`;
-    const newSpaceId = createSpace(defaultTitle);
-    // Set this new space to be in editing mode immediately
-    setEditingSpaceId(newSpaceId);
-    setEditingSpaceName(defaultTitle);
-    // Track that this is a newly created space
-    setNewlyCreatedSpaceId(newSpaceId);
-    // Open spaces section if it's closed
-    if (!spacesOpen) {
-      setSpacesOpen(true);
-    }
-  };
 
-  // Update the journal rename function as you already have
 
-  // Update the space rename function to use inline editing
-  const handleRenameSpace = (e: React.MouseEvent, spaceId: string, currentName: string) => {
-    e.stopPropagation();
-    setEditingSpaceId(spaceId);
-    setEditingSpaceName(currentName);
-  };
-
-  // Update the delete space function to use the confirmation dialog
-  const handleDeleteSpace = (e: React.MouseEvent, spaceId: string, spaceName: string) => {
-    e.stopPropagation();
-    setItemToDelete({ id: spaceId, name: spaceName, type: 'space' });
-    setShowDeleteConfirm(true);
-  };
-
-  // Add a new function for handling journal deletion
-  const handleDeleteJournal = (e: React.MouseEvent, journalId: string, journalName: string) => {
-    e.stopPropagation();
-    setItemToDelete({ id: journalId, name: journalName, type: 'journal' });
-    setShowDeleteConfirm(true);
-  };
-
-  // Find the SpacesList component or section and update it
-  const SpacesList = () => {
-    const { 
-      spaces, 
-      currentSpaceId, 
-      switchSpace, 
-      renameSpace, 
-      deleteSpace,
-      togglePinSpace,
-      resetToAutoNaming
-    } = useSpaces();
-    const router = useRouter();
-    const [editingSpaceId, setEditingSpaceId] = useState<string | null>(null);
-    const [editingSpaceName, setEditingSpaceName] = useState('');
-    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-    const [itemToDelete, setItemToDelete] = useState<{ id: string; name: string; type: 'journal' | 'space' } | null>(null);
-    const [newlyCreatedSpaceId, setNewlyCreatedSpaceId] = useState<string | null>(null);
-    
-    // Get active spaces (not archived)
-    const activeSpaces = spaces.filter(space => !space.archived);
-    
-    // Sort spaces: pinned first, then by last updated
-    const sortedSpaces = [...activeSpaces].sort((a, b) => {
-      // First by pinned status
-      if (a.metadata?.pinned && !b.metadata?.pinned) return -1;
-      if (!a.metadata?.pinned && b.metadata?.pinned) return 1;
-      
-      // Then by updated date (most recent first)
-      return b.updatedAt - a.updatedAt;
-    });
-
-    const handleSpaceClick = (e: React.MouseEvent, spaceId: string) => {
-      e.preventDefault();
-      switchSpace(spaceId);
-      router.push(`/space/${spaceId}`);
-    };
-    
-    const handleRenameSpace = (e: React.MouseEvent, spaceId: string, currentName: string) => {
-      e.stopPropagation();
-      setEditingSpaceId(spaceId);
-      setEditingSpaceName(currentName);
-    };
-    
-    const handleFinishRename = (spaceId: string) => {
-      if (editingSpaceName.trim()) {
-        renameSpace(spaceId, editingSpaceName.trim(), true); // Mark as manually renamed
-      }
-      setEditingSpaceId(null);
-      setEditingSpaceName('');
-    };
-    
-    const handleDeleteSpace = (e: React.MouseEvent, spaceId: string, spaceName: string) => {
-      e.stopPropagation();
-      setItemToDelete({ id: spaceId, name: spaceName, type: 'space' });
-      setShowDeleteConfirm(true);
-    };
-    
-    const handleTogglePin = (e: React.MouseEvent, spaceId: string) => {
-      e.stopPropagation();
-      togglePinSpace(spaceId);
-    };
-    
-    const focusInputRef = useRef<HTMLInputElement>(null);
-    
-    // Focus input on edit
-    useEffect(() => {
-      if (editingSpaceId && focusInputRef.current) {
-        focusInputRef.current.focus();
-      }
-    }, [editingSpaceId]);
-    
-    return (
-      <div className="space-y-0.5 mt-1">
-        {sortedSpaces.map(space => (
-          <div
-            key={space.id}
-            className="group relative"
-          >
-            <div
-              className={cn(
-                "flex w-full items-center",
-                space.id === currentSpaceId
-                  ? "bg-emerald-50 dark:bg-emerald-900/20"
-                  : ""
-              )}
-              onClick={e => handleSpaceClick(e, space.id)}
-            >
-              {editingSpaceId === space.id ? (
-                // Editing name
-                <div className="flex items-center w-full px-4 py-1">
-                  <input
-                    ref={focusInputRef}
-                    value={editingSpaceName}
-                    onChange={e => setEditingSpaceName(e.target.value)}
-                    className="w-full px-1 py-0.5 text-sm bg-white dark:bg-neutral-800 border border-emerald-400/60 rounded focus:outline-none"
-                    autoFocus
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        handleFinishRename(space.id);
-                      } else if (e.key === 'Escape') {
-                        setEditingSpaceId(null);
-                      }
-                    }}
-                    onBlur={() => handleFinishRename(space.id)}
-                  />
-                </div>
-              ) : (
-                // Display name
-                <button
-                  className="w-full text-left px-4 py-1.5 text-sm flex items-center"
-                  style={{ 
-                    color: space.id === currentSpaceId 
-                      ? 'var(--tw-color-emerald-600)' 
-                      : 'var(--tw-color-neutral-600)' 
-                  }}
-                >
-                  <div className="flex items-center truncate pl-5">
-                    {space.metadata?.pinned && (
-                      <Pin className="h-3 w-3 mr-1.5 flex-shrink-0 text-blue-400" />
-                    )}
-                    <ConversationNameDisplay
-                      name={space.name}
-                      isLoading={space.metadata?.isGeneratingName}
-                      isAutoNamed={!space.metadata?.manuallyRenamed}
-                      className="truncate font-medium"
-                    />
-                  </div>
-                </button>
-              )}
-              
-              {!editingSpaceId && (
-                <div className="absolute right-2 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                  {!space.metadata?.isGeneratingName && space.metadata?.manuallyRenamed && space.messages.length > 0 && (
-                    <button
-                      className="p-1 rounded hover:bg-neutral-200 dark:hover:bg-neutral-700"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        resetToAutoNaming(space.id);
-                      }}
-                      title="Reset to auto naming"
-                    >
-                      <RefreshCw className="h-3 w-3 text-neutral-500 dark:text-neutral-400" />
-                    </button>
-                  )}
-                  <button
-                    className="p-1 rounded hover:bg-neutral-200 dark:hover:bg-neutral-700"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      togglePinSpace(space.id);
-                    }}
-                    title={space.metadata?.pinned ? "Unpin space" : "Pin space"}
-                  >
-                    {space.metadata?.pinned ? 
-                      <PinOff className="h-3 w-3 text-neutral-500 dark:text-neutral-400" /> : 
-                      <Pin className="h-3 w-3 text-neutral-500 dark:text-neutral-400" />
-                    }
-                  </button>
-                  <button
-                    className="p-1 rounded hover:bg-neutral-200 dark:hover:bg-neutral-700"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleRenameSpace(e, space.id, space.name);
-                    }}
-                    title="Rename space"
-                  >
-                    <Edit2 className="h-3 w-3 text-neutral-500 dark:text-neutral-400" />
-                  </button>
-                  <button
-                    className="p-1 rounded hover:bg-neutral-200 dark:hover:bg-neutral-700"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleDeleteSpace(e, space.id, space.name);
-                    }}
-                    title="Delete space"
-                  >
-                    <Trash2 className="h-3 w-3 text-neutral-500 dark:text-neutral-400" />
-                  </button>
-                </div>
-              )}
-            </div>
-            
-            {/* Metadata with hover effect */}
-            {space.messages.length > 0 && (
-              <div 
-                className="ml-9 px-4 mt-0 pb-0.5 overflow-hidden transition-all duration-300 max-h-0 opacity-0 transform translate-y-[-5px] group-hover:opacity-100 group-hover:max-h-8 group-hover:mt-0.5 group-hover:translate-y-0"
-              >
-                <ConversationMetadata space={space} compact={true} className="text-neutral-500 dark:text-neutral-400" />
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
-    );
-  };
 
   return (
     <>
@@ -538,17 +279,10 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                 <div className="p-1">
                       <button
                         className="flex items-center gap-2 w-full text-left p-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded"
-                        onClick={handleCreateSpace}
+                        onClick={handleCreateNotebook}
                       >
-                    <FolderPlus className="h-4 w-4 text-neutral-500 dark:text-neutral-400" />
-                        <span className="text-sm text-neutral-700 dark:text-neutral-300">New Space</span>
-                      </button>
-                      <button
-                        className="flex items-center gap-2 w-full text-left p-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded"
-                        onClick={handleCreateJournal}
-                      >
-                    <PenLine className="h-4 w-4 text-neutral-500 dark:text-neutral-400" />
-                        <span className="text-sm text-neutral-700 dark:text-neutral-300">New Journal</span>
+                    <BookOpen className="h-4 w-4 text-neutral-500 dark:text-neutral-400" />
+                        <span className="text-sm text-neutral-700 dark:text-neutral-300">New Notebook</span>
                       </button>
                     </div>
                   </div>
@@ -569,288 +303,24 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
             </div>
           </div>
 
-          {/* Content area with sections */}
+          {/* Content area with notebooks */}
           <div className="flex-1 overflow-y-auto py-2">
-            {/* Journals section */}
+            {/* Notebooks section */}
             <div className="mb-2">
-              <div className="px-4 py-1.5 flex items-center justify-between cursor-pointer" onClick={() => setJournalsOpen(!journalsOpen)}>
-                <h3 className="text-xs font-medium text-neutral-500 dark:text-neutral-400 tracking-wider">JOURNALS</h3>
-                <ChevronDown className={cn(
-                  "h-4 w-4 text-neutral-400 transition-transform duration-200 ease-in-out",
-                  journalsOpen ? "rotate-180" : ""
-                )} />
+              <div className="px-4 py-1.5 flex items-center justify-between">
+                <h3 className="text-xs font-medium text-neutral-500 dark:text-neutral-400 tracking-wider">NOTEBOOKS</h3>
               </div>
               
-              {/* New Journal button - always visible */}
-              <button
-                onClick={handleCreateJournal}
-                className="w-full flex items-center gap-2 text-left px-4 py-1.5 text-sm text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 mt-1"
-              >
-                <PenLine className="h-3.5 w-3.5 text-neutral-400" />
-                <span>New Journal</span>
-              </button>
-              
-              {/* Animate journals dropdown - contains only journal entries */}
-              <div className={cn(
-                "overflow-hidden transition-all duration-200 ease-in-out",
-                journalsOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
-              )}>
-                <div className="mt-1 space-y-0.5 pb-1">                  
-                  {entries.map((entry) => {
-                    const isActive = currentPageType === 'journal' && entry.id === currentPageId;
-                    const isEditing = entry.id === editingJournalId;
-                    
-                    return (
-                      <div key={entry.id} className="group relative">
-                        <div className={cn(
-                          "flex w-full items-center",
-                          isActive ? "bg-emerald-50 dark:bg-emerald-900/20" : ""
-                        )}>
-                          {isEditing ? (
-                            // Show input field when editing
-                            <div className="flex items-center w-full px-4 py-1">
-                              <input
-                                type="text"
-                                className="w-full px-1 py-0.5 text-sm bg-white dark:bg-neutral-800 border border-emerald-400/60 rounded focus:outline-none"
-                                value={editingJournalTitle}
-                                onChange={(e) => setEditingJournalTitle(e.target.value)}
-                                autoFocus
-                                onKeyDown={(e) => {
-                                  if (e.key === 'Enter') {
-                                    const defaultTitle = `Journal - ${new Date().toLocaleDateString()}`;
-                                    const title = editingJournalTitle.trim() || defaultTitle;
-                                    updateEntry(entry.id, { title });
-                                    setEditingJournalId(null);
-                                    
-                                    // Navigate to the newly created journal
-                                    if (newlyCreatedJournalId === entry.id) {
-                                      router.push(`/journal/${entry.id}`);
-                                      setNewlyCreatedJournalId(null);
-                                    }
-                                  } else if (e.key === 'Escape') {
-                                    setEditingJournalId(null);
-                                  }
-                                }}
-                                onBlur={() => {
-                                  const defaultTitle = `Journal - ${new Date().toLocaleDateString()}`;
-                                  const title = editingJournalTitle.trim() || defaultTitle;
-                                  updateEntry(entry.id, { title });
-                                  setEditingJournalId(null);
-                                  
-                                  // Navigate to the newly created journal
-                                  if (newlyCreatedJournalId === entry.id) {
-                                    router.push(`/journal/${entry.id}`);
-                                    setNewlyCreatedJournalId(null);
-                                  }
-                                }}
-                              />
-                            </div>
-                          ) : (
-                            // Show regular button when not editing
-                            <button
-                              onClick={() => router.push(`/journal/${entry.id}`)}
-                              className="w-full text-left px-4 py-1.5 text-sm flex items-center"
-                              style={{ color: isActive ? 'var(--tw-color-emerald-600)' : 'var(--tw-color-neutral-600)' }}
-                            >
-                              <span className="truncate pl-5 font-medium">{entry.title}</span>
-                            </button>
-                          )}
-                          
-                          {!isEditing && (
-                            <div className="absolute right-2 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                              <button 
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setEditingJournalId(entry.id);
-                                  setEditingJournalTitle(entry.title);
-                                }}
-                                className="p-1 rounded hover:bg-neutral-200 dark:hover:bg-neutral-700"
-                                aria-label="Rename journal"
-                              >
-                                <Edit2 className="h-3 w-3 text-neutral-500 dark:text-neutral-400" />
-                              </button>
-                              <button 
-                                onClick={(e) => handleDeleteJournal(e, entry.id, entry.title)}
-                                className="p-1 rounded hover:bg-neutral-200 dark:hover:bg-neutral-700"
-                                aria-label="Delete journal"
-                              >
-                                <Trash2 className="h-3 w-3 text-neutral-500 dark:text-neutral-400" />
-                              </button>
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Timestamp with hover effect */}
-                        <div 
-                          className="ml-9 px-4 mt-0 pb-0.5 overflow-hidden transition-all duration-300 max-h-0 opacity-0 transform translate-y-[-5px] group-hover:opacity-100 group-hover:max-h-8 group-hover:mt-0.5 group-hover:translate-y-0"
-                        >
-                          <div className="flex items-center gap-1.5 text-xs text-neutral-500 dark:text-neutral-400">
-                            <Clock className="h-2.5 w-2.5 mr-0.5" />
-                            <span>{format(new Date(entry.updatedAt), 'MMM d, yyyy')}</span>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-
-            {/* Spaces section */}
-            <div className="mb-2">
-              <div className="px-4 py-1.5 flex items-center justify-between cursor-pointer" onClick={() => setSpacesOpen(!spacesOpen)}>
-                <h3 className="text-xs font-medium text-neutral-500 dark:text-neutral-400 tracking-wider">SPACES</h3>
-                <ChevronDown className={cn(
-                  "h-4 w-4 text-neutral-400 transition-transform duration-200 ease-in-out",
-                  spacesOpen ? "rotate-180" : ""
-                )} />
-              </div>
-              
-              {/* New Space button - always visible */}
-              <button
-                onClick={handleCreateSpace}
-                className="w-full flex items-center gap-2 text-left px-4 py-1.5 text-sm text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 mt-1"
-              >
-                <FolderPlus className="h-3.5 w-3.5 text-neutral-400" />
-                <span>New Space</span>
-              </button>
-              
-              {/* Animate spaces dropdown - contains only space entries */}
-              <div className={cn(
-                "overflow-hidden transition-all duration-200 ease-in-out",
-                spacesOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
-              )}>
-                <div className="space-y-0.5 mt-1">
-                  {/* Filter non-archived spaces and sort them */}
-                  {spaces
-                    .filter(space => !space.archived)
-                    .sort((a, b) => {
-                      // Sort by pinned status first
-                      if (a.metadata?.pinned && !b.metadata?.pinned) return -1;
-                      if (!a.metadata?.pinned && b.metadata?.pinned) return 1;
-                      // Then by updated date
-                      return b.updatedAt - a.updatedAt;
-                    })
-                    .map(space => (
-                      <div 
-                        key={space.id}
-                        className="group relative"
-                      >
-                        <div
-                          className={cn(
-                            "flex w-full items-center",
-                            space.id === currentPageId
-                              ? "bg-emerald-50 dark:bg-emerald-900/20"
-                              : ""
-                          )}
-                          onClick={() => {
-                            if (currentPageType !== 'space' || currentPageId !== space.id) {
-                              switchSpace(space.id);
-                              router.push(`/space/${space.id}`);
-                            }
-                          }}
-                        >
-                          {editingSpaceId === space.id ? (
-                            <div className="flex items-center w-full px-4 py-1">
-                              <input
-                                ref={editingSpaceId === space.id && newlyCreatedSpaceId === space.id ? focusInputRef : null}
-                                value={editingSpaceName}
-                                onChange={(e) => setEditingSpaceName(e.target.value)}
-                                onBlur={() => {
-                                  if (editingSpaceName.trim()) {
-                                    renameSpace(space.id, editingSpaceName.trim(), true); // Mark as manually renamed
-                                  }
-                                  setEditingSpaceId(null);
-                                }}
-                                className="w-full px-1 py-0.5 text-sm bg-white dark:bg-neutral-800 border border-emerald-400/60 rounded focus:outline-none"
-                                autoFocus
-                              />
-                            </div>
-                          ) : (
-                            <button
-                              className="w-full text-left px-4 py-1.5 text-sm flex items-center"
-                              style={{ 
-                                color: space.id === currentPageId 
-                                  ? 'var(--tw-color-emerald-600)' 
-                                  : 'var(--tw-color-neutral-600)' 
-                              }}
-                            >
-                              <div className="flex items-center truncate pl-5">
-                                {space.metadata?.pinned && (
-                                  <Pin className="h-3 w-3 mr-1.5 flex-shrink-0 text-blue-400" />
-                                )}
-                                <ConversationNameDisplay
-                                  name={space.name}
-                                  isLoading={space.metadata?.isGeneratingName}
-                                  isAutoNamed={!space.metadata?.manuallyRenamed}
-                                  className="truncate font-medium"
-                                />
-                              </div>
-                            </button>
-                          )}
-                          
-                          {!editingSpaceId && (
-                            <div className="absolute right-2 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                              {!space.metadata?.isGeneratingName && space.metadata?.manuallyRenamed && space.messages.length > 0 && (
-                                <button
-                                  className="p-1 rounded hover:bg-neutral-200 dark:hover:bg-neutral-700"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    resetToAutoNaming(space.id);
-                                  }}
-                                  title="Reset to auto naming"
-                                >
-                                  <RefreshCw className="h-3 w-3 text-neutral-500 dark:text-neutral-400" />
-                                </button>
-                              )}
-                              <button
-                                className="p-1 rounded hover:bg-neutral-200 dark:hover:bg-neutral-700"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  togglePinSpace(space.id);
-                                }}
-                                title={space.metadata?.pinned ? "Unpin space" : "Pin space"}
-                              >
-                                {space.metadata?.pinned ? 
-                                  <PinOff className="h-3 w-3 text-neutral-500 dark:text-neutral-400" /> : 
-                                  <Pin className="h-3 w-3 text-neutral-500 dark:text-neutral-400" />
-                                }
-                              </button>
-                              <button
-                                className="p-1 rounded hover:bg-neutral-200 dark:hover:bg-neutral-700"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleRenameSpace(e, space.id, space.name);
-                                }}
-                                title="Rename space"
-                              >
-                                <Edit2 className="h-3 w-3 text-neutral-500 dark:text-neutral-400" />
-                              </button>
-                              <button
-                                className="p-1 rounded hover:bg-neutral-200 dark:hover:bg-neutral-700"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleDeleteSpace(e, space.id, space.name);
-                                }}
-                                title="Delete space"
-                              >
-                                <Trash2 className="h-3 w-3 text-neutral-500 dark:text-neutral-400" />
-                              </button>
-                            </div>
-                          )}
-                        </div>
-                        
-                        {/* Metadata with hover effect */}
-                        {space.messages.length > 0 && (
-                          <div 
-                            className="ml-9 px-4 mt-0 pb-0.5 overflow-hidden transition-all duration-300 max-h-0 opacity-0 transform translate-y-[-5px] group-hover:opacity-100 group-hover:max-h-8 group-hover:mt-0.5 group-hover:translate-y-0"
-                          >
-                            <ConversationMetadata space={space} compact={true} className="text-neutral-500 dark:text-neutral-400" />
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                </div>
+              {/* Notebooks list */}
+              <div className="space-y-1">
+                {notebooks.map(notebook => (
+                  <SidebarNotebook
+                    key={notebook.id}
+                    notebook={notebook}
+                    currentPageType={currentPageType}
+                    currentPageId={currentPageId}
+                  />
+                ))}
               </div>
             </div>
           </div>

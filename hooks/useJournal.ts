@@ -44,7 +44,7 @@ export function useJournal() {
     return updatedEntries
   }, [])
 
-  const createEntry = useCallback((title: string) => {
+  const createEntry = useCallback((title: string, notebook_id?: string) => {
     const now = new Date().toISOString()
     const id =
       typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
@@ -60,6 +60,7 @@ export function useJournal() {
       blocks: [],
       createdAt: now,
       updatedAt: now,
+      notebook_id,
     }
     
     setEntries(prev => {

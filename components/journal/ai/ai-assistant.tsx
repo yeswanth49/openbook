@@ -2,11 +2,9 @@
 
 import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Cpu, MessageSquare, Lightbulb, Loader2, X, Copy, Check } from 'lucide-react'
+import { Cpu, Lightbulb, Loader2, X, Copy, Check } from 'lucide-react'
 import { useChat } from '@ai-sdk/react'
 import { Block, BlockType } from '@/lib/types'
-import { useSpaces } from '@/contexts/SpacesContext'
-import { useRouter } from 'next/navigation'
 
 interface AIAssistantProps {
   selectedBlocks: Block[]
@@ -28,9 +26,6 @@ export default function AIAssistant({
   const [suggestion, setSuggestion] = useState<string>('')
   const [isLoading, setIsLoading] = useState(false)
   const [copied, setCopied] = useState(false)
-  
-  const { createSpace, addMessage } = useSpaces()
-  const router = useRouter()
 
   const { messages, input, handleInputChange, handleSubmit, isLoading: chatLoading } = useChat({
     api: '/api/search',
@@ -48,6 +43,8 @@ export default function AIAssistant({
     
     try {
       const context = selectedBlocks.map(block => block.content).join('\n\n')
+      console.log('Sending explanation request with context:', context)
+      
       const response = await fetch('/api/search', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -61,36 +58,188 @@ export default function AIAssistant({
         }),
       })
 
-      if (!response.ok) throw new Error('Failed to get explanation')
+      console.log('Response status:', response.status)
+      console.log('Response headers:', response.headers)
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error('API Error:', errorText)
+        throw new Error(`Failed to get explanation: ${response.status}`)
+      }
       
       const reader = response.body?.getReader()
       if (!reader) throw new Error('No response body')
 
       let explanationText = ''
+      let hasReceivedData = false
+      
       while (true) {
         const { done, value } = await reader.read()
         if (done) break
         
         const chunk = new TextDecoder().decode(value)
+        console.log('Received chunk:', chunk)
+        
         const lines = chunk.split('\n')
         
         for (const line of lines) {
-          if (line.startsWith('0:')) {
+          if (line.trim() === '') continue
+          
+          // Check if this is a direct text chunk like 0:"Hello there"
+          if (line.startsWith('0:"')) {
             try {
-              const data = JSON.parse(line.slice(2))
-              if (data.type === 'text-delta') {
-                explanationText += data.textDelta
+              // Extract the text between quotes
+              const text = line.slice(2).trim()
+              if (text.startsWith('"') && text.endsWith('"')) {
+                const extractedText = JSON.parse(text) // Parse the JSON string
+                explanationText += extractedText
                 setExplanation(explanationText)
+                hasReceivedData = true
+                console.log('Added direct text chunk:', extractedText)
               }
-            } catch (e) {
-              // Ignore parsing errors
+            } catch (textError) {
+              console.error('Failed to parse direct text chunk:', textError)
+            }
+            continue // Skip to next line after handling direct text chunk
+          }
+          
+          // Skip metadata lines
+          if (line.startsWith('f:') || line.startsWith('e:') || line.startsWith('d:')) {
+            continue
+          }
+          
+          try {
+            // Try parsing different JSON response formats
+            let data
+            if (line.startsWith('0:')) {
+              data = JSON.parse(line.slice(2))
+            } else if (line.startsWith('data: ')) {
+              data = JSON.parse(line.slice(6))
+            } else {
+              data = JSON.parse(line)
+            }
+            
+            console.log('Parsed data:', data)
+            
+            // Handle different response formats
+            if (data.type === 'text-delta' && data.textDelta) {
+              explanationText += data.textDelta
+              setExplanation(explanationText)
+              hasReceivedData = true
+            } else if (data.type === 'text' && data.text) {
+              explanationText += data.text
+              setExplanation(explanationText)
+              hasReceivedData = true
+            } else if (data.delta && data.delta.content) {
+              explanationText += data.delta.content
+              setExplanation(explanationText)
+              hasReceivedData = true
+            } else if (data.content) {
+              // Handle both string content and array content
+              if (typeof data.content === 'string') {
+                explanationText += data.content
+                setExplanation(explanationText)
+                hasReceivedData = true
+              } else if (Array.isArray(data.content)) {
+                // Handle content array (like from AI SDK responses)
+                for (const contentItem of data.content) {
+                  if (contentItem.text) {
+                    explanationText += contentItem.text
+                    setExplanation(explanationText)
+                    hasReceivedData = true
+                  }
+                }
+              }
+            } else if (data.messages && Array.isArray(data.messages)) {
+              // Handle full response with messages array
+              for (const message of data.messages) {
+                if (message.role === 'assistant' && message.content) {
+                  if (typeof message.content === 'string') {
+                    explanationText += message.content
+                    setExplanation(explanationText)
+                    hasReceivedData = true
+                  } else if (Array.isArray(message.content)) {
+                    for (const contentItem of message.content) {
+                      if (contentItem.text) {
+                        explanationText += contentItem.text
+                        setExplanation(explanationText)
+                        hasReceivedData = true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          } catch (e) {
+            console.log('Failed to parse as JSON, treating as text:', line)
+            // If it's not JSON, treat as plain text
+            if (line.trim() && !line.includes(':') && !line.startsWith('[') && !line.startsWith('{')) {
+              explanationText += line
+              setExplanation(explanationText)
+              hasReceivedData = true
             }
           }
         }
       }
+      
+      // If no data was received through streaming, try a fallback approach
+      if (!hasReceivedData) {
+        console.log('No streaming data received, trying fallback...')
+        const fallbackResponse = await fetch('/api/search', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            messages: [{
+              role: 'user',
+              content: `Please explain the following content from my journal in a clear and helpful way:\n\n${context}`
+            }],
+            model: 'neuman-google',
+            group: 'chat',
+            stream: false // Try without streaming
+          }),
+        })
+        
+        if (fallbackResponse.ok) {
+          const fallbackData = await fallbackResponse.json()
+          console.log('Fallback response:', fallbackData)
+          
+          // Try to extract content from various response formats
+          let extractedContent = ''
+          
+          if (fallbackData.content) {
+            if (typeof fallbackData.content === 'string') {
+              extractedContent = fallbackData.content
+            } else if (Array.isArray(fallbackData.content)) {
+              extractedContent = fallbackData.content.map((item: any) => item.text || '').join('')
+            }
+          } else if (fallbackData.message) {
+            extractedContent = fallbackData.message
+          } else if (fallbackData.messages && Array.isArray(fallbackData.messages)) {
+            for (const message of fallbackData.messages) {
+              if (message.role === 'assistant' && message.content) {
+                if (typeof message.content === 'string') {
+                  extractedContent += message.content
+                } else if (Array.isArray(message.content)) {
+                  extractedContent += message.content.map((item: any) => item.text || '').join('')
+                }
+              }
+            }
+          }
+          
+          if (extractedContent) {
+            setExplanation(extractedContent)
+            hasReceivedData = true
+          }
+        }
+      }
+      
+      if (!hasReceivedData) {
+        setExplanation('I was able to process your request, but encountered an issue displaying the response. Please try again.')
+      }
+      
     } catch (error) {
       console.error('Error explaining blocks:', error)
-      setExplanation('Sorry, I encountered an error while explaining the content.')
+      setExplanation('Sorry, I encountered an error while explaining the content. Please check your connection and try again.')
     } finally {
       setIsLoading(false)
     }
@@ -117,6 +266,8 @@ Current block content: ${currentBlock.content || '(empty)'}
 
 Please provide a thoughtful suggestion that would enhance this journal entry:`
 
+      console.log('Sending suggestion request with prompt:', prompt)
+
       const response = await fetch('/api/search', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -127,55 +278,190 @@ Please provide a thoughtful suggestion that would enhance this journal entry:`
         }),
       })
 
-      if (!response.ok) throw new Error('Failed to get suggestion')
+      console.log('Suggestion response status:', response.status)
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error('Suggestion API Error:', errorText)
+        throw new Error(`Failed to get suggestion: ${response.status}`)
+      }
       
       const reader = response.body?.getReader()
       if (!reader) throw new Error('No response body')
 
       let suggestionText = ''
+      let hasReceivedData = false
+      
       while (true) {
         const { done, value } = await reader.read()
         if (done) break
         
         const chunk = new TextDecoder().decode(value)
+        console.log('Suggestion chunk:', chunk)
+        
         const lines = chunk.split('\n')
         
         for (const line of lines) {
-          if (line.startsWith('0:')) {
+          if (line.trim() === '') continue
+          
+          // Check if this is a direct text chunk like 0:"Hello there"
+          if (line.startsWith('0:"')) {
             try {
-              const data = JSON.parse(line.slice(2))
-              if (data.type === 'text-delta') {
-                suggestionText += data.textDelta
+              // Extract the text between quotes
+              const text = line.slice(2).trim()
+              if (text.startsWith('"') && text.endsWith('"')) {
+                const extractedText = JSON.parse(text) // Parse the JSON string
+                suggestionText += extractedText
                 setSuggestion(suggestionText)
+                hasReceivedData = true
+                console.log('Added direct suggestion text chunk:', extractedText)
               }
-            } catch (e) {
-              // Ignore parsing errors
+            } catch (textError) {
+              console.error('Failed to parse direct suggestion text chunk:', textError)
+            }
+            continue // Skip to next line after handling direct text chunk
+          }
+          
+          // Skip metadata lines
+          if (line.startsWith('f:') || line.startsWith('e:') || line.startsWith('d:')) {
+            continue
+          }
+          
+          try {
+            // Try parsing different JSON response formats
+            let data
+            if (line.startsWith('0:')) {
+              data = JSON.parse(line.slice(2))
+            } else if (line.startsWith('data: ')) {
+              data = JSON.parse(line.slice(6))
+            } else {
+              data = JSON.parse(line)
+            }
+            
+            console.log('Suggestion parsed data:', data)
+            
+            // Handle different response formats
+            if (data.type === 'text-delta' && data.textDelta) {
+              suggestionText += data.textDelta
+              setSuggestion(suggestionText)
+              hasReceivedData = true
+            } else if (data.type === 'text' && data.text) {
+              suggestionText += data.text
+              setSuggestion(suggestionText)
+              hasReceivedData = true
+            } else if (data.delta && data.delta.content) {
+              suggestionText += data.delta.content
+              setSuggestion(suggestionText)
+              hasReceivedData = true
+            } else if (data.content) {
+              // Handle both string content and array content
+              if (typeof data.content === 'string') {
+                suggestionText += data.content
+                setSuggestion(suggestionText)
+                hasReceivedData = true
+              } else if (Array.isArray(data.content)) {
+                // Handle content array (like from AI SDK responses)
+                for (const contentItem of data.content) {
+                  if (contentItem.text) {
+                    suggestionText += contentItem.text
+                    setSuggestion(suggestionText)
+                    hasReceivedData = true
+                  }
+                }
+              }
+            } else if (data.messages && Array.isArray(data.messages)) {
+              // Handle full response with messages array
+              for (const message of data.messages) {
+                if (message.role === 'assistant' && message.content) {
+                  if (typeof message.content === 'string') {
+                    suggestionText += message.content
+                    setSuggestion(suggestionText)
+                    hasReceivedData = true
+                  } else if (Array.isArray(message.content)) {
+                    for (const contentItem of message.content) {
+                      if (contentItem.text) {
+                        suggestionText += contentItem.text
+                        setSuggestion(suggestionText)
+                        hasReceivedData = true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          } catch (e) {
+            console.log('Failed to parse suggestion as JSON, treating as text:', line)
+            // If it's not JSON, treat as plain text
+            if (line.trim() && !line.includes(':') && !line.startsWith('[') && !line.startsWith('{')) {
+              suggestionText += line
+              setSuggestion(suggestionText)
+              hasReceivedData = true
             }
           }
         }
       }
+      
+      // If no data was received through streaming, try a fallback approach
+      if (!hasReceivedData) {
+        console.log('No suggestion streaming data received, trying fallback...')
+        const fallbackResponse = await fetch('/api/search', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            messages: [{ role: 'user', content: prompt }],
+            model: 'neuman-google',
+            group: 'chat',
+            stream: false // Try without streaming
+          }),
+        })
+        
+        if (fallbackResponse.ok) {
+          const fallbackData = await fallbackResponse.json()
+          console.log('Suggestion fallback response:', fallbackData)
+          
+          // Try to extract content from various response formats
+          let extractedContent = ''
+          
+          if (fallbackData.content) {
+            if (typeof fallbackData.content === 'string') {
+              extractedContent = fallbackData.content
+            } else if (Array.isArray(fallbackData.content)) {
+              extractedContent = fallbackData.content.map((item: any) => item.text || '').join('')
+            }
+          } else if (fallbackData.message) {
+            extractedContent = fallbackData.message
+          } else if (fallbackData.messages && Array.isArray(fallbackData.messages)) {
+            for (const message of fallbackData.messages) {
+              if (message.role === 'assistant' && message.content) {
+                if (typeof message.content === 'string') {
+                  extractedContent += message.content
+                } else if (Array.isArray(message.content)) {
+                  extractedContent += message.content.map((item: any) => item.text || '').join('')
+                }
+              }
+            }
+          }
+          
+          if (extractedContent) {
+            setSuggestion(extractedContent)
+            hasReceivedData = true
+          }
+        }
+      }
+      
+      if (!hasReceivedData) {
+        setSuggestion('I was able to process your request, but encountered an issue displaying the response. Please try again.')
+      }
+      
     } catch (error) {
       console.error('Error getting suggestion:', error)
-      setSuggestion('Sorry, I encountered an error while generating a suggestion.')
+      setSuggestion('Sorry, I encountered an error while generating a suggestion. Please check your connection and try again.')
     } finally {
       setIsLoading(false)
     }
   }
 
-  const handleAskInSpace = () => {
-    if (selectedBlocks.length === 0) return
-    
-    const context = selectedBlocks.map(block => block.content).join('\n\n')
-    const spaceName = `Journal Discussion - ${new Date().toLocaleTimeString()}`
-    const newSpaceId = createSpace(spaceName)
-    
-    addMessage({ 
-      role: 'user', 
-      content: `I'd like to discuss this content from my journal:\n\n${context}\n\nCan you help me explore this further?` 
-    })
-    
-    router.push(`/space/${newSpaceId}`)
-  }
+
 
   const handleApplySuggestion = () => {
     if (currentBlock && suggestion && onBlockUpdate) {
@@ -234,6 +520,8 @@ Please provide a thoughtful suggestion that would enhance this journal entry:`
                   : 'No blocks selected'
                 }
               </p>
+              
+
 
               <div className="grid gap-3">
                 {selectedBlocks.length > 0 && (
@@ -249,16 +537,7 @@ Please provide a thoughtful suggestion that would enhance this journal entry:`
                       </div>
                     </button>
 
-                    <button
-                      onClick={handleAskInSpace}
-                      className="flex items-center gap-3 p-3 rounded-lg border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors"
-                    >
-                      <MessageSquare className="h-5 w-5 text-green-500" />
-                      <div className="text-left">
-                        <div className="font-medium">Ask in Space</div>
-                        <div className="text-sm text-neutral-500">Start a conversation about this content</div>
-                      </div>
-                    </button>
+
                   </>
                 )}
 
@@ -271,6 +550,113 @@ Please provide a thoughtful suggestion that would enhance this journal entry:`
                     <div className="text-left">
                       <div className="font-medium">Suggest Content</div>
                       <div className="text-sm text-neutral-500">Get AI suggestions for this block</div>
+                    </div>
+                  </button>
+                )}
+                
+                {/* Debug button for testing API */}
+                {process.env.NODE_ENV === 'development' && (
+                  <button
+                    onClick={async () => {
+                      console.log('Testing API connection with detailed response parsing...')
+                      try {
+                        const response = await fetch('/api/search', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({
+                            messages: [{ role: 'user', content: 'Test message' }],
+                            model: 'neuman-google',
+                            group: 'chat',
+                          }),
+                        })
+                        console.log('API test response:', response.status)
+                        
+                        if (!response.ok) {
+                          console.error('API error:', response.status, response.statusText)
+                          return
+                        }
+                        
+                        // Test streaming response parsing
+                        const reader = response.body?.getReader()
+                        if (!reader) {
+                          console.error('No response body')
+                          return
+                        }
+                        
+                        let fullText = ''
+                        let formattedText = 'Parsed content:\n'
+                        
+                        while (true) {
+                          const { done, value } = await reader.read()
+                          if (done) break
+                          
+                          const chunk = new TextDecoder().decode(value)
+                          console.log('Raw chunk:', JSON.stringify(chunk))
+                          fullText += chunk
+                          
+                          const lines = chunk.split('\n')
+                          
+                          for (const line of lines) {
+                            if (line.trim() === '') continue
+                            
+                            console.log('Processing line:', JSON.stringify(line))
+                            
+                            // Check if it's a direct text chunk
+                            if (line.startsWith('0:"')) {
+                              try {
+                                const text = line.slice(2).trim()
+                                if (text.startsWith('"') && text.endsWith('"')) {
+                                  const extractedText = JSON.parse(text)
+                                  formattedText += `[Direct text]: ${extractedText}\n`
+                                  console.log('Extracted direct text:', extractedText)
+                                }
+                              } catch (e) {
+                                console.error('Failed to parse direct text:', e)
+                              }
+                            } 
+                            // Skip metadata lines
+                            else if (line.startsWith('f:') || line.startsWith('e:') || line.startsWith('d:')) {
+                              console.log('Skipping metadata:', line)
+                            }
+                            // Try JSON parsing
+                            else {
+                              try {
+                                let data
+                                if (line.startsWith('0:')) {
+                                  data = JSON.parse(line.slice(2))
+                                } else if (line.startsWith('data: ')) {
+                                  data = JSON.parse(line.slice(6))
+                                } else {
+                                  data = JSON.parse(line)
+                                }
+                                
+                                console.log('Parsed JSON data:', data)
+                                formattedText += `[JSON]: ${JSON.stringify(data)}\n`
+                              } catch (e) {
+                                console.log('Not valid JSON:', line)
+                              }
+                            }
+                          }
+                        }
+                        
+                        console.log('Full response text:', fullText)
+                        console.log(formattedText)
+                        
+                        // Show results in UI
+                        setActiveFeature('explain')
+                        setExplanation(`DEBUG API TEST RESULTS:\n\n${formattedText}`)
+                        
+                                              } catch (e: any) {
+                          console.error('API test failed:', e)
+                          setActiveFeature('explain')
+                          setExplanation(`API TEST ERROR: ${e.message || String(e)}`)
+                        }
+                    }}
+                    className="flex items-center gap-3 p-3 rounded-lg border border-orange-200 dark:border-orange-700 hover:bg-orange-50 dark:hover:bg-orange-800 transition-colors"
+                  >
+                    <div className="text-left">
+                      <div className="font-medium text-orange-600">Debug API</div>
+                      <div className="text-sm text-orange-500">Test API with detailed parsing</div>
                     </div>
                   </button>
                 )}
@@ -302,7 +688,7 @@ Please provide a thoughtful suggestion that would enhance this journal entry:`
               <div className="max-h-96 overflow-y-auto">
                 {isLoading ? (
                   <div className="flex items-center gap-2 text-neutral-500">
-                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <div className="h-2 w-2 bg-neutral-400 rounded-full animate-pulse"></div>
                     Generating explanation...
                   </div>
                 ) : (
@@ -329,7 +715,7 @@ Please provide a thoughtful suggestion that would enhance this journal entry:`
               <div className="max-h-96 overflow-y-auto">
                 {isLoading ? (
                   <div className="flex items-center gap-2 text-neutral-500">
-                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <div className="h-2 w-2 bg-neutral-400 rounded-full animate-pulse"></div>
                     Generating suggestion...
                   </div>
                 ) : (

@@ -166,20 +166,31 @@ const HomeContent = () => {
             const sortedMessages = [...currentSpace.messages].sort((a, b) => a.timestamp - b.timestamp);
             setMessages(sortedMessages);
         }
+        // Reset initialization flag when switching spaces to allow new queries
+        initializedRef.current = false;
         // Only run this effect when the space ID changes
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [currentSpaceId]);
 
     useEffect(() => {
-        if (!initializedRef.current && initialState.query && !messages.length) {
-            initializedRef.current = true;
-            console.log("[initial query]:", initialState.query);
-            appendWithPersist({
-                content: initialState.query,
-                role: 'user'
-            });
+        if (!initializedRef.current && initialState.query) {
+            // Check if this query is already the last message in the space
+            const lastMessage = messages[messages.length - 1];
+            const isQueryAlreadyProcessed = lastMessage && 
+                lastMessage.role === 'user' && 
+                lastMessage.content === initialState.query;
+            
+            if (!isQueryAlreadyProcessed) {
+                initializedRef.current = true;
+                console.log("[initial query]:", initialState.query);
+                setHasSubmitted(true);
+                appendWithPersist({
+                    content: initialState.query,
+                    role: 'user'
+                });
+            }
         }
-    }, [initialState.query, appendWithPersist, setInput, messages.length]);
+    }, [initialState.query, appendWithPersist, setInput, messages]);
 
     // Wrap setMessages to satisfy MessagesProps (only array setter)
     const updateMessages = useCallback((msgs: any[]) => {
@@ -318,6 +329,11 @@ const HomeContent = () => {
         setSuggestedQuestions([]);
     }, []);
 
+    // Helper function to determine if content is being processed/loaded
+    const isProcessing = useMemo(() => {
+        return status !== 'ready';
+    }, [status]);
+
 
     const WidgetSection = memo(() => {
         const [currentTime, setCurrentTime] = useState(new Date());
@@ -427,8 +443,29 @@ const HomeContent = () => {
                         {status === 'ready' && messages.length === 0 && (
                             <div className="text-center">
                                 <h1 className="text-2xl sm:text-4xl mb-4 sm:mb-6 text-neutral-800 dark:text-neutral-100 font-syne!">
-                                    What do you want to learn, about?
+                                    {currentSpace?.name && currentSpace.name !== 'General' 
+                                        ? `Continue your conversation in ${currentSpace.name}`
+                                        : 'What do you want to learn about?'
+                                    }
                                 </h1>
+                                {currentSpace?.name && currentSpace.name !== 'General' && (
+                                    <div>
+                                        {currentSpace.name.includes('Journal Discussion') && isProcessing ? (
+                                            <div className="flex items-center gap-2 mb-4">
+                                                <div className="animate-spin h-4 w-4 border-2 border-green-500 rounded-full border-t-transparent"></div>
+                                                <p className="text-sm text-green-600 dark:text-green-400 font-medium">
+                                                    Analyzing your journal content...
+                                                </p>
+                                            </div>
+                                        ) : (
+                                            <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-4">
+                                                {currentSpace.name.includes('Journal Discussion') 
+                                                    ? "Your journal content has been analyzed. Feel free to ask follow-up questions." 
+                                                    : "This is your dedicated space for focused discussions"}
+                                            </p>
+                                        )}
+                                    </div>
+                                )}
                             </div>
                         )}
                         <AnimatePresence>

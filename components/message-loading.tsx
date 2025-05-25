@@ -54,47 +54,7 @@ export const MessageLoading: React.FC<MessageLoadingProps> = ({
             <span className="text-neutral-600 dark:text-neutral-400 mr-2 font-medium">
               {thinkingDuration > 0 ? getThinkingText(thinkingDuration) : loadingText}
             </span>
-            <div className="flex space-x-1">
-              <motion.div
-                animate={{
-                  scale: [1, 1.2, 1],
-                  opacity: [0.5, 1, 0.5],
-                }}
-                transition={{
-                  duration: 1.5,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                  delay: 0,
-                }}
-                className="h-2 w-2 rounded-full bg-neutral-400 dark:bg-neutral-500"
-              />
-              <motion.div
-                animate={{
-                  scale: [1, 1.2, 1],
-                  opacity: [0.5, 1, 0.5],
-                }}
-                transition={{
-                  duration: 1.5,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                  delay: 0.2,
-                }}
-                className="h-2 w-2 rounded-full bg-neutral-400 dark:bg-neutral-500"
-              />
-              <motion.div
-                animate={{
-                  scale: [1, 1.2, 1],
-                  opacity: [0.5, 1, 0.5],
-                }}
-                transition={{
-                  duration: 1.5,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                  delay: 0.4,
-                }}
-                className="h-2 w-2 rounded-full bg-neutral-400 dark:bg-neutral-500"
-              />
-            </div>
+            <div className="h-2 w-2 bg-neutral-400 dark:bg-neutral-500 rounded-full animate-pulse"></div>
           </div>
         ) : (
           <div className="space-y-3 max-w-full md:max-w-[80%]">
@@ -207,44 +167,7 @@ export const TypingIndicator: React.FC<{ text?: string }> = ({
       transition={{ duration: 0.3 }}
       className="flex items-center gap-2 px-3 py-2 bg-white dark:bg-neutral-800 shadow-md rounded-full border border-neutral-200 dark:border-neutral-700 max-w-full md:max-w-fit overflow-hidden"
     >
-      <div className="flex space-x-1 items-center">
-        <motion.div
-          animate={{
-            y: [0, -5, 0],
-          }}
-          transition={{
-            duration: 0.7,
-            repeat: Infinity,
-            ease: "easeInOut",
-            delay: 0,
-          }}
-          className="h-2 w-2 rounded-full bg-primary"
-        />
-        <motion.div
-          animate={{
-            y: [0, -5, 0],
-          }}
-          transition={{
-            duration: 0.7,
-            repeat: Infinity,
-            ease: "easeInOut",
-            delay: 0.2,
-          }}
-          className="h-2 w-2 rounded-full bg-primary"
-        />
-        <motion.div
-          animate={{
-            y: [0, -5, 0],
-          }}
-          transition={{
-            duration: 0.7,
-            repeat: Infinity,
-            ease: "easeInOut",
-            delay: 0.4,
-          }}
-          className="h-2 w-2 rounded-full bg-primary"
-        />
-      </div>
+      <div className="h-2 w-2 rounded-full bg-primary animate-pulse"></div>
       <span className="text-sm text-neutral-600 dark:text-neutral-300 truncate">
         {text}
       </span>

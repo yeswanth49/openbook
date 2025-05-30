@@ -109,6 +109,10 @@ const HomeContent = () => {
     // Get stored user ID
     const userId = useMemo(() => getUserId(), []);
 
+    // Create refs to access space functions without adding them as dependencies
+    const spaceFunctionsRef = useRef({ addMessage });
+    spaceFunctionsRef.current = { addMessage };
+
     // Get current study mode for the active space
     const currentStudyMode = useMemo(() => {
         return currentSpaceId ? getStudyModeForSpace(currentSpaceId) : null;
@@ -161,7 +165,7 @@ const HomeContent = () => {
                     content: aiMessageFromSDK.content,
                     timestamp: aiMessageFromSDK.createdAt ? aiMessageFromSDK.createdAt.getTime() : Date.now()
                 };
-                addMessage(assistantChatMessage);
+                spaceFunctionsRef.current.addMessage(assistantChatMessage);
                 const newHistory = [
                     { role: 'user', content: lastSubmittedQueryRef.current },
                     { role: 'assistant', content: assistantChatMessage.content },
@@ -177,7 +181,7 @@ const HomeContent = () => {
                 });
             },
         };
-    }, [selectedModel, selectedGroup, userId, addMessage, currentStudyMode]);
+    }, [selectedModel, selectedGroup, userId, currentStudyMode]);
 
     const {
         input,
@@ -201,7 +205,7 @@ const HomeContent = () => {
                 content: messageProps.content,
                 timestamp: Date.now()
             };
-            addMessage(userChatMessage); // Persist to SpacesContext/localStorage
+            spaceFunctionsRef.current.addMessage(userChatMessage); // Persist to SpacesContext/localStorage
             
             // Pass the same object (with id, role, content) to useChat's append
             // The @ai-sdk/react 'Message' type has id, role, content.
@@ -217,7 +221,7 @@ const HomeContent = () => {
             const result = await append(messageProps, options);
             return result;
         }
-    }, [append, addMessage]); // Dependencies: append from useChat, addMessage from SpacesContext
+    }, [append]); // Remove addMessage dependency since we're using the ref
 
     // Sync chat internal messages when switching spaces (only on space change, not on every message addition)
     useEffect(() => {
@@ -228,9 +232,9 @@ const HomeContent = () => {
         }
         // Reset initialization flag when switching spaces to allow new queries
         initializedRef.current = false;
-        // Only run this effect when the space ID changes
+        // Only run this effect when the space ID changes, NOT when messages change
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [currentSpaceId, JSON.stringify(currentSpace?.messages || [])]);
+    }, [currentSpaceId]);
 
     useEffect(() => {
         if (!initializedRef.current && initialState.query) {
@@ -547,7 +551,12 @@ const HomeContent = () => {
                                         onChange={setInput}
                                         onSubmit={() => {
                                             lastSubmittedQueryRef.current = input;
-                                            handleSubmit();
+                                            appendWithPersist({
+                                                content: input,
+                                                role: 'user'
+                                            });
+                                            setInput(''); // Clear input after submit
+                                            setHasSubmitted(true);
                                             setHasManuallyScrolled(false);
                                             bottomRef.current?.scrollIntoView({ behavior: "smooth" });
                                         }}
@@ -617,7 +626,14 @@ const HomeContent = () => {
                                             onChange={setInput}
                                             onSubmit={() => {
                                                 lastSubmittedQueryRef.current = input;
-                                                handleSubmit();
+                                                appendWithPersist({
+                                                    content: input,
+                                                    role: 'user'
+                                                });
+                                                setInput(''); // Clear input after submit
+                                                setHasSubmitted(true);
+                                                setHasManuallyScrolled(false);
+                                                bottomRef.current?.scrollIntoView({ behavior: "smooth" });
                                             }}
                                             selectedModel={selectedModel}
                                             setSelectedModel={setSelectedModel}

@@ -302,38 +302,41 @@ export const SpacesProvider = ({ children }: { children: ReactNode }) => {
 
   const addMessage = (newMessageToAdd: ChatMessage) => {
     const spaceUpdateTimestamp = Date.now(); // For the space's updatedAt field
-    setSpaces(prev => prev.map(s => {
-      if (s.id !== currentSpaceId) return s;
-      
-      // Filter out any existing message with the same ID to prevent duplicates,
-      // then add the new message.
-      const updatedMessages = s.messages.filter(m => m.id !== newMessageToAdd.id);
-      updatedMessages.push(newMessageToAdd);
+    setSpaces(prev => {
+      const updated = prev.map(s => {
+        if (s.id !== currentSpaceId) return s;
+        
+        // Filter out any existing message with the same ID to prevent duplicates,
+        // then add the new message.
+        const updatedMessages = s.messages.filter(m => m.id !== newMessageToAdd.id);
+        updatedMessages.push(newMessageToAdd);
 
-      const updatedSpace = {
-        ...s,
-        messages: updatedMessages,
-        updatedAt: spaceUpdateTimestamp
-      };
-      
-      // Auto-naming logic (uses newMessageToAdd.role)
-      if (
-        newMessageToAdd.role === 'user' &&
-        updatedSpace.messages.filter(m => m.role === 'user').length === 1 &&
-        updatedSpace.messages.length <= 2 && // Ensure it's early in the conversation
-        !updatedSpace.metadata?.manuallyRenamed
-      ) {
-        return {
-          ...updatedSpace,
-          metadata: {
-            ...(updatedSpace.metadata || { manuallyRenamed: false }),
-            isGeneratingName: true
-          }
+        const updatedSpace = {
+          ...s,
+          messages: updatedMessages,
+          updatedAt: spaceUpdateTimestamp
         };
-      }
-      
-      return updatedSpace;
-    }));
+        
+        // Auto-naming logic (uses newMessageToAdd.role)
+        if (
+          newMessageToAdd.role === 'user' &&
+          updatedSpace.messages.filter(m => m.role === 'user').length === 1 &&
+          updatedSpace.messages.length <= 2 && // Ensure it's early in the conversation
+          !updatedSpace.metadata?.manuallyRenamed
+        ) {
+          return {
+            ...updatedSpace,
+            metadata: {
+              ...(updatedSpace.metadata || { manuallyRenamed: false }),
+              isGeneratingName: true
+            }
+          };
+        }
+        
+        return updatedSpace;
+      });
+      return updated;
+    });
   };
 
   const exportSpace = (id: string) => {

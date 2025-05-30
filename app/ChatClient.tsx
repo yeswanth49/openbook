@@ -3,7 +3,7 @@
 import 'katex/dist/katex.min.css';
 
 import { AnimatePresence, motion } from 'framer-motion';
-import { useChat, UseChatOptions } from '@ai-sdk/react';
+import { useChat, UseChatOptions, Message } from '@ai-sdk/react';
 import { CalendarBlank, Clock as PhosphorClock, Info } from '@phosphor-icons/react';
 import { Switch } from "@/components/ui/switch"
 import { parseAsString, useQueryState } from 'nuqs';
@@ -42,7 +42,7 @@ import { suggestQuestions } from './actions';
 import Messages from '@/components/messages';
 import { Input } from "@/components/ui/input";
 import Sidebar from '@/components/sidebar';
-import { useSpaces } from '@/contexts/SpacesContext';
+import { useSpaces, type ChatMessage } from '@/contexts/SpacesContext'; // Adjusted path, assuming ChatMessage is exported from index of SpacesContext
 import { TerminalInput } from '@/components/terminal/terminal-input';
 import { useStudyMode } from '@/contexts/StudyModeContext';
 import { StudyModeBadge } from '@/components/study/study-mode-badge';
@@ -152,13 +152,19 @@ const HomeContent = () => {
                 user_id: userId,
                 timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
             },
-        onFinish: async (message: any, { finishReason }: { finishReason: string }) => {
-            if (message.content && (finishReason === 'stop' || finishReason === 'length')) {
+        onFinish: async (aiMessageFromSDK: Message, { finishReason }: { finishReason: string }) => {
+            if (aiMessageFromSDK.content && (finishReason === 'stop' || finishReason === 'length')) {
                 // Persist assistant message to current space
-                addMessage({ role: 'assistant', content: message.content });
+                const assistantChatMessage: ChatMessage = {
+                    id: aiMessageFromSDK.id,
+                    role: 'assistant',
+                    content: aiMessageFromSDK.content,
+                    timestamp: aiMessageFromSDK.createdAt ? aiMessageFromSDK.createdAt.getTime() : Date.now()
+                };
+                addMessage(assistantChatMessage);
                 const newHistory = [
                     { role: 'user', content: lastSubmittedQueryRef.current },
-                    { role: 'assistant', content: message.content },
+                    { role: 'assistant', content: assistantChatMessage.content },
                 ];
                 const { questions } = await suggestQuestions(newHistory);
                 setSuggestedQuestions(questions);
@@ -187,16 +193,31 @@ const HomeContent = () => {
     } = useChat(chatOptions);
 
     // Wrap append to persist user messages to current space
-    const appendWithPersist = useCallback(async (message: any, options: any = {}): Promise<any> => {
-        // Persist user messages to the current space BEFORE sending to AI
-        // This ensures the user message timestamp is earlier than the AI response timestamp.
-        if (message.role === 'user') {
-            addMessage({ role: message.role, content: message.content });
+    const appendWithPersist = useCallback(async (messageProps: { role: 'user' | 'assistant', content: string }, options: any = {}): Promise<any> => {
+        if (messageProps.role === 'user') {
+            const userChatMessage: ChatMessage = {
+                id: crypto.randomUUID(),
+                role: 'user', // explicitly 'user'
+                content: messageProps.content,
+                timestamp: Date.now()
+            };
+            addMessage(userChatMessage); // Persist to SpacesContext/localStorage
+            
+            // Pass the same object (with id, role, content) to useChat's append
+            // The @ai-sdk/react 'Message' type has id, role, content.
+            // Our ChatMessage {id, role, content, timestamp} is compatible for append.
+            const result = await append(userChatMessage, options); 
+            return result;
+        } else {
+            // For other roles, if any are directly passed here.
+            // AI messages are primarily handled in onFinish.
+            // This path should ensure that if an assistant message is somehow passed here,
+            // it's at least appended to the useChat state.
+            // Persistence for assistant messages is handled in onFinish.
+            const result = await append(messageProps, options);
+            return result;
         }
-        // Then append to internal chat state and send to AI service
-        const result = await append(message, options);
-        return result;
-    }, [append, addMessage]);
+    }, [append, addMessage]); // Dependencies: append from useChat, addMessage from SpacesContext
 
     // Sync chat internal messages when switching spaces (only on space change, not on every message addition)
     useEffect(() => {
@@ -209,7 +230,7 @@ const HomeContent = () => {
         initializedRef.current = false;
         // Only run this effect when the space ID changes
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [currentSpaceId]);
+    }, [currentSpaceId, JSON.stringify(currentSpace?.messages || [])]);
 
     useEffect(() => {
         if (!initializedRef.current && initialState.query) {

@@ -10,6 +10,7 @@ import { Toaster } from "sonner";
 import "./globals.css";
 import { Providers } from './providers';
 import { SpacesProvider } from '../contexts/SpacesContext';
+import { NotebookProvider } from '../contexts/NotebookContext';
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://goopenbook.in"),
@@ -103,10 +104,12 @@ export default function RootLayout({
       <body className={`${GeistSans.variable} ${syne.variable} font-sans antialiased`} suppressHydrationWarning>
         <NuqsAdapter>
           <Providers>
-            <SpacesProvider>
-              <Toaster position="top-center" />
-              {children}
-            </SpacesProvider>
+            <NotebookProvider>
+              <SpacesProvider>
+                <Toaster position="top-center" />
+                {children}
+              </SpacesProvider>
+            </NotebookProvider>
           </Providers>
         </NuqsAdapter>
         <Analytics />

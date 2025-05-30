@@ -3,7 +3,7 @@
 import 'katex/dist/katex.min.css';
 
 import { AnimatePresence, motion } from 'framer-motion';
-import { useChat, UseChatOptions } from '@ai-sdk/react';
+import { useChat, UseChatOptions, Message } from '@ai-sdk/react';
 import { CalendarBlank, Clock as PhosphorClock, Info } from '@phosphor-icons/react';
 import { Switch } from "@/components/ui/switch"
 import { parseAsString, useQueryState } from 'nuqs';
@@ -42,8 +42,11 @@ import { suggestQuestions } from './actions';
 import Messages from '@/components/messages';
 import { Input } from "@/components/ui/input";
 import Sidebar from '@/components/sidebar';
-import { useSpaces } from '@/contexts/SpacesContext';
+import { useSpaces, type ChatMessage } from '@/contexts/SpacesContext'; // Adjusted path, assuming ChatMessage is exported from index of SpacesContext
 import { TerminalInput } from '@/components/terminal/terminal-input';
+import { useStudyMode } from '@/contexts/StudyModeContext';
+import { StudyModeBadge } from '@/components/study/study-mode-badge';
+import { StudyFramework } from '@/lib/types';
 
 interface Attachment {
     name: string;
@@ -79,6 +82,8 @@ const HomeContent = () => {
 
     // Conversation spaces context
     const { currentSpace, currentSpaceId, switchSpace, addMessage } = useSpaces();
+    // Study mode context
+    const { getStudyModeForSpace, setStudyMode } = useStudyMode();
     // Set Google Gemini 2.5 Flash as the default model
     const [selectedModel, setSelectedModel] = useLocalStorage('neuman-selected-model', 'neuman-google');
 
@@ -104,35 +109,79 @@ const HomeContent = () => {
     // Get stored user ID
     const userId = useMemo(() => getUserId(), []);
 
-    const chatOptions: UseChatOptions = useMemo(() => ({
-        api: '/api/search',
-        experimental_throttle: 500,
-        maxSteps: 5,
-        body: {
-            model: selectedModel,
-            group: selectedGroup,
-            user_id: userId,
-            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-        },
-        onFinish: async (message: any, { finishReason }: { finishReason: string }) => {
-            if (message.content && (finishReason === 'stop' || finishReason === 'length')) {
+    // Create refs to access space functions without adding them as dependencies
+    const spaceFunctionsRef = useRef({ addMessage });
+    spaceFunctionsRef.current = { addMessage };
+
+    // Get current study mode for the active space
+    const currentStudyMode = useMemo(() => {
+        return currentSpaceId ? getStudyModeForSpace(currentSpaceId) : null;
+    }, [currentSpaceId, getStudyModeForSpace]);
+
+    // Handle framework selection
+    const handleFrameworkSelect = useCallback((frameworkString: string) => {
+        if (!currentSpaceId) return;
+        
+        const framework = frameworkString as StudyFramework;
+        setStudyMode(framework, currentSpaceId);
+        
+        // Dispatch space change event for StudyModeContext
+        window.dispatchEvent(new CustomEvent('spaceChanged', { 
+            detail: { spaceId: currentSpaceId } 
+        }));
+    }, [currentSpaceId, setStudyMode]);
+
+    // Handle study mode badge click (to change or disable mode)
+    const handleStudyModeBadgeClick = useCallback(() => {
+        if (!currentSpaceId) return;
+        
+        // For now, just clear the study mode. Later we can show a selector.
+        setStudyMode(null, currentSpaceId);
+        toast.info('Study mode disabled');
+    }, [currentSpaceId, setStudyMode]);
+
+    const chatOptions: UseChatOptions = useMemo(() => {
+        // Determine API endpoint based on study mode
+        const apiEndpoint = currentStudyMode?.framework 
+            ? `/api/study/${currentStudyMode.framework}`
+            : '/api/search';
+
+        return {
+            api: apiEndpoint,
+            experimental_throttle: 500,
+            maxSteps: 5,
+            body: {
+                model: selectedModel,
+                group: selectedGroup,
+                user_id: userId,
+                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+            },
+        onFinish: async (aiMessageFromSDK: Message, { finishReason }: { finishReason: string }) => {
+            if (aiMessageFromSDK.content && (finishReason === 'stop' || finishReason === 'length')) {
                 // Persist assistant message to current space
-                addMessage({ role: 'assistant', content: message.content });
+                const assistantChatMessage: ChatMessage = {
+                    id: aiMessageFromSDK.id,
+                    role: 'assistant',
+                    content: aiMessageFromSDK.content,
+                    timestamp: aiMessageFromSDK.createdAt ? aiMessageFromSDK.createdAt.getTime() : Date.now()
+                };
+                spaceFunctionsRef.current.addMessage(assistantChatMessage);
                 const newHistory = [
                     { role: 'user', content: lastSubmittedQueryRef.current },
-                    { role: 'assistant', content: message.content },
+                    { role: 'assistant', content: assistantChatMessage.content },
                 ];
                 const { questions } = await suggestQuestions(newHistory);
                 setSuggestedQuestions(questions);
             }
         },
-        onError: (error) => {
-            console.error("Chat error:", error.cause, error.message);
-            toast.error("An error occurred.", {
-                description: `Oops! An error occurred while processing your request. ${error.message}`,
-            });
-        },
-    }), [selectedModel, selectedGroup, userId, addMessage]);
+            onError: (error) => {
+                console.error("Chat error:", error.cause, error.message);
+                toast.error("An error occurred.", {
+                    description: `Oops! An error occurred while processing your request. ${error.message}`,
+                });
+            },
+        };
+    }, [selectedModel, selectedGroup, userId, currentStudyMode]);
 
     const {
         input,
@@ -148,16 +197,31 @@ const HomeContent = () => {
     } = useChat(chatOptions);
 
     // Wrap append to persist user messages to current space
-    const appendWithPersist = useCallback(async (message: any, options: any = {}): Promise<any> => {
-        // Persist user messages to the current space BEFORE sending to AI
-        // This ensures the user message timestamp is earlier than the AI response timestamp.
-        if (message.role === 'user') {
-            addMessage({ role: message.role, content: message.content });
+    const appendWithPersist = useCallback(async (messageProps: { role: 'user' | 'assistant', content: string }, options: any = {}): Promise<any> => {
+        if (messageProps.role === 'user') {
+            const userChatMessage: ChatMessage = {
+                id: crypto.randomUUID(),
+                role: 'user', // explicitly 'user'
+                content: messageProps.content,
+                timestamp: Date.now()
+            };
+            spaceFunctionsRef.current.addMessage(userChatMessage); // Persist to SpacesContext/localStorage
+            
+            // Pass the same object (with id, role, content) to useChat's append
+            // The @ai-sdk/react 'Message' type has id, role, content.
+            // Our ChatMessage {id, role, content, timestamp} is compatible for append.
+            const result = await append(userChatMessage, options); 
+            return result;
+        } else {
+            // For other roles, if any are directly passed here.
+            // AI messages are primarily handled in onFinish.
+            // This path should ensure that if an assistant message is somehow passed here,
+            // it's at least appended to the useChat state.
+            // Persistence for assistant messages is handled in onFinish.
+            const result = await append(messageProps, options);
+            return result;
         }
-        // Then append to internal chat state and send to AI service
-        const result = await append(message, options);
-        return result;
-    }, [append, addMessage]);
+    }, [append]); // Remove addMessage dependency since we're using the ref
 
     // Sync chat internal messages when switching spaces (only on space change, not on every message addition)
     useEffect(() => {
@@ -166,20 +230,31 @@ const HomeContent = () => {
             const sortedMessages = [...currentSpace.messages].sort((a, b) => a.timestamp - b.timestamp);
             setMessages(sortedMessages);
         }
-        // Only run this effect when the space ID changes
+        // Reset initialization flag when switching spaces to allow new queries
+        initializedRef.current = false;
+        // Only run this effect when the space ID changes, NOT when messages change
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [currentSpaceId]);
 
     useEffect(() => {
-        if (!initializedRef.current && initialState.query && !messages.length) {
-            initializedRef.current = true;
-            console.log("[initial query]:", initialState.query);
-            appendWithPersist({
-                content: initialState.query,
-                role: 'user'
-            });
+        if (!initializedRef.current && initialState.query) {
+            // Check if this query is already the last message in the space
+            const lastMessage = messages[messages.length - 1];
+            const isQueryAlreadyProcessed = lastMessage && 
+                lastMessage.role === 'user' && 
+                lastMessage.content === initialState.query;
+            
+            if (!isQueryAlreadyProcessed) {
+                initializedRef.current = true;
+                console.log("[initial query]:", initialState.query);
+                setHasSubmitted(true);
+                appendWithPersist({
+                    content: initialState.query,
+                    role: 'user'
+                });
+            }
         }
-    }, [initialState.query, appendWithPersist, setInput, messages.length]);
+    }, [initialState.query, appendWithPersist, setInput, messages]);
 
     // Wrap setMessages to satisfy MessagesProps (only array setter)
     const updateMessages = useCallback((msgs: any[]) => {
@@ -303,8 +378,12 @@ const HomeContent = () => {
                     </Link>
                 </div>
                 <div className='flex items-center space-x-4'>
-                    <Switch />
-                    <AboutButton />
+                    {currentStudyMode?.framework && (
+                        <StudyModeBadge 
+                            framework={currentStudyMode.framework as StudyFramework}
+                            onClick={handleStudyModeBadgeClick}
+                        />
+                    )}
                     <ThemeToggle />
                 </div>
             </div>
@@ -319,6 +398,11 @@ const HomeContent = () => {
     const resetSuggestedQuestions = useCallback(() => {
         setSuggestedQuestions([]);
     }, []);
+
+    // Helper function to determine if content is being processed/loaded
+    const isProcessing = useMemo(() => {
+        return status !== 'ready';
+    }, [status]);
 
 
     const WidgetSection = memo(() => {
@@ -429,8 +513,29 @@ const HomeContent = () => {
                         {status === 'ready' && messages.length === 0 && (
                             <div className="text-center">
                                 <h1 className="text-2xl sm:text-4xl mb-4 sm:mb-6 text-neutral-800 dark:text-neutral-100 font-syne!">
-                                    What do you want to learn, about?
+                                    {currentSpace?.name && currentSpace.name !== 'General' 
+                                        ? `Continue your conversation in ${currentSpace.name}`
+                                        : 'What do you want to learn about?'
+                                    }
                                 </h1>
+                                {currentSpace?.name && currentSpace.name !== 'General' && (
+                                    <div>
+                                        {currentSpace.name.includes('Journal Discussion') && isProcessing ? (
+                                            <div className="flex items-center gap-2 mb-4">
+                                                <div className="animate-spin h-4 w-4 border-2 border-green-500 rounded-full border-t-transparent"></div>
+                                                <p className="text-sm text-green-600 dark:text-green-400 font-medium">
+                                                    Analyzing your journal content...
+                                                </p>
+                                            </div>
+                                        ) : (
+                                            <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-4">
+                                                {currentSpace.name.includes('Journal Discussion') 
+                                                    ? "Your journal content has been analyzed. Feel free to ask follow-up questions." 
+                                                    : "This is your dedicated space for focused discussions"}
+                                            </p>
+                                        )}
+                                    </div>
+                                )}
                             </div>
                         )}
                         <AnimatePresence>
@@ -446,7 +551,12 @@ const HomeContent = () => {
                                         onChange={setInput}
                                         onSubmit={() => {
                                             lastSubmittedQueryRef.current = input;
-                                            handleSubmit();
+                                            appendWithPersist({
+                                                content: input,
+                                                role: 'user'
+                                            });
+                                            setInput(''); // Clear input after submit
+                                            setHasSubmitted(true);
                                             setHasManuallyScrolled(false);
                                             bottomRef.current?.scrollIntoView({ behavior: "smooth" });
                                         }}
@@ -457,6 +567,7 @@ const HomeContent = () => {
                                         setAttachments={setAttachments}
                                         onStop={stop}
                                         status={status}
+                                        onFrameworkSelect={handleFrameworkSelect}
                                     />
                                 </motion.div>
                             )}
@@ -515,7 +626,14 @@ const HomeContent = () => {
                                             onChange={setInput}
                                             onSubmit={() => {
                                                 lastSubmittedQueryRef.current = input;
-                                                handleSubmit();
+                                                appendWithPersist({
+                                                    content: input,
+                                                    role: 'user'
+                                                });
+                                                setInput(''); // Clear input after submit
+                                                setHasSubmitted(true);
+                                                setHasManuallyScrolled(false);
+                                                bottomRef.current?.scrollIntoView({ behavior: "smooth" });
                                             }}
                                             selectedModel={selectedModel}
                                             setSelectedModel={setSelectedModel}
@@ -524,6 +642,7 @@ const HomeContent = () => {
                                             setAttachments={setAttachments}
                                             onStop={stop}
                                             status={status}
+                                            onFrameworkSelect={handleFrameworkSelect}
                                         />
                                     </div>
                                 </motion.div>

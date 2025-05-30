@@ -27,10 +27,54 @@ export interface Block {
   metadata?: Record<string, any>
 }
 
+export interface Notebook {
+  id: string
+  name: string
+  order: number
+  createdAt: number
+  updatedAt: number
+  isExpanded?: boolean
+  metadata?: {
+    icon?: string
+    color?: string
+  }
+}
+
 export interface JournalEntry {
   id: string
   title: string
   blocks: Block[]
   createdAt: string
   updatedAt: string
+  notebook_id?: string
+}
+
+export enum StudyFramework {
+  MemoryPalace = 'memory-palace',
+  FeynmanTechnique = 'feynman-technique',
+  SpacedRepetition = 'spaced-repetition',
+  ExtremeMode = 'extreme-mode'
+}
+
+export interface StudyModeSettings {
+  framework: StudyFramework | null;
+  activatedAt: number;
+  settings: {
+    memoryPalace?: {
+      currentLocation?: string;
+      stations?: Array<{ id: string; name: string; concept: string; }>;
+    };
+    feynman?: {
+      currentConcept?: string;
+      simplificationLevel?: number;
+    };
+    spacedRepetition?: {
+      reviewSchedule?: Array<{ concept: string; nextReview: number; interval: number; }>;
+    };
+    extremeMode?: {
+      sessionStartTime?: number;
+      targetDuration?: number;
+      combinedTechniques?: StudyFramework[];
+    };
+  };
 }

@@ -5,6 +5,8 @@ import { Upload } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
+import { FrameworkSelector } from "@/components/study/framework-selector"
+import { StudyFramework } from "@/lib/types"
 
 // Define the model options - with Google Gemini 2.5 Flash as the default
 const models = [
@@ -38,6 +40,7 @@ interface TerminalInputProps {
   setAttachments: React.Dispatch<React.SetStateAction<Array<Attachment>>>;
   onStop: () => void;
   status: 'submitted' | 'streaming' | 'ready' | 'error';
+  onFrameworkSelect?: (framework: string) => void;
 }
 
 export function TerminalInput({
@@ -51,6 +54,7 @@ export function TerminalInput({
   setAttachments,
   onStop,
   status,
+  onFrameworkSelect,
 }: TerminalInputProps) {
   const [showCommands, setShowCommands] = useState(false)
   const [activeInterface, setActiveInterface] = useState<string | null>(null)
@@ -61,6 +65,10 @@ export function TerminalInput({
   
   const commands: Command[] = [
     { name: "/model", description: "Change AI model" },
+    { name: "/frameworks", description: "Study frameworks" },
+    { name: "/extreme", description: "Extreme study mode" },
+    { name: "/tools", description: "Study tools (coming soon)" },
+    { name: "/rules", description: "Study rules (coming soon)" },
     { name: "/clear", description: "Clear conversation history" },
     { name: "/help", description: "List available commands" },
   ]
@@ -75,6 +83,8 @@ export function TerminalInput({
     // Check if the command is complete and set the active interface
     if (value === "/model") {
       setActiveInterface("model")
+    } else if (value === "/frameworks") {
+      setActiveInterface("frameworks")
     } else if (value === "/help") {
       setActiveInterface("help")
     } else if (value === "/clear") {
@@ -157,9 +167,24 @@ export function TerminalInput({
 
     switch (cmd) {
       case "/model":
+      case "/frameworks":
       case "/help":
       case "/clear":
         // These are handled by the activeInterface state
+        break
+      case "/extreme":
+        // Quick access to extreme mode
+        if (onFrameworkSelect) {
+          onFrameworkSelect('extreme-mode');
+        }
+        onChange("")
+        setActiveInterface(null)
+        break
+      case "/tools":
+      case "/rules":
+        toast.info(`${cmd} - Coming soon!`)
+        onChange("")
+        setActiveInterface(null)
         break
       default:
         toast.info(`Unknown command: ${cmd}`)
@@ -201,6 +226,14 @@ export function TerminalInput({
     toast.info("Chat cleared")
     closeInterface()
     // You would need to implement this functionality in the parent and pass it as a prop
+  }
+
+  const handleFrameworkSelect = (framework: StudyFramework) => {
+    if (onFrameworkSelect) {
+      onFrameworkSelect(framework);
+    }
+    closeInterface()
+    toast.success(`Study mode activated: ${framework}`)
   }
 
   // Model selector component
@@ -313,12 +346,18 @@ export function TerminalInput({
     </div>
   )
 
-  return (
-    <div className="relative w-full">
-      {/* Command interfaces */}
-      {activeInterface === "model" && <ModelSelector />}
-      {activeInterface === "help" && <HelpPanel />}
-      {activeInterface === "clear" && <ClearConfirmation />}
+      return (
+      <div className="relative w-full">
+        {/* Command interfaces */}
+        {activeInterface === "model" && <ModelSelector />}
+        {activeInterface === "frameworks" && (
+          <FrameworkSelector 
+            onSelect={handleFrameworkSelect} 
+            onClose={closeInterface} 
+          />
+        )}
+        {activeInterface === "help" && <HelpPanel />}
+        {activeInterface === "clear" && <ClearConfirmation />}
 
       {/* Command suggestions */}
       {showCommands && !activeInterface && (

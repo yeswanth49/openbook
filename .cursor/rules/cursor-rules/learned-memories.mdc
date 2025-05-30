@@ -9,6 +9,9 @@ This file stores project-specific knowledge, conventions, and user preferences l
 
 ## Technical Decisions
 
+// ... existing code ...
+- Always use `pnpm` for package management tasks.
+
 - **Conversations Naming Strategy:** Auto-generate conversation names based on first user message or key topics extracted from content. Show loading indicators during generation. Allow manual renaming with option to revert to auto-naming.
 
 - **Loading States Design:** All loading indicators use a combination of skeletons, progress bars, and contextual messages that adapt to duration. Mobile views use simplified layouts.

@@ -4,7 +4,8 @@ import type React from "react"
 import { useEffect, useRef, useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { type Block, BlockType } from "../../../lib/types"
-import { GripVertical, Plus, Trash2, Copy, MoveVertical, Palette, Check, ArrowUp, ArrowDown, Link, Type, Heading1, Heading2, Code, List, CheckSquare, Quote, Minus, ChevronRight, Edit2, Cpu, Repeat, Square } from "lucide-react"
+import { GripVertical, Plus, Trash2, Copy, MoveVertical, Palette, Check, ArrowUp, ArrowDown, Link, Type, Heading1, Heading2, Code, List, CheckSquare, Quote, Minus, ChevronRight, Edit2, Cpu, Repeat, Square, Sparkles, MessageSquare } from "lucide-react"
+import AIAssistant from "../ai/ai-assistant"
 
 interface EditorContentProps {
   blocks: Block[]
@@ -30,17 +31,28 @@ export default function EditorContent({
   const blockRefs = useRef<Record<string, HTMLDivElement | null>>({})
   const [activeMenu, setActiveMenu] = useState<string | null>(null)
   const [selectedBlocks, setSelectedBlocks] = useState<string[]>([])
-  const [showAskModal, setShowAskModal] = useState(false)
   const [submenu, setSubmenu] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState<string>("")
+  const [showAIAssistant, setShowAIAssistant] = useState(false)
+  const [currentBlockForAI, setCurrentBlockForAI] = useState<Block | null>(null)
   const toggleSelection = (id: string) => {
     setSelectedBlocks(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id])
   }
-  const confirmAsk = () => {
-    const selected = blocks.filter(b => selectedBlocks.includes(b.id))
-    onCreateSpaceConversation?.(selected)
-    setShowAskModal(false)
-    setSelectedBlocks([])
+
+  const handleAIBlockUpdate = (blockId: string, content: string) => {
+    onChange(blockId, content)
+  }
+
+  const handleAICreateBlock = (content: string, type: BlockType = BlockType.Text) => {
+    const newBlock: Block = {
+      id: Date.now().toString(),
+      type,
+      content,
+      isFocused: false
+    }
+    
+    const updatedBlocks = [...blocks, newBlock]
+    onBlocksChange?.(updatedBlocks)
   }
   const menuRef = useRef<HTMLDivElement>(null)
 
@@ -52,9 +64,30 @@ export default function EditorContent({
       }
     }
     
+    // Handle keyboard shortcuts
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Cmd+L (Mac) or Ctrl+L (Windows/Linux) to open AI Assistant
+      if ((e.metaKey || e.ctrlKey) && e.key === 'l') {
+        e.preventDefault()
+        
+        // Find the currently focused block or use the first selected block
+        const focusedBlock = blocks.find(b => b.isFocused)
+        const selectedBlocksData = blocks.filter(b => selectedBlocks.includes(b.id))
+        
+        if (focusedBlock || selectedBlocksData.length > 0) {
+          setCurrentBlockForAI(focusedBlock || selectedBlocksData[0])
+          setShowAIAssistant(true)
+        }
+      }
+    }
+    
     document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [])
+    document.addEventListener('keydown', handleKeyDown)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+      document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [blocks, selectedBlocks])
 
   useEffect(() => {
     // Focus on the block that has isFocused set to true
@@ -84,6 +117,25 @@ export default function EditorContent({
     setActiveMenu(null)
     
     switch (action) {
+      case 'ai-assistant':
+        const block = blocks.find(b => b.id === blockId)
+        if (block) {
+          setCurrentBlockForAI(block)
+          setShowAIAssistant(true)
+        }
+        break
+      case 'ask-in-spaces':
+        // Get all selected blocks, or just the current block if none are selected
+        const blocksToSend = selectedBlocks.length > 0 
+          ? blocks.filter(b => selectedBlocks.includes(b.id))
+          : blocks.filter(b => b.id === blockId)
+        
+        if (blocksToSend.length > 0) {
+          onCreateSpaceConversation?.(blocksToSend)
+          // Clear selection after sending to spaces
+          setSelectedBlocks([])
+        }
+        break
       case 'delete':
         onDeleteBlock?.(blockId)
         break
@@ -154,16 +206,20 @@ export default function EditorContent({
         className="group relative block-container pl-16"
       >
         {/* Add a menu indicator at the beginning of each block */}
-        <div className="absolute left-[-64px] top-1/2 transform -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center gap-2">
+        <div className={`absolute left-[-64px] top-1/2 transform -translate-y-1/2 transition-opacity duration-200 flex items-center gap-2 ${
+          selectedBlocks.includes(block.id) ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+        }`}>
           <button
             onClick={(e) => {
               e.stopPropagation();
               toggleSelection(block.id);
             }}
-            className="h-8 w-8 rounded-md flex items-center justify-center hover:bg-neutral-100 dark:hover:bg-neutral-800"
+            className={`h-8 w-8 rounded-md flex items-center justify-center hover:bg-neutral-100 dark:hover:bg-neutral-800 ${
+              selectedBlocks.includes(block.id) ? 'bg-blue-50 dark:bg-blue-900/30' : ''
+            }`}
           >
             {selectedBlocks.includes(block.id) ? (
-              <CheckSquare className="h-5 w-5 text-neutral-400" />
+              <CheckSquare className="h-5 w-5 text-blue-600 dark:text-blue-400" />
             ) : (
               <Square className="h-5 w-5 text-neutral-400" />
             )}
@@ -206,23 +262,23 @@ export default function EditorContent({
                   </div>
                   <div className="p-1 flex flex-col">
                     <button
-                      onClick={() => { /* Suggest action */ setActiveMenu(null); }}
+                      onClick={() => handleBlockAction('ask-in-spaces', block.id)}
                       onMouseEnter={() => setSubmenu(null)}
                       className="flex items-center justify-between w-full px-3 py-1 text-sm hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded"
                     >
                       <span className="flex items-center gap-2">
-                        <Edit2 className="h-4 w-4 text-neutral-500" />
-                        <span>Suggest</span>
+                        <MessageSquare className="h-4 w-4 text-green-600 dark:text-green-400" />
+                        <span>Ask in Spaces</span>
                       </span>
                     </button>
                     <button
-                      onClick={() => { /* Ask AI action */ setActiveMenu(null); }}
+                      onClick={() => handleBlockAction('ai-assistant', block.id)}
                       onMouseEnter={() => setSubmenu(null)}
                       className="flex items-center justify-between w-full px-3 py-1 text-sm hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded"
                     >
                       <span className="flex items-center gap-2">
-                        <Cpu className="h-4 w-4 text-neutral-500" />
-                        <span>Ask AI</span>
+                        <Sparkles className="h-4 w-4 text-purple-500" />
+                        <span>AI Assistant</span>
                       </span>
                     </button>
                     <button
@@ -315,7 +371,7 @@ export default function EditorContent({
         {block.content.trim() === "" && block.isFocused && !activeMenu && block.type === BlockType.Text && (
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
             <span className="flex items-center gap-1 text-neutral-400 select-none text-sm font-normal opacity-70">
-              Type <span className="inline-block px-1.5 py-0.5 bg-neutral-100 dark:bg-neutral-800 rounded text-xs font-medium">/</span> for commands
+              Type <span className="inline-block px-1.5 py-0.5 bg-neutral-100 dark:bg-neutral-800 rounded text-xs font-medium">/</span> for commands or <span className="inline-block px-1.5 py-0.5 bg-neutral-100 dark:bg-neutral-800 rounded text-xs font-medium">⌘L</span> for AI
             </span>
           </div>
         )}
@@ -457,32 +513,22 @@ export default function EditorContent({
 
   return (
     <div className="max-w-2xl mx-auto relative">
-      {selectedBlocks.length > 0 && (
-        <div className="sticky top-0 bg-white dark:bg-neutral-900 flex items-center justify-between px-4 py-2 border-b border-neutral-200 dark:border-neutral-800 z-50">
-          <span className="text-sm text-neutral-600 dark:text-neutral-400">{selectedBlocks.length} selected</span>
-          <button onClick={() => setShowAskModal(true)} className="text-sm text-blue-600 dark:text-blue-400 hover:underline">
-            Ask in spaces
-          </button>
-        </div>
-      )}
       {blocks.map((block, index) => renderBlock(block, index))}
-      {showAskModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-neutral-900 rounded-lg p-4 w-80">
-            <p className="text-sm text-neutral-800 dark:text-neutral-200">
-              Open a new Spaces conversation with these {selectedBlocks.length} blocks?
-            </p>
-            <div className="mt-4 flex justify-end gap-2">
-              <button onClick={() => setShowAskModal(false)} className="px-3 py-1 text-sm text-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded">
-                Cancel
-              </button>
-              <button onClick={() => { confirmAsk(); }} className="px-3 py-1 text-sm text-white bg-blue-600 dark:bg-blue-500 rounded hover:bg-blue-700">
-                Yes
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      
+      <AnimatePresence>
+        {showAIAssistant && (
+          <AIAssistant
+            selectedBlocks={blocks.filter(b => selectedBlocks.includes(b.id))}
+            currentBlock={currentBlockForAI || undefined}
+            onBlockUpdate={handleAIBlockUpdate}
+            onCreateBlock={handleAICreateBlock}
+            onClose={() => {
+              setShowAIAssistant(false)
+              setCurrentBlockForAI(null)
+            }}
+          />
+        )}
+      </AnimatePresence>
     </div>
   )
 }

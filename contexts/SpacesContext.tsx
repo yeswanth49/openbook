@@ -18,11 +18,17 @@ export type Space = {
   archived: boolean;
   createdAt: number;
   updatedAt: number;
+  notebook_id?: string;
   metadata?: {
     manuallyRenamed: boolean;
     pinned?: boolean;
     lastAutoNameUpdate?: number;
     isGeneratingName?: boolean;
+  };
+  studyMode?: {
+    framework: 'memory-palace' | 'feynman-technique' | 'spaced-repetition' | 'extreme-mode' | null;
+    settings?: Record<string, any>;
+    activatedAt?: number;
   };
 };
 
@@ -30,12 +36,12 @@ export interface SpacesContextType {
   spaces: Space[];
   currentSpaceId: string;
   currentSpace?: Space;
-  createSpace: (name: string) => string;
+  createSpace: (name: string, notebook_id?: string) => string;
   deleteSpace: (id: string) => void;
   archiveSpace: (id: string) => void;
   renameSpace: (id: string, name: string, isManualRename?: boolean) => void;
   switchSpace: (id: string) => void;
-  addMessage: (message: Omit<ChatMessage, 'id' | 'timestamp'>) => void;
+  addMessage: (message: ChatMessage) => void;
   exportSpace: (id: string) => void;
   togglePinSpace: (id: string) => void;
   resetToAutoNaming: (id: string) => void;
@@ -202,7 +208,7 @@ export const SpacesProvider = ({ children }: { children: ReactNode }) => {
     processSpaces();
   }, [spaces, generateNameWithDelay]);
   
-  const createSpace = (name: string) => {
+  const createSpace = (name: string, notebook_id?: string) => {
     const newSpace: Space = {
       id: crypto.randomUUID(),
       name,
@@ -210,6 +216,7 @@ export const SpacesProvider = ({ children }: { children: ReactNode }) => {
       archived: false,
       createdAt: Date.now(),
       updatedAt: Date.now(),
+      notebook_id,
       metadata: {
         manuallyRenamed: false, // Default to auto-naming for new spaces
         isGeneratingName: false
@@ -293,36 +300,43 @@ export const SpacesProvider = ({ children }: { children: ReactNode }) => {
     setCurrentSpaceId(id);
   };
 
-  const addMessage = (message: Omit<ChatMessage, 'id' | 'timestamp'>) => {
-    const now = Date.now();
-    setSpaces(prev => prev.map(s => {
-      if (s.id !== currentSpaceId) return s;
-      
-      // For the current space, add the message
-      const updatedSpace = {
-        ...s,
-        messages: [...s.messages, { ...message, id: crypto.randomUUID(), timestamp: now }],
-        updatedAt: now
-      };
-      
-      // If this is the first user message and the space has auto-naming, 
-      // mark it as generating a name
-      if (
-        message.role === 'user' && 
-        updatedSpace.messages.filter(m => m.role === 'user').length === 1 &&
-        !updatedSpace.metadata?.manuallyRenamed
-      ) {
-        return {
-          ...updatedSpace,
-          metadata: {
-            ...(updatedSpace.metadata || { manuallyRenamed: false }),
-            isGeneratingName: true
-          }
+  const addMessage = (newMessageToAdd: ChatMessage) => {
+    const spaceUpdateTimestamp = Date.now(); // For the space's updatedAt field
+    setSpaces(prev => {
+      const updated = prev.map(s => {
+        if (s.id !== currentSpaceId) return s;
+        
+        // Filter out any existing message with the same ID to prevent duplicates,
+        // then add the new message.
+        const updatedMessages = s.messages.filter(m => m.id !== newMessageToAdd.id);
+        updatedMessages.push(newMessageToAdd);
+
+        const updatedSpace = {
+          ...s,
+          messages: updatedMessages,
+          updatedAt: spaceUpdateTimestamp
         };
-      }
-      
-      return updatedSpace;
-    }));
+        
+        // Auto-naming logic (uses newMessageToAdd.role)
+        if (
+          newMessageToAdd.role === 'user' &&
+          updatedSpace.messages.filter(m => m.role === 'user').length === 1 &&
+          updatedSpace.messages.length <= 2 && // Ensure it's early in the conversation
+          !updatedSpace.metadata?.manuallyRenamed
+        ) {
+          return {
+            ...updatedSpace,
+            metadata: {
+              ...(updatedSpace.metadata || { manuallyRenamed: false }),
+              isGeneratingName: true
+            }
+          };
+        }
+        
+        return updatedSpace;
+      });
+      return updated;
+    });
   };
 
   const exportSpace = (id: string) => {

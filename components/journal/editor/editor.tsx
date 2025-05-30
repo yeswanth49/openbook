@@ -2,6 +2,8 @@
 
 import React, { useState, useRef, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
+import { Moon, Sun } from "lucide-react"
+import { useTheme } from "next-themes"
 import SlashCommandMenu from "./slash-command-menu"
 import EditorContent from "./editor-content"
 import EmptyState from "./empty-state"
@@ -38,6 +40,23 @@ export default function Editor({ initialBlocks, onBlocksChange, title, onTitleCh
   // Spaces integration for 'Ask in spaces'
   const router = useRouter()
   const { createSpace, addMessage } = useSpaces()
+
+  // Theme toggle component
+  const ThemeToggle: React.FC = () => {
+    const { resolvedTheme, setTheme } = useTheme();
+
+    return (
+      <button
+        onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
+        className="p-2 rounded-full hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+        title="Toggle theme"
+      >
+        <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+        <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+        <span className="sr-only">Toggle theme</span>
+      </button>
+    );
+  };
 
   useEffect(() => {
     // Initialize loading state
@@ -278,6 +297,7 @@ export default function Editor({ initialBlocks, onBlocksChange, title, onTitleCh
             onChange={(e) => handleTitleChange(e.target.value)}
             placeholder={defaultTitle}
           />
+          <ThemeToggle />
         </div>
       </header>
 

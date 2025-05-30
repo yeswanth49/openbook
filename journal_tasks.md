@@ -19,6 +19,25 @@ This document outlines the plan to implement and enhance the journaling function
   - [x] Create consistent styling with subtle visual elements
   - [x] Implement minimalistic metadata display
   - [x] Add subtle hover effects and transitions
+- [x] **AI-Assisted Journal Implementation**
+  - [x] **"Explain Selected Blocks" feature with AI integration**
+    - [x] Implement text selection handling in journal editor
+    - [x] Create AI assistant panel component with streaming responses
+    - [x] Add explanation request system with context-aware prompts
+    - [x] Build explanation display with copy functionality
+  - [x] **"Ask in Space" direct conversation feature**
+    - [x] Integrate with existing Spaces API and context
+    - [x] Create seamless transitions between journal and conversation
+    - [x] Add journal context attachment to conversations
+  - [x] **"Suggest Content" functionality for blocks**
+    - [x] Implement context-aware prompt generation for suggestions
+    - [x] Add surrounding block context collection
+    - [x] Build content insertion system with apply/create options
+    - [x] **"Add to Journal" button in spaces**
+      - [x] Create add-to-journal-button component for conversation strips
+      - [x] Implement automatic journal entry creation/updating
+      - [x] Add visual feedback and navigation to journal entries
+      - [x] Integrate button into spaces message display
 
 ## In Progress Tasks
 

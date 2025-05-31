@@ -230,7 +230,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
         className={cn(
           "fixed top-24 left-0 z-50 bg-white dark:bg-neutral-900",
           "rounded-r-md p-2 shadow-sm transition-transform duration-200 ease-out",
-          "hover:bg-neutral-100 dark:hover:bg-neutral-800"
+          "hover:bg-neutral-100 dark:hover:bg-neutral-800 opacity-40 hover:opacity-90"
         )}
         onClick={() => setIsOpen(!isOpen)}
         aria-label={isOpen ? "Collapse sidebar" : "Expand sidebar"}

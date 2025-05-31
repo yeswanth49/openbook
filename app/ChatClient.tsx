@@ -57,6 +57,7 @@ interface Attachment {
 
 
 const SIDEBAR_WIDTH = 256; // 64 * 4 = 256px
+const SIDEBAR_WIDTH_SM = 240; // Smaller width for smaller screens
 
 const HomeContent = () => {
     const [query] = useQueryState('query', parseAsString.withDefault(''))
@@ -86,7 +87,8 @@ const HomeContent = () => {
     const [hasSubmitted, setHasSubmitted] = React.useState(false);
     const [hasManuallyScrolled, setHasManuallyScrolled] = useState(false);
     const isAutoScrollingRef = useRef(false);
-    const [sidebarOpen, setSidebarOpen] = useState(true);
+    const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1024);
+    const [sidebarOpen, setSidebarOpen] = useState(false);
 
     // Get stored user ID
     const userId = useMemo(() => getUserId(), []);
@@ -276,11 +278,19 @@ const HomeContent = () => {
             // Initial scroll to bottom when streaming starts
             if (bottomRef.current) {
                 isAutoScrollingRef.current = true;
-                bottomRef.current.scrollIntoView({ behavior: "smooth" });
+                const blockValue = windowWidth < 640 ? "end" : "center";
+                bottomRef.current.scrollIntoView({ 
+                    behavior: windowWidth < 640 ? "auto" : "smooth",
+                    block: blockValue as ScrollLogicalPosition 
+                });
+                setTimeout(() => {
+                    isAutoScrollingRef.current = false;
+                }, windowWidth < 640 ? 10 : 100);
             }
         }
-    }, [status]);
+    }, [status, windowWidth]);
 
+    // Scroll handling effect
     useEffect(() => {
         let scrollTimeout: NodeJS.Timeout;
 
@@ -292,9 +302,14 @@ const HomeContent = () => {
 
             // If we're not auto-scrolling and we're streaming, it must be a user scroll
             if (!isAutoScrollingRef.current && status === 'streaming') {
-                const isAtBottom = window.innerHeight + window.scrollY >= document.body.offsetHeight - 100;
+                // Use a smaller offset on mobile
+                const mobileAdjust = windowWidth < 640 ? 80 : 120;
+                const isAtBottom = window.innerHeight + window.scrollY >= document.body.offsetHeight - mobileAdjust;
                 if (!isAtBottom) {
                     setHasManuallyScrolled(true);
+                } else {
+                    // If user scrolled back to bottom, reset the manual scroll flag
+                    setHasManuallyScrolled(false);
                 }
             }
         };
@@ -305,12 +320,17 @@ const HomeContent = () => {
         if (status === 'streaming' && !hasManuallyScrolled && bottomRef.current) {
             scrollTimeout = setTimeout(() => {
                 isAutoScrollingRef.current = true;
-                bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+                // Use a different block value on mobile
+                const blockValue = windowWidth < 640 ? "end" : "center";
+                bottomRef.current?.scrollIntoView({ 
+                    behavior: windowWidth < 640 ? "auto" : "smooth", 
+                    block: blockValue as ScrollLogicalPosition 
+                });
                 // Reset auto-scroll flag after animation
                 setTimeout(() => {
                     isAutoScrollingRef.current = false;
-                }, 100);
-            }, 100);
+                }, windowWidth < 640 ? 10 : 100);
+            }, windowWidth < 640 ? 10 : 100);
         }
 
         return () => {
@@ -319,8 +339,19 @@ const HomeContent = () => {
                 clearTimeout(scrollTimeout);
             }
         };
-    }, [messages, suggestedQuestions, status, hasManuallyScrolled]);
+    }, [messages, suggestedQuestions, status, hasManuallyScrolled, windowWidth]);
 
+    // Handle window resize without automatically toggling sidebar
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+        
+        const handleResize = () => {
+            setWindowWidth(window.innerWidth);
+        };
+
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     const AboutButton = () => {
         return (
@@ -341,25 +372,14 @@ const HomeContent = () => {
     const Navbar: React.FC<NavbarProps> = () => {
         return (
             <div className={cn(
-                "fixed top-0 left-0 right-0 z-60 flex justify-between items-center p-4",
+                "fixed top-0 left-0 right-0 z-60 flex justify-between items-center p-3 sm:p-4",
                 // No background, no shadow
                 "bg-transparent"
             )}>
-                <div className="flex items-center gap-4">
-                    <Link href="/new">
-                        {/* <Button
-                            type="button"
-                            variant={'secondary'}
-                            className="rounded-full bg-accent hover:bg-accent/80 backdrop-blur-xs group transition-all hover:scale-105 pointer-events-auto"
-                        >
-                            <Plus size={18} className="group-hover:rotate-90 transition-all" />
-                            <span className="text-sm ml-2 group-hover:block hidden animate-in fade-in duration-300">
-                                New
-                            </span>
-                        </Button> */}
-                    </Link>
+                <div className="flex items-center gap-2 sm:gap-4">
+                    {/* Sidebar toggle button removed */}
                 </div>
-                <div className='flex items-center space-x-4'>
+                <div className='flex items-center space-x-2 sm:space-x-4'>
                     {currentStudyMode?.framework && (
                         <StudyModeBadge 
                             framework={currentStudyMode.framework as StudyFramework}
@@ -448,16 +468,16 @@ const HomeContent = () => {
         }, []);
 
         return (
-            <div className="mt-8 w-full">
-                <div className="flex flex-wrap gap-3 justify-center">
+            <div className="w-full mt-0 sm:mt-2 md:mt-4">
+                <div className="flex flex-wrap gap-2 sm:gap-3 justify-center">
                     {/* Time Widget */}
                     <Button
                         variant="outline"
-                        className="group flex items-center gap-2 px-4 py-2 rounded-full bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-800 hover:shadow-xs transition-all h-auto"
+                        className="group flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-800 hover:shadow-xs transition-all h-auto"
                         onClick={handleDateTimeClick}
                     >
-                        <PhosphorClock weight="duotone" className="h-5 w-5 text-blue-500 dark:text-blue-400 group-hover:scale-110 transition-transform" />
-                        <span className="text-sm text-neutral-700 dark:text-neutral-300 font-medium">
+                        <PhosphorClock weight="duotone" className="h-4 w-4 sm:h-5 sm:w-5 text-blue-500 dark:text-blue-400 group-hover:scale-110 transition-transform" />
+                        <span className="text-xs sm:text-sm text-neutral-700 dark:text-neutral-300 font-medium">
                             {formattedTime}
                         </span>
                     </Button>
@@ -465,11 +485,11 @@ const HomeContent = () => {
                     {/* Date Widget */}
                     <Button
                         variant="outline"
-                        className="group flex items-center gap-2 px-4 py-2 rounded-full bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-800 hover:shadow-xs transition-all h-auto"
+                        className="group flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-800 hover:shadow-xs transition-all h-auto"
                         onClick={handleDateTimeClick}
                     >
-                        <CalendarBlank weight="duotone" className="h-5 w-5 text-emerald-500 dark:text-emerald-400 group-hover:scale-110 transition-transform" />
-                        <span className="text-sm text-neutral-700 dark:text-neutral-300 font-medium">
+                        <CalendarBlank weight="duotone" className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-500 dark:text-emerald-400 group-hover:scale-110 transition-transform" />
+                        <span className="text-xs sm:text-sm text-neutral-700 dark:text-neutral-300 font-medium">
                             {formattedDate}
                         </span>
                     </Button>
@@ -481,20 +501,30 @@ const HomeContent = () => {
     WidgetSection.displayName = 'WidgetSection';
 
     return (
-        <div className="flex font-sans! min-h-screen bg-background text-foreground transition-all duration-500">
+        <div className="flex flex-col font-sans! items-center min-h-screen bg-background text-foreground transition-all duration-500">
+            {/* Sidebar overlay for mobile */}
+            {sidebarOpen && windowWidth < 768 && (
+                <div 
+                    className="fixed inset-0 bg-black/30 z-40 transition-opacity duration-300"
+                    onClick={() => setSidebarOpen(false)}
+                />
+            )}
+            
             <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
             <div
-                className={"flex-1 min-h-screen transition-all duration-300 flex flex-col items-center"}
-                style={{ marginLeft: sidebarOpen ? SIDEBAR_WIDTH : 0 }}
+                className={cn(
+                    "w-full transition-all duration-300 flex flex-col items-center",
+                    sidebarOpen && windowWidth >= 768 ? 
+                        windowWidth >= 1024 ? "lg:ml-[256px] lg:w-[calc(100%-256px)]" : "md:ml-[240px] md:w-[calc(100%-240px)]" 
+                        : ""
+                )}
             >
                 <Navbar />
-                <div className={`flex flex-col items-center w-full p-2 sm:p-4 pt-20 transition-all duration-300 ${status === 'ready' && messages.length === 0
-                    ? 'min-h-screen! flex! flex-col! items-center! justify-center!' // Center everything when no messages
-                    : ''}`}>
-                    <div className={`w-full max-w-[26rem] sm:max-w-4xl space-y-6 p-0 mx-auto transition-all duration-300`}>
+                <div className="w-full p-2 sm:p-4 mt-20! sm:mt-16! flex flex-col!">
+                    <div className={`w-full max-w-[95%] xs:max-w-[90%] sm:max-w-2xl md:max-w-3xl lg:max-w-4xl space-y-4 sm:space-y-6 mx-auto transition-all duration-300 overflow-x-hidden`}>
                         {status === 'ready' && messages.length === 0 && (
-                            <div className="text-center">
-                                <h1 className="text-2xl sm:text-4xl mb-4 sm:mb-6 text-neutral-800 dark:text-neutral-100 font-syne!">
+                            <div className="text-center py-8 sm:py-12">
+                                <h1 className="text-xl xs:text-2xl sm:text-3xl md:text-4xl mb-3 sm:mb-4 md:mb-6 text-neutral-800 dark:text-neutral-100 font-syne!">
                                     {currentSpace?.name && currentSpace.name !== 'General' 
                                         ? `Continue your conversation in ${currentSpace.name}`
                                         : 'What do you want to learn about?'
@@ -557,14 +587,14 @@ const HomeContent = () => {
 
                         {/* Add the widget section below form when no messages */}
                         {messages.length === 0 && (
-                            <div>
+                            <div className="mt-0 sm:mt-4">
                                 <WidgetSection />
                             </div>
                         )}
 
                         {/* Use the Messages component */}
                         {messages.length > 0 && (
-                            <div className="mt-16 w-full">
+                            <div className="mt-4 sm:mt-8 md:mt-12 w-full overflow-x-hidden">
                                 <Messages
                                     messages={messages}
                                     lastUserMessageIndex={lastUserMessageIndex}
@@ -591,9 +621,10 @@ const HomeContent = () => {
                     <AnimatePresence>
                         {(messages.length > 0 || hasSubmitted) && (
                             <div 
-                                className="fixed bottom-0 left-0 right-0 pb-4 z-40 pointer-events-none"
+                                className="fixed bottom-0 left-0 right-0 pb-3 sm:pb-4 z-40 pointer-events-none"
                                 style={{ 
-                                    paddingLeft: sidebarOpen ? SIDEBAR_WIDTH : 0,
+                                    paddingLeft: sidebarOpen && windowWidth >= 768 ? (windowWidth >= 1024 ? SIDEBAR_WIDTH : SIDEBAR_WIDTH_SM) : 0,
+                                    paddingRight: 0,
                                     transition: 'padding-left 0.3s ease'
                                 }}
                             >
@@ -602,9 +633,9 @@ const HomeContent = () => {
                                     animate={{ opacity: 1, y: 0 }}
                                     exit={{ opacity: 0, y: 20 }}
                                     transition={{ duration: 0.5 }}
-                                    className="max-w-[26rem] sm:max-w-2xl mx-auto px-4 pointer-events-auto"
+                                    className="w-[95%] xs:w-[90%] sm:max-w-2xl md:max-w-3xl mx-auto px-2 xs:px-3 sm:px-4 md:px-6 pointer-events-auto"
                                 >
-                                    <div className="bg-white/60 dark:bg-neutral-900/60 backdrop-blur-sm rounded-md p-1">
+                                    <div className="bg-white/60 dark:bg-neutral-900/60 backdrop-blur-sm rounded-md p-1 sm:p-1.5 shadow-lg w-full">
                                         <TerminalInput
                                             value={input}
                                             onChange={setInput}

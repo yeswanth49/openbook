@@ -488,7 +488,7 @@ const HomeContent = () => {
                 style={{ marginLeft: sidebarOpen ? SIDEBAR_WIDTH : 0 }}
             >
                 <Navbar />
-                <div className={`flex flex-col items-center w-full p-2 sm:p-4 transition-all duration-300 ${status === 'ready' && messages.length === 0
+                <div className={`flex flex-col items-center w-full p-2 sm:p-4 pt-20 transition-all duration-300 ${status === 'ready' && messages.length === 0
                     ? 'min-h-screen! flex! flex-col! items-center! justify-center!' // Center everything when no messages
                     : ''}`}>
                     <div className={`w-full max-w-[26rem] sm:max-w-4xl space-y-6 p-0 mx-auto transition-all duration-300`}>
@@ -564,23 +564,25 @@ const HomeContent = () => {
 
                         {/* Use the Messages component */}
                         {messages.length > 0 && (
-                            <Messages
-                                messages={messages}
-                                lastUserMessageIndex={lastUserMessageIndex}
-                                isEditingMessage={isEditingMessage}
-                                editingMessageIndex={editingMessageIndex}
-                                input={input}
-                                setInput={setInput}
-                                setIsEditingMessage={setIsEditingMessage}
-                                setEditingMessageIndex={setEditingMessageIndex}
-                                setMessages={updateMessages}
-                                append={appendWithPersist}
-                                reload={reload}
-                                suggestedQuestions={suggestedQuestions}
-                                setSuggestedQuestions={setSuggestedQuestions}
-                                status={status}
-                                error={error}
-                            />
+                            <div className="mt-16 w-full">
+                                <Messages
+                                    messages={messages}
+                                    lastUserMessageIndex={lastUserMessageIndex}
+                                    isEditingMessage={isEditingMessage}
+                                    editingMessageIndex={editingMessageIndex}
+                                    input={input}
+                                    setInput={setInput}
+                                    setIsEditingMessage={setIsEditingMessage}
+                                    setEditingMessageIndex={setEditingMessageIndex}
+                                    setMessages={updateMessages}
+                                    append={appendWithPersist}
+                                    reload={reload}
+                                    suggestedQuestions={suggestedQuestions}
+                                    setSuggestedQuestions={setSuggestedQuestions}
+                                    status={status}
+                                    error={error}
+                                />
+                            </div>
                         )}
                         
                         <div ref={bottomRef} />

@@ -33,6 +33,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
     journals: { id: string; title: string; preview?: string; matchType: string }[];
     spaces: { id: string; name: string; preview?: string; matchType: string }[];
   }>({ journals: [], spaces: [] });
+  const [isMobile, setIsMobile] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const searchResultsRef = useRef<HTMLDivElement>(null);
   const { notebooks, createNotebook } = useNotebooks();
@@ -62,6 +63,22 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
       setInitialExpansionDone(true);
     }
   }, [currentPageType, initialExpansionDone]);
+
+  // Add a media query to detect mobile screens
+  useEffect(() => {
+    const checkIsMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    // Initial check
+    checkIsMobile();
+    
+    // Add event listener for window resize
+    window.addEventListener('resize', checkIsMobile);
+    
+    // Clean up
+    return () => window.removeEventListener('resize', checkIsMobile);
+  }, []);
 
   // Enhanced search functionality
   useEffect(() => {
@@ -208,8 +225,12 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
     createNotebook(defaultName);
   };
 
-
-
+  // Handle backdrop click to close sidebar on mobile
+  const handleBackdropClick = () => {
+    if (isMobile && isOpen) {
+      setIsOpen(false);
+    }
+  };
 
   return (
     <>
@@ -223,7 +244,20 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
           from { opacity: 0; backdrop-filter: blur(0px); }
           to { opacity: 1; backdrop-filter: blur(2px); }
         }
+        @keyframes slideIn {
+          from { transform: translateX(-100%); }
+          to { transform: translateX(0); }
+        }
       `}</style>
+      
+      {/* Mobile backdrop overlay */}
+      {isMobile && isOpen && (
+        <div 
+          className="fixed inset-0 bg-black/30 backdrop-blur-[1px] z-40"
+          onClick={handleBackdropClick}
+          style={{ animation: 'overlayShow 0.2s cubic-bezier(0.16, 1, 0.3, 1)' }}
+        />
+      )}
       
       {/* Toggle button that always stays visible */}
       <button
@@ -235,7 +269,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
         onClick={() => setIsOpen(!isOpen)}
         aria-label={isOpen ? "Collapse sidebar" : "Expand sidebar"}
         style={{ 
-          transform: isOpen ? 'translateX(256px)' : 'translateX(0)'
+          transform: !isMobile && isOpen ? 'translateX(256px)' : 'translateX(0)'
         }}
       >
         {isOpen ? 
@@ -246,9 +280,20 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
       
       <aside
         className={cn(
-          "fixed top-0 left-0 h-screen transition-[width] duration-200 ease-out flex flex-col overflow-hidden",
+          "fixed top-0 left-0 h-screen z-50 flex flex-col overflow-hidden",
           "bg-white dark:bg-neutral-900 border-r border-neutral-100 dark:border-neutral-800",
-          isOpen ? "w-64 pointer-events-auto" : "w-0 pointer-events-none"
+          isMobile ? (
+            isOpen 
+              ? "w-[80%] max-w-xs shadow-xl p-3" 
+              : "w-0"
+          ) : (
+            isOpen 
+              ? "w-64 p-0" 
+              : "w-0"
+          ),
+          isMobile && isOpen ? "animate-[slideIn_0.3s_ease-out]" : "",
+          "transition-[width] duration-200 ease-out",
+          isOpen ? "pointer-events-auto" : "pointer-events-none"
         )}
       >
         {/* Hide content when closed for accessibility and performance */}
@@ -264,30 +309,30 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                 <BookOpen className="h-5 w-5 text-neutral-700 dark:text-neutral-300" />
                 <span className="text-lg font-medium text-neutral-800 dark:text-neutral-200">OpenBook</span>
               </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
+              <Button
+                variant="ghost"
+                size="icon"
                 className="h-7 w-7 rounded-full hover:bg-neutral-100 dark:hover:bg-neutral-800"
-                  onClick={() => setShowNewMenu(!showNewMenu)}
-                  aria-label="New"
-                >
+                onClick={() => setShowNewMenu(!showNewMenu)}
+                aria-label="New"
+              >
                 <Plus className="h-4 w-4 text-emerald-500" />
-                </Button>
+              </Button>
             </div>
             
-                {showNewMenu && (
+            {showNewMenu && (
               <div className="absolute right-4 mt-1 bg-white dark:bg-neutral-900 border border-neutral-100 dark:border-neutral-800 rounded-md z-10 shadow-sm">
                 <div className="p-1">
-                      <button
-                        className="flex items-center gap-2 w-full text-left p-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded"
-                        onClick={handleCreateNotebook}
-                      >
+                  <button
+                    className="flex items-center gap-2 w-full text-left p-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded"
+                    onClick={handleCreateNotebook}
+                  >
                     <BookOpen className="h-4 w-4 text-neutral-500 dark:text-neutral-400" />
-                        <span className="text-sm text-neutral-700 dark:text-neutral-300">New Notebook</span>
-                      </button>
-                    </div>
-                  </div>
-                )}
+                    <span className="text-sm text-neutral-700 dark:text-neutral-300">New Notebook</span>
+                  </button>
+                </div>
+              </div>
+            )}
           
             {/* Search button styled like the original input */}
             <div className="relative px-4 mt-4 mb-2">

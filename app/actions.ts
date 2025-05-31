@@ -14,7 +14,7 @@ export async function suggestQuestions(history: any[]) {
   console.log(history);
 
   const { object } = await generateObject({
-    model: google("gemini-2.5-flash-preview-04-17"),
+    model: openai("gpt-4o-mini"),
     temperature: 0,
     maxTokens: 300,
     topP: 0.3,
@@ -23,6 +23,7 @@ export async function suggestQuestions(history: any[]) {
       `You are a search engine query/questions generator. You MUST create EXACTLY 3 questions for the search engine based on the message history.
 
 ### Question Generation Guidelines:
+- Questions should be in a way, it enlightens the user with understanding of the topic, and ditch rote meorization
 - Create exactly 3 questions that are open-ended and encourage further discussion
 - Questions must be concise (5-10 words each) but specific and contextually relevant
 - Each question must contain specific nouns, entities, or clear context markers

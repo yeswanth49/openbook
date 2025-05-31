@@ -269,8 +269,8 @@ const Messages: React.FC<MessagesProps> = ({
           <div key={`${messageIndex}-${partIndex}-text`}>
             <div className="flex items-center justify-between mt-5 mb-2">
               <div className="flex items-center gap-2">
-                <Image src="/openbook.png" alt="Neuman" className='size-6 invert dark:invert-0' width={100} height={100} unoptimized quality={100} />
-                <h2 className="text-lg font-semibold font-syne text-neutral-800 dark:text-neutral-200">
+                <Image src="/m.png" alt="Neuman" className='size-8' width={100} height={100} unoptimized quality={100} />
+                <h2 className="text-md font-medium text-neutral-800 dark:text-neutral-200">
                   Neuman
                 </h2>
               </div>

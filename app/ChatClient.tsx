@@ -55,24 +55,6 @@ interface Attachment {
     size: number;
 }
 
-const VercelIcon = ({ size = 16 }: { size: number }) => {
-    return (
-        <svg
-            height={size}
-            strokeLinejoin="round"
-            viewBox="0 0 16 16"
-            width={size}
-            style={{ color: "currentcolor" }}
-        >
-            <path
-                fillRule="evenodd"
-                clipRule="evenodd"
-                d="M8 1L16 15H0L8 1Z"
-                fill="currentColor"
-            ></path>
-        </svg>
-    );
-};
 
 const SIDEBAR_WIDTH = 256; // 64 * 4 = 256px
 
@@ -509,7 +491,7 @@ const HomeContent = () => {
                 <div className={`flex flex-col items-center w-full p-2 sm:p-4 transition-all duration-300 ${status === 'ready' && messages.length === 0
                     ? 'min-h-screen! flex! flex-col! items-center! justify-center!' // Center everything when no messages
                     : ''}`}>
-                    <div className={`w-full max-w-[26rem] sm:max-w-2xl space-y-6 p-0 mx-auto transition-all duration-300`}>
+                    <div className={`w-full max-w-[26rem] sm:max-w-4xl space-y-6 p-0 mx-auto transition-all duration-300`}>
                         {status === 'ready' && messages.length === 0 && (
                             <div className="text-center">
                                 <h1 className="text-2xl sm:text-4xl mb-4 sm:mb-6 text-neutral-800 dark:text-neutral-100 font-syne!">

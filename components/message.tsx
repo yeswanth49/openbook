@@ -264,8 +264,7 @@ export const Message: React.FC<MessageProps> = ({
             className="w-full max-w-xl sm:max-w-2xl mt-6"
           >
             <div className="flex items-center gap-2 mb-4">
-              <AlignLeft className="w-5 h-5 text-primary" />
-              <h2 className="font-semibold text-base text-neutral-800 dark:text-neutral-200">Suggested questions</h2>
+              <h2 className="font-medium text-neutral-800 dark:text-neutral-200">More Curated Questions</h2>
             </div>
             <div className="space-y-2 flex flex-col">
               {suggestedQuestions.map((question, i) => (

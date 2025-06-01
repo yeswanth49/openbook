@@ -21,6 +21,116 @@ interface SidebarProps {
   setIsOpen: (open: boolean) => void;
 }
 
+// Define consistent animation settings used throughout the site
+const animationConfig = {
+  // Standard transition presets
+  transition: {
+    ease: [0.25, 0.1, 0.25, 1], // Standard cubic bezier
+    duration: 0.3  // Standard duration
+  },
+
+  // Spring configuration
+  spring: {
+    type: 'spring',
+    stiffness: 400,
+    damping: 30
+  },
+
+  // Fade in/out preset
+  fade: {
+    initial: { opacity: 0 },
+    animate: { opacity: 1 },
+    exit: { opacity: 0 },
+    transition: { duration: 0.2 }
+  },
+  
+  // Hover animation preset
+  hover: {
+    scale: 1.02,
+    transition: { duration: 0.2 }
+  },
+  
+  // Tap animation preset
+  tap: {
+    scale: 0.98
+  }
+};
+
+// Sidebar variants
+const sidebarVariants = {
+  open: (isMobile: boolean) => ({
+    width: isMobile ? '80%' : '256px',
+    transition: animationConfig.spring
+  }),
+  closed: {
+    width: '0px',
+    transition: {
+      ...animationConfig.spring,
+      when: "afterChildren"
+    }
+  }
+};
+
+// Content variants
+const contentVariants = {
+  open: {
+    opacity: 1,
+    transition: {
+      delay: 0.1,
+      duration: 0.2
+    }
+  },
+  closed: {
+    opacity: 0,
+    transition: {
+      duration: 0.1
+    }
+  }
+};
+
+// Backdrop variants
+const backdropVariants = {
+  open: {
+    opacity: 1,
+    backdropFilter: 'blur(2px)',
+    transition: animationConfig.transition
+  },
+  closed: {
+    opacity: 0,
+    backdropFilter: 'blur(0px)',
+    transition: animationConfig.transition
+  }
+};
+
+// Toggle button variants
+const toggleButtonVariants = {
+  open: (isMobile: boolean) => ({
+    x: isMobile ? 0 : 256,
+    rotate: 0,
+    transition: animationConfig.spring
+  }),
+  closed: {
+    x: 0,
+    rotate: 180,
+    transition: animationConfig.spring
+  }
+};
+
+// Modal variants
+const modalVariants = {
+  initial: { opacity: 0, scale: 0.95, y: 10 },
+  animate: { opacity: 1, scale: 1, y: 0 },
+  exit: { opacity: 0, scale: 0.98, y: 10 },
+  transition: animationConfig.spring
+};
+
+// List item variants
+const itemVariants = {
+  initial: { opacity: 0, y: 5 },
+  animate: { opacity: 1, y: 0 },
+  transition: { duration: 0.2 }
+};
+
 export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
   const [showNewMenu, setShowNewMenu] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -197,7 +307,6 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
   const [editingJournalTitle, setEditingJournalTitle] = useState('');
   const [editingSpaceId, setEditingSpaceId] = useState<string | null>(null);
 
-
   // Add useEffect for keyboard shortcut near the other useEffect hooks
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -243,72 +352,52 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
 
   return (
     <>
-      {/* Add keyframes animations for the modal */}
-      <style jsx global>{`
-        @keyframes fadeIn {
-          from { opacity: 0; transform: scale(0.96); }
-          to { opacity: 1; transform: scale(1); }
-        }
-        @keyframes overlayShow {
-          from { opacity: 0; backdrop-filter: blur(0px); }
-          to { opacity: 1; backdrop-filter: blur(2px); }
-        }
-        @keyframes slideIn {
-          from { transform: translateX(-100%); }
-          to { transform: translateX(0); }
-        }
-      `}</style>
-      
       {/* Mobile backdrop overlay */}
-      {isMobile && isOpen && (
-        <div 
-          className="fixed inset-0 bg-black/30 backdrop-blur-[1px] z-40"
-          onClick={handleBackdropClick}
-          style={{ animation: 'overlayShow 0.2s cubic-bezier(0.16, 1, 0.3, 1)' }}
-        />
-      )}
+      <AnimatePresence>
+        {isMobile && isOpen && (
+          <motion.div 
+            className="fixed inset-0 bg-black/30 backdrop-blur-[2px] z-40"
+            onClick={handleBackdropClick}
+            initial="closed"
+            animate="open"
+            exit="closed"
+            variants={backdropVariants}
+          />
+        )}
+      </AnimatePresence>
       
       {/* Toggle button that always stays visible */}
-      <button
+      <motion.button
         className={cn(
           "fixed top-24 left-0 z-50 bg-white dark:bg-neutral-900",
-          "rounded-r-md p-2 shadow-sm transition-transform duration-200 ease-out",
+          "rounded-r-md p-2 shadow-sm",
           "hover:bg-neutral-100 dark:hover:bg-neutral-800 opacity-40 hover:opacity-90"
         )}
         onClick={() => setIsOpen(!isOpen)}
         aria-label={isOpen ? "Collapse sidebar" : "Expand sidebar"}
-        style={{ 
-          transform: !isMobile && isOpen ? 'translateX(256px)' : 'translateX(0)'
-        }}
+        custom={isMobile}
+        initial="closed"
+        animate={isOpen ? "open" : "closed"}
+        variants={toggleButtonVariants}
       >
-        {isOpen ? 
-          <ChevronLeft className="h-5 w-5 text-neutral-600 dark:text-neutral-400" /> :
-          <ChevronRight className="h-5 w-5 text-neutral-600 dark:text-neutral-400" />
-        }
-      </button>
+        <ChevronLeft className="h-5 w-5 text-neutral-600 dark:text-neutral-400" />
+      </motion.button>
       
-      <aside
+      <motion.aside
         className={cn(
           "fixed top-0 left-0 h-screen z-50 flex flex-col overflow-hidden",
           "bg-white dark:bg-neutral-900 border-r border-neutral-100 dark:border-neutral-800",
-          isMobile ? (
-            isOpen 
-              ? "w-[80%] max-w-xs shadow-xl p-3" 
-              : "w-0"
-          ) : (
-            isOpen 
-              ? "w-64 p-0" 
-              : "w-0"
-          ),
-          "transition-[width] duration-200 ease-out",
-          isOpen ? "pointer-events-auto" : "pointer-events-none"
+          isMobile ? "max-w-xs" : ""
         )}
+        initial="closed"
+        animate={isOpen ? "open" : "closed"}
+        custom={isMobile}
+        variants={sidebarVariants}
       >
-        {/* Hide content when closed for accessibility and performance */}
-        <div className={cn(
-          "flex flex-col h-full flex-1 transition-opacity duration-200 ease-out overflow-hidden",
-          isOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
-        )}
+        {/* Content container with animation */}
+        <motion.div 
+          className="flex flex-col h-full flex-1 overflow-hidden"
+          variants={contentVariants}
         >
           <div className="p-4 border-b border-neutral-100 dark:border-neutral-800">
             {/* Brand row */}
@@ -328,23 +417,32 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
               </Button>
             </div>
             
-            {showNewMenu && (
-              <div className="absolute right-4 mt-1 bg-white dark:bg-neutral-900 border border-neutral-100 dark:border-neutral-800 rounded-md z-10 shadow-sm">
-                <div className="p-1">
-                  <button
-                    className="flex items-center gap-2 w-full text-left p-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded"
-                    onClick={handleCreateNotebook}
-                  >
-                    <BookOpen className="h-4 w-4 text-neutral-500 dark:text-neutral-400" />
-                    <span className="text-sm text-neutral-700 dark:text-neutral-300">New Notebook</span>
-                  </button>
-                </div>
-              </div>
-            )}
+            <AnimatePresence>
+              {showNewMenu && (
+                <motion.div 
+                  className="absolute right-4 mt-1 bg-white dark:bg-neutral-900 border border-neutral-100 dark:border-neutral-800 rounded-md z-10 shadow-sm"
+                  {...animationConfig.fade}
+                >
+                  <div className="p-1">
+                    <motion.button
+                      whileHover={{ x: 3 }}
+                      whileTap={animationConfig.tap}
+                      className="flex items-center gap-2 w-full text-left p-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded"
+                      onClick={handleCreateNotebook}
+                    >
+                      <BookOpen className="h-4 w-4 text-neutral-500 dark:text-neutral-400" />
+                      <span className="text-sm text-neutral-700 dark:text-neutral-300">New Notebook</span>
+                    </motion.button>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           
             {/* Search button styled like the original input */}
             <div className="relative px-4 mt-4 mb-2">
-              <button
+              <motion.button
+                whileHover={{ backgroundColor: "rgba(0, 0, 0, 0.03)" }}
+                whileTap={animationConfig.tap}
                 className="w-full flex items-center justify-between px-2 py-1.5 bg-neutral-50 dark:bg-neutral-800 rounded-md border border-neutral-200 dark:border-neutral-700 text-neutral-400 dark:text-neutral-500 text-sm cursor-text hover:bg-neutral-100 dark:hover:bg-neutral-700/50"
                 onClick={() => setShowSearchModal(true)}
               >
@@ -353,7 +451,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                   <span>Search...</span>
                 </div>
                 <span className="text-xs text-neutral-400 dark:text-neutral-600 font-mono">⌘K</span>
-              </button>
+              </motion.button>
             </div>
           </div>
 
@@ -373,6 +471,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                         notebook={notebook}
                         currentPageType={currentPageType}
                         currentPageId={currentPageId}
+                        animationConfig={animationConfig}
                       />
                     ))}
                 </div>
@@ -383,27 +482,35 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                     <h3 className="text-xs font-medium text-neutral-500 dark:text-neutral-400 tracking-wider">NOTEBOOKS</h3>
                   </div>
                   
-                  {/* Notebooks list */}
+                  {/* Notebooks list with animations */}
                   <div className="space-y-0.5">
                     {notebooks.map((notebook) => (
-                      <div key={notebook.id}>
+                      <motion.div 
+                        key={notebook.id}
+                        initial={{ opacity: 0, y: 5 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.2 }}
+                      >
                         <SidebarNotebook
                           notebook={notebook}
                           currentPageType={currentPageType}
                           currentPageId={currentPageId}
+                          animationConfig={animationConfig}
                         />
-                      </div>
+                      </motion.div>
                     ))}
                   </div>
                   
                   {/* New Notebook button */}
-                  <button
+                  <motion.button
+                    whileHover={{ x: 3 }}
+                    whileTap={animationConfig.tap}
                     onClick={handleCreateNotebook}
-                    className="w-full flex items-center gap-2 text-left px-4 py-1.5 mt-1 text-sm text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors duration-200"
+                    className="w-full flex items-center gap-2 text-left px-4 py-1.5 mt-1 text-sm text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800"
                   >
                     <BookOpen className="h-3.5 w-3.5 text-neutral-400" />
                     <span>New Notebook</span>
-                  </button>
+                  </motion.button>
                 </div>
               )}
             </div>
@@ -412,268 +519,333 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
           {/* Footer */}
           <div className="border-t border-neutral-100 dark:border-neutral-800 py-3 px-4">
             <div className="space-y-1">
-              <button className="flex items-center gap-2 w-full text-left px-2 py-1.5 text-sm text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded">
-              <Settings className="h-4 w-4 text-neutral-400" />
+              <motion.button 
+                whileHover={{ x: 3 }}
+                whileTap={animationConfig.tap}
+                className="flex items-center gap-2 w-full text-left px-2 py-1.5 text-sm text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded"
+              >
+                <Settings className="h-4 w-4 text-neutral-400" />
                 <span>Settings</span>
-              </button>
+              </motion.button>
               <Link href="https://x.com/GoOpenBook" target="_blank" className="block">
-                <button className="flex items-center gap-2 w-full text-left px-2 py-1.5 text-sm text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded">
+                <motion.button 
+                  whileHover={{ x: 3 }}
+                  whileTap={animationConfig.tap}
+                  className="flex items-center gap-2 w-full text-left px-2 py-1.5 text-sm text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded"
+                >
                   <MessageSquare className="h-4 w-4 text-neutral-400" />
                   <span>Follow on X</span>
-              </button>
-            </Link>
-              <button className="flex items-center gap-2 w-full text-left px-2 py-1.5 text-sm text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded">
-              <Flag className="h-4 w-4 text-neutral-400" />
+                </motion.button>
+              </Link>
+              <motion.button 
+                whileHover={{ x: 3 }}
+                whileTap={animationConfig.tap}
+                className="flex items-center gap-2 w-full text-left px-2 py-1.5 text-sm text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded"
+              >
+                <Flag className="h-4 w-4 text-neutral-400" />
                 <span>Report Bug</span>
-            </button>
-              <button className="flex items-center gap-2 w-full text-left px-2 py-1.5 text-sm text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded">
-              <HelpCircle className="h-4 w-4 text-neutral-400" />
+              </motion.button>
+              <motion.button 
+                whileHover={{ x: 3 }}
+                whileTap={animationConfig.tap}
+                className="flex items-center gap-2 w-full text-left px-2 py-1.5 text-sm text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded"
+              >
+                <HelpCircle className="h-4 w-4 text-neutral-400" />
                 <span>Help</span>
-              </button>
-              <button 
+              </motion.button>
+              <motion.button 
+                whileHover={{ x: 3 }}
+                whileTap={animationConfig.tap}
                 onClick={() => setShowClearDataConfirm(true)}
                 className="flex items-center gap-2 w-full text-left px-2 py-1.5 text-sm text-red-600 dark:text-red-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded"
               >
                 <Trash2 className="h-4 w-4 text-red-500" />
                 <span>Delete all local data</span>
-              </button>
+              </motion.button>
             </div>
           </div>
-        </div>
-      </aside>
+        </motion.div>
+      </motion.aside>
 
-      {/* Add the search modal */}
-      {showSearchModal && (
-        <div 
-          className="fixed inset-0 bg-black/10 backdrop-blur-[2px] z-50 flex items-center justify-center p-4" 
-          onClick={() => {
-            setShowSearchModal(false);
-            setSearchQuery('');
-            setShowSearchResults(false);
-          }}
-          style={{ animation: 'overlayShow 0.2s cubic-bezier(0.16, 1, 0.3, 1)' }}
-        >
-          <div 
-            className="bg-white dark:bg-neutral-900 rounded-md shadow-sm max-w-md w-full transform transition-all ease-out duration-300 border border-neutral-200 dark:border-neutral-800"
-            style={{ animation: 'fadeIn 0.2s ease-out' }}
-            onClick={e => e.stopPropagation()}
+      {/* Add the search modal with improved animations */}
+      <AnimatePresence>
+        {showSearchModal && (
+          <motion.div 
+            className="fixed inset-0 bg-black/10 backdrop-blur-[2px] z-50 flex items-center justify-center p-4" 
+            onClick={() => {
+              setShowSearchModal(false);
+              setSearchQuery('');
+              setShowSearchResults(false);
+            }}
+            {...animationConfig.fade}
           >
-            <div className="p-4">
-              <div className="relative">
-                <Search className="absolute left-3 top-2.5 h-4 w-4 text-neutral-400" />
-                <Input 
-                  ref={searchInputRef}
-                  placeholder="Search..." 
-                  className="pl-9 h-9 bg-white dark:bg-neutral-900 border-neutral-200 dark:border-neutral-700 rounded-md focus-visible:ring-emerald-500/30 focus-visible:ring-offset-0"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  autoFocus
-                />
-                {searchQuery && (
-                  <button 
-                    className="absolute right-2 top-2.5 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300"
-                    onClick={() => {
-                      setSearchQuery('');
-                      setShowSearchResults(false);
-                    }}
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
-                )}
-              </div>
-              
-              {/* Search Results */}
-              <div className="mt-3 max-h-64 overflow-y-auto">
-                {searchQuery.trim().length > 0 ? (
-                  <>
-                    {searchResults.journals.length === 0 && searchResults.spaces.length === 0 ? (
-                      <div className="p-3 text-sm text-neutral-500 dark:text-neutral-400 text-center">
-                        No results found
-                      </div>
+            <motion.div 
+              className="bg-white dark:bg-neutral-900 rounded-md shadow-sm max-w-md w-full border border-neutral-200 dark:border-neutral-800"
+              variants={modalVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="p-4">
+                <div className="relative">
+                  <Search className="absolute left-3 top-2.5 h-4 w-4 text-neutral-400" />
+                  <Input 
+                    ref={searchInputRef}
+                    placeholder="Search..." 
+                    className="pl-9 h-9 bg-white dark:bg-neutral-900 border-neutral-200 dark:border-neutral-700 rounded-md focus-visible:ring-emerald-500/30 focus-visible:ring-offset-0"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    autoFocus
+                  />
+                  {searchQuery && (
+                    <button 
+                      className="absolute right-2 top-2.5 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300"
+                      onClick={() => {
+                        setSearchQuery('');
+                        setShowSearchResults(false);
+                      }}
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  )}
+                </div>
+                
+                {/* Search Results with animation */}
+                <div className="mt-3 max-h-64 overflow-y-auto">
+                  <AnimatePresence mode="wait">
+                    {searchQuery.trim().length > 0 ? (
+                      <motion.div
+                        key="results"
+                        {...animationConfig.fade}
+                      >
+                        {searchResults.journals.length === 0 && searchResults.spaces.length === 0 ? (
+                          <div className="p-3 text-sm text-neutral-500 dark:text-neutral-400 text-center">
+                            No results found
+                          </div>
+                        ) : (
+                          <>
+                            {searchResults.journals.length > 0 && (
+                              <div className="mb-3">
+                                <div className="px-1 py-1 text-xs font-medium text-emerald-500/70 dark:text-emerald-400/70 tracking-wider">
+                                  Journals
+                                </div>
+                                <div className="space-y-1">
+                                  {searchResults.journals.map(journal => (
+                                    <motion.button
+                                      key={journal.id}
+                                      initial="initial"
+                                      animate="animate"
+                                      exit="exit"
+                                      variants={itemVariants}
+                                      whileHover={{ x: 3 }}
+                                      whileTap={animationConfig.tap}
+                                      className="flex flex-col w-full text-left px-2 py-2 text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-md"
+                                      onClick={() => {
+                                        handleSearchItemClick('journal', journal.id);
+                                        setShowSearchModal(false);
+                                      }}
+                                    >
+                                      <div className="flex items-center">
+                                        <PenLine className="h-3.5 w-3.5 text-neutral-400 mr-2 flex-shrink-0" />
+                                        <span className="font-medium truncate">{journal.title}</span>
+                                      </div>
+                                      {journal.preview && (
+                                        <div className="ml-5 mt-1 text-xs text-neutral-500 dark:text-neutral-500 line-clamp-1">
+                                          {journal.preview}
+                                        </div>
+                                      )}
+                                    </motion.button>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                            
+                            {searchResults.spaces.length > 0 && (
+                              <div>
+                                <div className="px-1 py-1 text-xs font-medium text-emerald-500/70 dark:text-emerald-400/70 tracking-wider">
+                                  Spaces
+                                </div>
+                                <div className="space-y-1">
+                                  {searchResults.spaces.map((space, index) => (
+                                    <motion.button
+                                      key={space.id}
+                                      initial="initial"
+                                      animate="animate" 
+                                      exit="exit"
+                                      variants={itemVariants}
+                                      transition={{ delay: index * 0.03 }}
+                                      whileHover={{ x: 3 }}
+                                      whileTap={animationConfig.tap}
+                                      className="flex flex-col w-full text-left px-2 py-2 text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-md"
+                                      onClick={() => {
+                                        handleSearchItemClick('space', space.id);
+                                        setShowSearchModal(false);
+                                      }}
+                                    >
+                                      <div className="flex items-center">
+                                        <span className="w-3 h-3 rounded-sm bg-neutral-200 dark:bg-neutral-700 mr-2 flex-shrink-0"></span>
+                                        <span className="font-medium truncate">{space.name}</span>
+                                      </div>
+                                      {space.preview && (
+                                        <div className="ml-5 mt-1 text-xs text-neutral-500 dark:text-neutral-500 line-clamp-1">
+                                          {space.preview}
+                                        </div>
+                                      )}
+                                    </motion.button>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </>
+                        )}
+                      </motion.div>
                     ) : (
-                      <>
-                        {searchResults.journals.length > 0 && (
-                          <div className="mb-3">
-                            <div className="px-1 py-1 text-xs font-medium text-emerald-500/70 dark:text-emerald-400/70 tracking-wider">
-                              Journals
-                            </div>
-                            <div className="space-y-1">
-                              {searchResults.journals.map(journal => (
-                                <button
-                                  key={journal.id}
-                                  className="flex flex-col w-full text-left px-2 py-2 text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-md"
-                                  onClick={() => {
-                                    handleSearchItemClick('journal', journal.id);
-                                    setShowSearchModal(false);
-                                  }}
-                                >
-                                  <div className="flex items-center">
-                                    <PenLine className="h-3.5 w-3.5 text-neutral-400 mr-2 flex-shrink-0" />
-                                    <span className="font-medium truncate">{journal.title}</span>
-                                  </div>
-                                  {journal.preview && (
-                                    <div className="ml-5 mt-1 text-xs text-neutral-500 dark:text-neutral-500 line-clamp-1">
-                                      {journal.preview}
-                                    </div>
-                                  )}
-                                </button>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                        
-                        {searchResults.spaces.length > 0 && (
-                          <div>
-                            <div className="px-1 py-1 text-xs font-medium text-emerald-500/70 dark:text-emerald-400/70 tracking-wider">
-                              Spaces
-                            </div>
-                            <div className="space-y-1">
-                              {searchResults.spaces.map(space => (
-                                <button
-                                  key={space.id}
-                                  className="flex flex-col w-full text-left px-2 py-2 text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-md"
-                                  onClick={() => {
-                                    handleSearchItemClick('space', space.id);
-                                    setShowSearchModal(false);
-                                  }}
-                                >
-                                  <div className="flex items-center">
-                                    <span className="w-3 h-3 rounded-sm bg-neutral-200 dark:bg-neutral-700 mr-2 flex-shrink-0"></span>
-                                    <span className="font-medium truncate">{space.name}</span>
-                                  </div>
-                                  {space.preview && (
-                                    <div className="ml-5 mt-1 text-xs text-neutral-500 dark:text-neutral-500 line-clamp-1">
-                                      {space.preview}
-                                    </div>
-                                  )}
-                                </button>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                      </>
+                      <motion.div
+                        key="empty"
+                        {...animationConfig.fade}
+                        className="py-8 text-sm text-neutral-500 dark:text-neutral-400 text-center"
+                      >
+                        Type to search journals and spaces
+                      </motion.div>
                     )}
-                  </>
-                ) : (
-                  <div className="py-8 text-sm text-neutral-500 dark:text-neutral-400 text-center">
-                    Type to search journals and spaces
-                  </div>
-                )}
+                  </AnimatePresence>
+                </div>
               </div>
-            </div>
-            
-            <div className="border-t border-neutral-100 dark:border-neutral-800 p-2 flex justify-end">
-              <button
-                className="px-2 py-1 text-xs rounded text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-300 transition-colors"
-                onClick={() => {
-                  setShowSearchModal(false);
-                  setSearchQuery('');
-                }}
-              >
-                ESC
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-      
-      {/* Add the delete confirmation dialog */}
-      {showDeleteConfirm && (
-        <div 
-          className="fixed inset-0 bg-black/30 backdrop-blur-[2px] z-50 flex items-center justify-center p-4" 
-          onClick={() => setShowDeleteConfirm(false)}
-          style={{ animation: 'overlayShow 0.15s ease-out' }}
-        >
-          <div 
-            className="bg-white dark:bg-neutral-900 rounded-md shadow-md max-w-xs w-full transform transition-all ease-out duration-300 scale-100 opacity-100 border border-neutral-100 dark:border-neutral-800"
-            style={{ animation: 'fadeIn 0.2s ease-out' }}
-            onClick={e => e.stopPropagation()}
-          >
-            <div className="p-4 border-b border-neutral-100 dark:border-neutral-800 flex items-center">
-              <Trash2 className="h-4 w-4 text-neutral-500 dark:text-neutral-400 mr-2" />
-              <h3 className="text-sm font-medium text-neutral-800 dark:text-neutral-200">
-                Delete {itemToDelete?.type === 'journal' ? 'Journal' : 'Space'}
-              </h3>
-            </div>
-            
-            <div className="p-4">
-              <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-4">
-                Delete &quot;{itemToDelete?.name}&quot;? This cannot be undone.
-              </p>
               
-              <div className="flex justify-end gap-2">
-                <button
-                  className="px-3 py-1.5 text-xs font-medium rounded-md bg-white dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors border border-neutral-200 dark:border-neutral-700"
-                  onClick={() => setShowDeleteConfirm(false)}
-                  autoFocus
-                >
-                  Cancel
-                </button>
-                <button
-                  className="px-3 py-1.5 text-xs font-medium rounded-md bg-red-500/80 text-white hover:bg-red-600 transition-colors"
+              <div className="border-t border-neutral-100 dark:border-neutral-800 p-2 flex justify-end">
+                <motion.button
+                  whileHover={{ x: 3 }}
+                  whileTap={animationConfig.tap}
+                  className="px-2 py-1 text-xs rounded text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-300 transition-colors"
                   onClick={() => {
-                    if (itemToDelete) {
-                      if (itemToDelete.type === 'journal') {
-                        deleteEntry(itemToDelete.id);
-                      } else {
-                        deleteSpace(itemToDelete.id);
-                      }
-                      setShowDeleteConfirm(false);
-                      setItemToDelete(null);
-                    }
+                    setShowSearchModal(false);
+                    setSearchQuery('');
                   }}
                 >
-                  Delete
-                </button>
+                  ESC
+                </motion.button>
               </div>
-            </div>
-          </div>
-        </div>
-      )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
       
-      {/* Add the clear data confirmation dialog */}
-      {showClearDataConfirm && (
-        <div 
-          className="fixed inset-0 bg-black/30 backdrop-blur-[2px] z-50 flex items-center justify-center p-4" 
-          onClick={() => setShowClearDataConfirm(false)}
-          style={{ animation: 'overlayShow 0.15s ease-out' }}
-        >
-          <div 
-            className="bg-white dark:bg-neutral-900 rounded-md shadow-md max-w-xs w-full transform transition-all ease-out duration-300 scale-100 opacity-100 border border-neutral-100 dark:border-neutral-800"
-            style={{ animation: 'fadeIn 0.2s ease-out' }}
-            onClick={e => e.stopPropagation()}
+      {/* Add the delete confirmation dialog with improved animations */}
+      <AnimatePresence>
+        {showDeleteConfirm && (
+          <motion.div 
+            className="fixed inset-0 bg-black/30 backdrop-blur-[2px] z-50 flex items-center justify-center p-4" 
+            onClick={() => setShowDeleteConfirm(false)}
+            {...animationConfig.fade}
           >
-            <div className="p-4 border-b border-neutral-100 dark:border-neutral-800 flex items-center">
-              <Trash2 className="h-4 w-4 text-red-500 mr-2" />
-              <h3 className="text-sm font-medium text-neutral-800 dark:text-neutral-200">
-                Delete All Local Data
-              </h3>
-            </div>
-            
-            <div className="p-4">
-              <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-4">
-                This will permanently delete all your notebooks, journals, spaces and conversations. This action cannot be undone.
-              </p>
-              
-              <div className="flex justify-end gap-2">
-                <button
-                  className="px-3 py-1.5 text-xs font-medium rounded-md bg-white dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors border border-neutral-200 dark:border-neutral-700"
-                  onClick={() => setShowClearDataConfirm(false)}
-                  autoFocus
-                >
-                  Cancel
-                </button>
-                <button
-                  className="px-3 py-1.5 text-xs font-medium rounded-md bg-red-500/80 text-white hover:bg-red-600 transition-colors"
-                  onClick={handleClearAllData}
-                >
-                  Delete All
-                </button>
+            <motion.div 
+              className="bg-white dark:bg-neutral-900 rounded-md shadow-md max-w-xs w-full border border-neutral-100 dark:border-neutral-800"
+              variants={modalVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="p-4 border-b border-neutral-100 dark:border-neutral-800 flex items-center">
+                <Trash2 className="h-4 w-4 text-neutral-500 dark:text-neutral-400 mr-2" />
+                <h3 className="text-sm font-medium text-neutral-800 dark:text-neutral-200">
+                  Delete {itemToDelete?.type === 'journal' ? 'Journal' : 'Space'}
+                </h3>
               </div>
-            </div>
-          </div>
-        </div>
-      )}
+              
+              <div className="p-4">
+                <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-4">
+                  Delete &quot;{itemToDelete?.name}&quot;? This cannot be undone.
+                </p>
+                
+                <div className="flex justify-end gap-2">
+                  <motion.button
+                    whileHover={{ x: 3 }}
+                    whileTap={animationConfig.tap}
+                    className="px-3 py-1.5 text-xs font-medium rounded-md bg-white dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors border border-neutral-200 dark:border-neutral-700"
+                    onClick={() => setShowDeleteConfirm(false)}
+                    autoFocus
+                  >
+                    Cancel
+                  </motion.button>
+                  <motion.button
+                    whileHover={{ x: 3 }}
+                    whileTap={animationConfig.tap}
+                    className="px-3 py-1.5 text-xs font-medium rounded-md bg-red-500/80 text-white hover:bg-red-600 transition-colors"
+                    onClick={() => {
+                      if (itemToDelete) {
+                        if (itemToDelete.type === 'journal') {
+                          deleteEntry(itemToDelete.id);
+                        } else {
+                          deleteSpace(itemToDelete.id);
+                        }
+                        setShowDeleteConfirm(false);
+                        setItemToDelete(null);
+                      }
+                    }}
+                  >
+                    Delete
+                  </motion.button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      
+      {/* Add the clear data confirmation dialog with improved animations */}
+      <AnimatePresence>
+        {showClearDataConfirm && (
+          <motion.div 
+            className="fixed inset-0 bg-black/30 backdrop-blur-[2px] z-50 flex items-center justify-center p-4" 
+            onClick={() => setShowClearDataConfirm(false)}
+            {...animationConfig.fade}
+          >
+            <motion.div 
+              className="bg-white dark:bg-neutral-900 rounded-md shadow-md max-w-xs w-full border border-neutral-100 dark:border-neutral-800"
+              variants={modalVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="p-4 border-b border-neutral-100 dark:border-neutral-800 flex items-center">
+                <Trash2 className="h-4 w-4 text-red-500 mr-2" />
+                <h3 className="text-sm font-medium text-neutral-800 dark:text-neutral-200">
+                  Delete All Local Data
+                </h3>
+              </div>
+              
+              <div className="p-4">
+                <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-4">
+                  This will delete all your notes, spaces, and settings. This action cannot be undone.
+                </p>
+                
+                <div className="flex justify-end gap-2">
+                  <motion.button
+                    whileHover={{ x: 3 }}
+                    whileTap={animationConfig.tap}
+                    className="px-3 py-1.5 text-xs font-medium rounded-md bg-white dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors border border-neutral-200 dark:border-neutral-700"
+                    onClick={() => setShowClearDataConfirm(false)}
+                    autoFocus
+                  >
+                    Cancel
+                  </motion.button>
+                  <motion.button
+                    whileHover={{ x: 3 }}
+                    whileTap={animationConfig.tap}
+                    className="px-3 py-1.5 text-xs font-medium rounded-md bg-red-500/80 text-white hover:bg-red-600 transition-colors"
+                    onClick={handleClearAllData}
+                  >
+                    Delete All
+                  </motion.button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 } 

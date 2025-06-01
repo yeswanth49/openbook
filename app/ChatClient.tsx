@@ -550,40 +550,33 @@ const HomeContent = () => {
                                 )}
                             </div>
                         )}
-                        <AnimatePresence>
-                            {messages.length === 0 && !hasSubmitted && (
-                                <motion.div
-                                    initial={{ opacity: 1, y: 0 }}
-                                    exit={{ opacity: 0, y: 20 }}
-                                    transition={{ duration: 0.5 }}
-                                    className={cn('mt-4! bg-white/60 dark:bg-neutral-900/60 backdrop-blur-sm rounded-md p-1')}
-                                >
-                                    <TerminalInput
-                                        value={input}
-                                        onChange={setInput}
-                                        onSubmit={() => {
-                                            lastSubmittedQueryRef.current = input;
-                                            appendWithPersist({
-                                                content: input,
-                                                role: 'user'
-                                            });
-                                            setInput(''); // Clear input after submit
-                                            setHasSubmitted(true);
-                                            setHasManuallyScrolled(false);
-                                            bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-                                        }}
-                                        selectedModel={selectedModel}
-                                        setSelectedModel={setSelectedModel}
-                                        fileInputRef={fileInputRef}
-                                        attachments={attachments}
-                                        setAttachments={setAttachments}
-                                        onStop={stop}
-                                        status={status}
-                                        onFrameworkSelect={handleFrameworkSelect}
-                                    />
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
+                        {messages.length === 0 && !hasSubmitted && (
+                            <div className='mt-4! bg-white/60 dark:bg-neutral-900/60 backdrop-blur-sm rounded-md p-1'>
+                                <TerminalInput
+                                    value={input}
+                                    onChange={setInput}
+                                    onSubmit={() => {
+                                        lastSubmittedQueryRef.current = input;
+                                        appendWithPersist({
+                                            content: input,
+                                            role: 'user'
+                                        });
+                                        setInput(''); // Clear input after submit
+                                        setHasSubmitted(true);
+                                        setHasManuallyScrolled(false);
+                                        bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+                                    }}
+                                    selectedModel={selectedModel}
+                                    setSelectedModel={setSelectedModel}
+                                    fileInputRef={fileInputRef}
+                                    attachments={attachments}
+                                    setAttachments={setAttachments}
+                                    onStop={stop}
+                                    status={status}
+                                    onFrameworkSelect={handleFrameworkSelect}
+                                />
+                            </div>
+                        )}
 
                         {/* Add the widget section below form when no messages */}
                         {messages.length === 0 && (
@@ -618,52 +611,44 @@ const HomeContent = () => {
                         <div ref={bottomRef} />
                     </div>
 
-                    <AnimatePresence>
-                        {(messages.length > 0 || hasSubmitted) && (
-                            <div 
-                                className="fixed bottom-0 left-0 right-0 pb-3 sm:pb-4 z-40 pointer-events-none"
-                                style={{ 
-                                    paddingLeft: sidebarOpen && windowWidth >= 768 ? (windowWidth >= 1024 ? SIDEBAR_WIDTH : SIDEBAR_WIDTH_SM) : 0,
-                                    paddingRight: 0,
-                                    transition: 'padding-left 0.3s ease'
-                                }}
-                            >
-                                <motion.div
-                                    initial={{ opacity: 0, y: 20 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    exit={{ opacity: 0, y: 20 }}
-                                    transition={{ duration: 0.5 }}
-                                    className="w-[95%] xs:w-[90%] sm:max-w-2xl md:max-w-3xl mx-auto px-2 xs:px-3 sm:px-4 md:px-6 pointer-events-auto"
-                                >
-                                    <div className="bg-white/60 dark:bg-neutral-900/60 backdrop-blur-sm rounded-md p-1 sm:p-1.5 shadow-lg w-full">
-                                        <TerminalInput
-                                            value={input}
-                                            onChange={setInput}
-                                            onSubmit={() => {
-                                                lastSubmittedQueryRef.current = input;
-                                                appendWithPersist({
-                                                    content: input,
-                                                    role: 'user'
-                                                });
-                                                setInput(''); // Clear input after submit
-                                                setHasSubmitted(true);
-                                                setHasManuallyScrolled(false);
-                                                bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-                                            }}
-                                            selectedModel={selectedModel}
-                                            setSelectedModel={setSelectedModel}
-                                            fileInputRef={fileInputRef}
-                                            attachments={attachments}
-                                            setAttachments={setAttachments}
-                                            onStop={stop}
-                                            status={status}
-                                            onFrameworkSelect={handleFrameworkSelect}
-                                        />
-                                    </div>
-                                </motion.div>
+                    {(messages.length > 0 || hasSubmitted) && (
+                        <div 
+                            className="fixed bottom-0 left-0 right-0 pb-3 sm:pb-4 z-40 pointer-events-none"
+                            style={{ 
+                                paddingLeft: sidebarOpen && windowWidth >= 768 ? (windowWidth >= 1024 ? SIDEBAR_WIDTH : SIDEBAR_WIDTH_SM) : 0,
+                                paddingRight: 0,
+                                transition: 'padding-left 0.3s ease'
+                            }}
+                        >
+                            <div className="w-[95%] xs:w-[90%] sm:max-w-2xl md:max-w-3xl mx-auto px-2 xs:px-3 sm:px-4 md:px-6 pointer-events-auto">
+                                <div className="bg-white/60 dark:bg-neutral-900/60 backdrop-blur-sm rounded-md p-1 sm:p-1.5 shadow-lg w-full">
+                                    <TerminalInput
+                                        value={input}
+                                        onChange={setInput}
+                                        onSubmit={() => {
+                                            lastSubmittedQueryRef.current = input;
+                                            appendWithPersist({
+                                                content: input,
+                                                role: 'user'
+                                            });
+                                            setInput(''); // Clear input after submit
+                                            setHasSubmitted(true);
+                                            setHasManuallyScrolled(false);
+                                            bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+                                        }}
+                                        selectedModel={selectedModel}
+                                        setSelectedModel={setSelectedModel}
+                                        fileInputRef={fileInputRef}
+                                        attachments={attachments}
+                                        setAttachments={setAttachments}
+                                        onStop={stop}
+                                        status={status}
+                                        onFrameworkSelect={handleFrameworkSelect}
+                                    />
+                                </div>
                             </div>
-                        )}
-                    </AnimatePresence>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

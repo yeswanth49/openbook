@@ -45,15 +45,9 @@ export function NameLoading({
   return (
     <div className={cn("flex items-center gap-1 text-xs", className)}>
       <Loader2 className="h-2.5 w-2.5 animate-spin text-muted-foreground" />
-      <motion.span
-        key={loadingTextIndex}
-        initial={{ opacity: 0.5, y: 2 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0.5, y: -2 }}
-        className="text-muted-foreground text-xs"
-      >
+      <span className="text-muted-foreground text-xs">
         {loadingTexts[loadingTextIndex]}
-      </motion.span>
+      </span>
     </div>
   );
 }
@@ -92,9 +86,7 @@ export function ConversationNameDisplay({
       
       {/* Minimalistic indicator for auto-named conversations */}
       {!isLoading && isAutoNamed && (
-        <motion.div 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
+        <div 
           className="absolute -top-0.5 -right-2 w-1 h-1 rounded-full bg-blue-400/70"
           title="Automatically named based on conversation content"
         />

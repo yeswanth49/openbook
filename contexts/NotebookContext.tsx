@@ -39,7 +39,7 @@ export const NotebookProvider = ({ children }: { children: ReactNode }) => {
     // Initialize default notebook
     const defaultNotebook: Notebook = {
       id: crypto.randomUUID(),
-      name: 'Default Notebook',
+      name: 'Default',
       order: 0,
       createdAt: Date.now(),
       updatedAt: Date.now(),

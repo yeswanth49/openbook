@@ -39,7 +39,21 @@ export default function SidebarNotebook({ notebook, currentPageType, currentPage
 
   // Filter entries and spaces by notebook
   const notebookEntries = entries.filter(entry => entry.notebook_id === notebook.id);
-  const notebookSpaces = spaces.filter(space => space.notebook_id === notebook.id);
+  
+  // Get all spaces that belong to this notebook
+  let notebookSpaces = spaces.filter(space => space.notebook_id === notebook.id);
+  
+  // Always include the current active space in the list, regardless of notebook assignment
+  const currentActiveSpace = spaces.find(space => space.id === currentSpaceId);
+  if (currentActiveSpace && !notebookSpaces.some(space => space.id === currentActiveSpace.id)) {
+    notebookSpaces = [currentActiveSpace, ...notebookSpaces];
+  }
+  
+  // For the default notebook, also include spaces without notebook assignment (legacy default spaces)
+  if (notebook.name === 'Default') {
+    const unassignedSpaces = spaces.filter(space => !space.notebook_id && !notebookSpaces.some(ns => ns.id === space.id));
+    notebookSpaces = [...notebookSpaces, ...unassignedSpaces];
+  }
 
   // Sort entries by updated date (most recent first)
   const sortedEntries = [...notebookEntries].sort((a, b) => 
@@ -78,7 +92,7 @@ export default function SidebarNotebook({ notebook, currentPageType, currentPage
   };
 
   const handleCreateSpace = () => {
-    const defaultTitle = `Space - ${new Date().toLocaleDateString()}`;
+    const defaultTitle = `Untitled`;
     const newSpaceId = createSpace(defaultTitle, notebook.id);
     setEditingSpaceId(newSpaceId);
     setEditingSpaceName(defaultTitle);
@@ -383,7 +397,8 @@ export default function SidebarNotebook({ notebook, currentPageType, currentPage
                       <div
                         className={cn(
                           "flex w-full items-center cursor-pointer",
-                          currentPageType === 'space' && currentPageId === space.id
+                          // Highlight if this space is the currently active space
+                          currentSpaceId === space.id
                             ? "bg-emerald-50 dark:bg-emerald-900/20"
                             : ""
                         )}
@@ -407,7 +422,7 @@ export default function SidebarNotebook({ notebook, currentPageType, currentPage
                           <button
                             className="w-full text-left px-4 py-1.5 text-sm flex items-center"
                             style={{ 
-                              color: currentPageType === 'space' && currentPageId === space.id
+                              color: currentSpaceId === space.id
                                 ? 'var(--tw-color-emerald-600)' 
                                 : 'var(--tw-color-neutral-600)' 
                             }}
@@ -415,6 +430,9 @@ export default function SidebarNotebook({ notebook, currentPageType, currentPage
                             <div className="flex items-center truncate pl-5">
                               {space.metadata?.pinned && (
                                 <Pin className="h-3 w-3 mr-1.5 flex-shrink-0 text-blue-400" />
+                              )}
+                              {currentSpaceId === space.id && (
+                                <span className="mr-1.5 px-1 py-0.5 text-[10px] font-medium bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded">Active</span>
                               )}
                               <ConversationNameDisplay
                                 name={space.name}
@@ -460,13 +478,15 @@ export default function SidebarNotebook({ notebook, currentPageType, currentPage
                             >
                               <Edit2 className="h-3 w-3 text-neutral-500 dark:text-neutral-400" />
                             </button>
-                            <button
-                              className="p-1 rounded hover:bg-neutral-200 dark:hover:bg-neutral-700"
-                              onClick={(e) => handleDeleteSpace(e, space.id, space.name)}
-                              title="Delete space"
-                            >
-                              <Trash2 className="h-3 w-3 text-neutral-500 dark:text-neutral-400" />
-                            </button>
+                            {space.name !== 'General' && (
+                              <button
+                                className="p-1 rounded hover:bg-neutral-200 dark:hover:bg-neutral-700"
+                                onClick={(e) => handleDeleteSpace(e, space.id, space.name)}
+                                title="Delete space"
+                              >
+                                <Trash2 className="h-3 w-3 text-neutral-500 dark:text-neutral-400" />
+                              </button>
+                            )}
                           </div>
                         )}
                       </div>

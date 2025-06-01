@@ -29,6 +29,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
   const [showSearchModal, setShowSearchModal] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<{ id: string; name: string; type: 'journal' | 'space' } | null>(null);
+  const [showClearDataConfirm, setShowClearDataConfirm] = useState(false);
   const [searchResults, setSearchResults] = useState<{
     journals: { id: string; title: string; preview?: string; matchType: string }[];
     spaces: { id: string; name: string; preview?: string; matchType: string }[];
@@ -229,6 +230,14 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
   const handleBackdropClick = () => {
     if (isMobile && isOpen) {
       setIsOpen(false);
+    }
+  };
+
+  // Handle clear all local data
+  const handleClearAllData = () => {
+    if (typeof window !== 'undefined') {
+      localStorage.clear();
+      window.location.reload();
     }
   };
 
@@ -448,6 +457,13 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
               <HelpCircle className="h-4 w-4 text-neutral-400" />
                 <span>Help</span>
               </button>
+              <button 
+                onClick={() => setShowClearDataConfirm(true)}
+                className="flex items-center gap-2 w-full text-left px-2 py-1.5 text-sm text-red-600 dark:text-red-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded"
+              >
+                <Trash2 className="h-4 w-4 text-red-500" />
+                <span>Delete all local data</span>
+              </button>
             </div>
           </div>
         </div>
@@ -635,6 +651,50 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                   }}
                 >
                   Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Add the clear data confirmation dialog */}
+      {showClearDataConfirm && (
+        <div 
+          className="fixed inset-0 bg-black/30 backdrop-blur-[2px] z-50 flex items-center justify-center p-4" 
+          onClick={() => setShowClearDataConfirm(false)}
+          style={{ animation: 'overlayShow 0.15s ease-out' }}
+        >
+          <div 
+            className="bg-white dark:bg-neutral-900 rounded-md shadow-md max-w-xs w-full transform transition-all ease-out duration-300 scale-100 opacity-100 border border-neutral-100 dark:border-neutral-800"
+            style={{ animation: 'fadeIn 0.2s ease-out' }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="p-4 border-b border-neutral-100 dark:border-neutral-800 flex items-center">
+              <Trash2 className="h-4 w-4 text-red-500 mr-2" />
+              <h3 className="text-sm font-medium text-neutral-800 dark:text-neutral-200">
+                Delete All Local Data
+              </h3>
+            </div>
+            
+            <div className="p-4">
+              <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-4">
+                This will permanently delete all your notebooks, journals, spaces and conversations. This action cannot be undone.
+              </p>
+              
+              <div className="flex justify-end gap-2">
+                <button
+                  className="px-3 py-1.5 text-xs font-medium rounded-md bg-white dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors border border-neutral-200 dark:border-neutral-700"
+                  onClick={() => setShowClearDataConfirm(false)}
+                  autoFocus
+                >
+                  Cancel
+                </button>
+                <button
+                  className="px-3 py-1.5 text-xs font-medium rounded-md bg-red-500/80 text-white hover:bg-red-600 transition-colors"
+                  onClick={handleClearAllData}
+                >
+                  Delete All
                 </button>
               </div>
             </div>

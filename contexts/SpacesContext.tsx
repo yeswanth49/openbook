@@ -228,9 +228,20 @@ export const SpacesProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const deleteSpace = (id: string) => {
+    // Find the space to check if it's the General space
+    const spaceToDelete = spaces.find(s => s.id === id);
+    
+    // Prevent deletion of the General space
+    if (spaceToDelete?.name === 'General') {
+      console.log('Cannot delete the General space');
+      return;
+    }
+    
     setSpaces(prev => prev.filter(s => s.id !== id));
     if (currentSpaceId === id && spaces.length > 1) {
-      const fallback = spaces.find(s => s.id !== id);
+      // If deleting current space, switch to General space first, or any other space
+      const generalSpace = spaces.find(s => s.name === 'General');
+      const fallback = generalSpace || spaces.find(s => s.id !== id);
       if (fallback) setCurrentSpaceId(fallback.id);
     }
   };
@@ -302,6 +313,42 @@ export const SpacesProvider = ({ children }: { children: ReactNode }) => {
 
   const addMessage = (newMessageToAdd: ChatMessage) => {
     const spaceUpdateTimestamp = Date.now(); // For the space's updatedAt field
+    
+    // Ensure we have a current space - if not, find or create General space
+    if (!currentSpaceId || !spaces.find(s => s.id === currentSpaceId)) {
+      console.log('No current space found, finding or creating General space');
+      
+      // First try to find existing General space
+      const existingGeneral = spaces.find(s => s.name === 'General');
+      if (existingGeneral) {
+        setCurrentSpaceId(existingGeneral.id);
+        // Add message to existing General space
+        setSpaces(prev => prev.map(s => 
+          s.id === existingGeneral.id 
+            ? { ...s, messages: [...s.messages, newMessageToAdd], updatedAt: spaceUpdateTimestamp }
+            : s
+        ));
+        return;
+      }
+      
+      // Create new General space if none exists
+      const defaultSpace: Space = {
+        id: crypto.randomUUID(),
+        name: 'General',
+        messages: [newMessageToAdd],
+        archived: false,
+        createdAt: Date.now(),
+        updatedAt: spaceUpdateTimestamp,
+        metadata: {
+          manuallyRenamed: true,
+          isGeneratingName: false
+        }
+      };
+      setSpaces(prev => [defaultSpace, ...prev]);
+      setCurrentSpaceId(defaultSpace.id);
+      return;
+    }
+    
     setSpaces(prev => {
       const updated = prev.map(s => {
         if (s.id !== currentSpaceId) return s;
@@ -317,12 +364,13 @@ export const SpacesProvider = ({ children }: { children: ReactNode }) => {
           updatedAt: spaceUpdateTimestamp
         };
         
-        // Auto-naming logic (uses newMessageToAdd.role)
+        // Auto-naming logic (uses newMessageToAdd.role) - but not for General space
         if (
           newMessageToAdd.role === 'user' &&
           updatedSpace.messages.filter(m => m.role === 'user').length === 1 &&
           updatedSpace.messages.length <= 2 && // Ensure it's early in the conversation
-          !updatedSpace.metadata?.manuallyRenamed
+          !updatedSpace.metadata?.manuallyRenamed &&
+          updatedSpace.name !== 'General' // Don't auto-rename General space
         ) {
           return {
             ...updatedSpace,

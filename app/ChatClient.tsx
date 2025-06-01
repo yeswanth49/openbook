@@ -271,75 +271,55 @@ const HomeContent = () => {
         return -1;
     }, [messages]);
 
+    // Scroll to bottom on message change or refresh
     useEffect(() => {
-        // Reset manual scroll when streaming starts
-        if (status === 'streaming') {
-            setHasManuallyScrolled(false);
-            // Initial scroll to bottom when streaming starts
+        // Don't scroll if user has manually scrolled up during conversation
+        if (hasManuallyScrolled && status === 'streaming') return;
+        
+        // Create a smooth scroll to bottom function
+        const scrollToBottom = () => {
             if (bottomRef.current) {
                 isAutoScrollingRef.current = true;
+                
+                // Use different scroll behavior based on device size
+                const behavior = windowWidth < 640 ? "auto" : "smooth";
                 const blockValue = windowWidth < 640 ? "end" : "center";
-                bottomRef.current.scrollIntoView({ 
-                    behavior: windowWidth < 640 ? "auto" : "smooth",
-                    block: blockValue as ScrollLogicalPosition 
-                });
+                
+                // Add a slight visual effect by using a timeout
                 setTimeout(() => {
-                    isAutoScrollingRef.current = false;
-                }, windowWidth < 640 ? 10 : 100);
+                    bottomRef.current?.scrollIntoView({ 
+                        behavior, 
+                        block: blockValue as ScrollLogicalPosition 
+                    });
+                    
+                    // Reset auto-scroll flag after animation
+                    setTimeout(() => {
+                        isAutoScrollingRef.current = false;
+                    }, behavior === "auto" ? 10 : 300);
+                }, 50);
             }
-        }
-    }, [status, windowWidth]);
-
-    // Scroll handling effect
-    useEffect(() => {
-        let scrollTimeout: NodeJS.Timeout;
-
+        };
+        
+        // Call scroll function when:
+        // 1. Messages array changes (new message added)
+        // 2. When streaming starts
+        // 3. When suggested questions appear
+        scrollToBottom();
+        
+        // Add a scroll listener to detect manual scrolling
         const handleScroll = () => {
-            // Clear any pending timeout
-            if (scrollTimeout) {
-                clearTimeout(scrollTimeout);
-            }
-
-            // If we're not auto-scrolling and we're streaming, it must be a user scroll
             if (!isAutoScrollingRef.current && status === 'streaming') {
-                // Use a smaller offset on mobile
                 const mobileAdjust = windowWidth < 640 ? 80 : 120;
                 const isAtBottom = window.innerHeight + window.scrollY >= document.body.offsetHeight - mobileAdjust;
-                if (!isAtBottom) {
-                    setHasManuallyScrolled(true);
-                } else {
-                    // If user scrolled back to bottom, reset the manual scroll flag
-                    setHasManuallyScrolled(false);
-                }
+                
+                // Set manual scroll flag only when user has scrolled up
+                setHasManuallyScrolled(!isAtBottom);
             }
         };
-
+        
         window.addEventListener('scroll', handleScroll);
-
-        // Auto-scroll on new content if we haven't manually scrolled
-        if (status === 'streaming' && !hasManuallyScrolled && bottomRef.current) {
-            scrollTimeout = setTimeout(() => {
-                isAutoScrollingRef.current = true;
-                // Use a different block value on mobile
-                const blockValue = windowWidth < 640 ? "end" : "center";
-                bottomRef.current?.scrollIntoView({ 
-                    behavior: windowWidth < 640 ? "auto" : "smooth", 
-                    block: blockValue as ScrollLogicalPosition 
-                });
-                // Reset auto-scroll flag after animation
-                setTimeout(() => {
-                    isAutoScrollingRef.current = false;
-                }, windowWidth < 640 ? 10 : 100);
-            }, windowWidth < 640 ? 10 : 100);
-        }
-
-        return () => {
-            window.removeEventListener('scroll', handleScroll);
-            if (scrollTimeout) {
-                clearTimeout(scrollTimeout);
-            }
-        };
-    }, [messages, suggestedQuestions, status, hasManuallyScrolled, windowWidth]);
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, [messages, suggestedQuestions, status, windowWidth, hasManuallyScrolled]);
 
     // Handle window resize without automatically toggling sidebar
     useEffect(() => {
@@ -563,8 +543,15 @@ const HomeContent = () => {
                                         });
                                         setInput(''); // Clear input after submit
                                         setHasSubmitted(true);
-                                        setHasManuallyScrolled(false);
-                                        bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+                                        setHasManuallyScrolled(false); // Reset manual scroll when user submits
+                                        
+                                        // Smooth scroll to bottom after a small delay
+                                        setTimeout(() => {
+                                            bottomRef.current?.scrollIntoView({ 
+                                                behavior: windowWidth < 640 ? "auto" : "smooth",
+                                                block: windowWidth < 640 ? "end" : "center"
+                                            });
+                                        }, 100);
                                     }}
                                     selectedModel={selectedModel}
                                     setSelectedModel={setSelectedModel}
@@ -608,7 +595,12 @@ const HomeContent = () => {
                             </div>
                         )}
                         
-                        <div ref={bottomRef} />
+                        {/* Bottom reference element for scrolling */}
+                        <div 
+                            ref={bottomRef} 
+                            className="h-0 w-full opacity-0 pointer-events-none"
+                            aria-hidden="true"
+                        />
                     </div>
 
                     {(messages.length > 0 || hasSubmitted) && (
@@ -633,8 +625,15 @@ const HomeContent = () => {
                                             });
                                             setInput(''); // Clear input after submit
                                             setHasSubmitted(true);
-                                            setHasManuallyScrolled(false);
-                                            bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+                                            setHasManuallyScrolled(false); // Reset manual scroll when user submits
+                                            
+                                            // Smooth scroll to bottom after a small delay
+                                            setTimeout(() => {
+                                                bottomRef.current?.scrollIntoView({ 
+                                                    behavior: windowWidth < 640 ? "auto" : "smooth",
+                                                    block: windowWidth < 640 ? "end" : "center"
+                                                });
+                                            }, 100);
                                         }}
                                         selectedModel={selectedModel}
                                         setSelectedModel={setSelectedModel}

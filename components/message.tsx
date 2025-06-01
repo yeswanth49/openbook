@@ -5,7 +5,7 @@ import { Separator } from '@/components/ui/separator';
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
-import { AlignLeft, ArrowRight, ChevronLeft, ChevronRight, Copy, Download, X } from 'lucide-react';
+import { AlignLeft, ArrowRight, ChevronLeft, ChevronRight, Copy, Download, X, Edit } from 'lucide-react';
 import { TextUIPart, ReasoningUIPart, ToolInvocationUIPart, SourceUIPart } from '@ai-sdk/ui-utils';
 
 // Define MessagePart type
@@ -149,25 +149,24 @@ export const Message: React.FC<MessageProps> = ({
                   <span className="text-sm font-medium text-neutral-600 dark:text-neutral-400">
                     Edit Query
                   </span>
-                  <div className="bg-neutral-100 dark:bg-neutral-800 rounded-[9px] border border-neutral-200 dark:border-neutral-700 flex items-center">
+                  <div className="flex items-center gap-1">
                     <Button
                       type="button"
                       variant="ghost"
-                      size="icon"
+                      size="sm"
                       onClick={() => {
                         setInput('');
                       }}
-                      className="h-7 w-7 rounded-l-lg! rounded-r-none! text-neutral-500 dark:text-neutral-400 hover:text-primary"
+                      className="h-8 px-2 text-xs rounded-full"
                       disabled={status === 'submitted' || status === 'streaming'}
                     >
                       <X className="h-4 w-4" />
                     </Button>
-                    <Separator orientation="vertical" className="h-7 bg-neutral-200 dark:bg-neutral-700" />
                     <Button
                       type="submit"
                       variant="ghost"
-                      size="icon"
-                      className="h-7 w-7 rounded-r-lg! rounded-l-none! text-neutral-500 dark:text-neutral-400 hover:text-primary"
+                      size="sm"
+                      className="h-8 px-2 text-xs rounded-full"
                       disabled={status === 'submitted' || status === 'streaming'}
                     >
                       <ArrowRight className="h-4 w-4" />
@@ -187,49 +186,39 @@ export const Message: React.FC<MessageProps> = ({
             </form>
           ) : (
             <div className="group relative">
-              <div className="relative">
-                <p className="text-xl font-medium font-sans break-words text-neutral-900 dark:text-neutral-100 pr-10 sm:pr-12">
-                  {message.content}
-                </p>
+              {/* Header section with user info and buttons - similar to AI messages */}
+              <div className="flex items-center justify-between mt-5 mb-2">
                 {!isEditingMessage && index === lastUserMessageIndex && (
-                  <div className="absolute -right-2 top-0 opacity-0 group-hover:opacity-100 transition-opacity bg-transparent rounded-[9px] border border-neutral-200 dark:border-neutral-700 flex items-center">
+                  <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
                     <Button
                       variant="ghost"
-                      size="icon"
+                      size="sm"
                       onClick={() => handleMessageEdit(index)}
-                      className="h-7 w-7 rounded-l-lg! rounded-r-none! text-neutral-500 dark:text-neutral-400 hover:text-primary"
+                      className="h-8 px-2 text-xs rounded-full"
                       disabled={status === 'submitted' || status === 'streaming'}
                     >
-                      <svg
-                        width="15"
-                        height="15"
-                        viewBox="0 0 15 15"
-                        fill="none"
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-4 w-4"
-                      >
-                        <path
-                          d="M12.1464 1.14645C12.3417 0.951184 12.6583 0.951184 12.8535 1.14645L14.8535 3.14645C15.0488 3.34171 15.0488 3.65829 14.8535 3.85355L10.9109 7.79618C10.8349 7.87218 10.7471 7.93543 10.651 7.9835L6.72359 9.94721C6.53109 10.0435 6.29861 10.0057 6.14643 9.85355C5.99425 9.70137 5.95652 9.46889 6.05277 9.27639L8.01648 5.34897C8.06455 5.25283 8.1278 5.16507 8.2038 5.08907L12.1464 1.14645ZM12.5 2.20711L8.91091 5.79618L7.87266 7.87267L9.94915 6.83442L13.5382 3.24535L12.5 2.20711ZM8.99997 1.49997C9.27611 1.49997 9.49997 1.72383 9.49997 1.99997C9.49997 2.27611 9.27611 2.49997 8.99997 2.49997H4.49997C3.67154 2.49997 2.99997 3.17154 2.99997 3.99997V11C2.99997 11.8284 3.67154 12.5 4.49997 12.5H11.5C12.3284 12.5 13 11.8284 13 11V6.49997C13 6.22383 13.2238 5.99997 13.5 5.99997C13.7761 5.99997 14 6.22383 14 6.49997V11C14 12.3807 12.8807 13.5 11.5 13.5H4.49997C3.11926 13.5 1.99997 12.3807 1.99997 11V3.99997C1.99997 2.61926 3.11926 1.49997 4.49997 1.49997H8.99997Z"
-                          fill="currentColor"
-                          fillRule="evenodd"
-                          clipRule="evenodd"
-                        />
-                      </svg>
+                      <Edit className="h-4 w-4" />
                     </Button>
-                    <Separator orientation="vertical" className="h-7" />
                     <Button
                       variant="ghost"
-                      size="icon"
+                      size="sm"
                       onClick={() => {
                         navigator.clipboard.writeText(message.content);
                         toast.success("Copied to clipboard");
                       }}
-                      className="h-7 w-7 rounded-r-lg! rounded-l-none! text-neutral-500 dark:text-neutral-400 hover:text-primary"
+                      className="h-8 px-2 text-xs rounded-full"
                     >
                       <Copy className="h-4 w-4" />
                     </Button>
                   </div>
                 )}
+              </div>
+              
+              {/* Message content */}
+              <div className="relative">
+                <p className="text-xl font-medium font-sans break-words text-neutral-900 dark:text-neutral-100">
+                  {message.content}
+                </p>
               </div>
               {message.experimental_attachments && message.experimental_attachments.length > 0 && (
                 <AttachmentsBadge attachments={message.experimental_attachments} />

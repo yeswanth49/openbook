@@ -278,7 +278,7 @@ const Messages: React.FC<MessagesProps> = ({
                 <div className="flex items-center gap-1">
                   <Button
                     variant="ghost"
-                    size="icon"
+                    size="sm"
                     onClick={() => {
                       const lastUserMessage = messages.findLast(m => m.role === 'user');
                       if (!lastUserMessage) return;
@@ -293,7 +293,7 @@ const Messages: React.FC<MessagesProps> = ({
                     }}
                     className="h-8 px-2 text-xs rounded-full"
                   >
-                    <RefreshCw className="h-3.5 w-3.5" />
+                    <RefreshCw className="h-4 w-4" />
                   </Button>
                   <CopyButton text={part.text} />
                 </div>

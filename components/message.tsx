@@ -135,12 +135,7 @@ export const Message: React.FC<MessageProps> = ({
 
   if (message.role === 'user') {
     return (
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="mb-4 px-0"
-      >
+      <div className="mb-4 px-0">
         <div className="grow min-w-0">
           {isEditingMessage && editingMessageIndex === index ? (
             <form onSubmit={handleMessageUpdate} className="w-full">
@@ -226,7 +221,7 @@ export const Message: React.FC<MessageProps> = ({
             </div>
           )}
         </div>
-      </motion.div>
+      </div>
     );
   }
 
@@ -245,13 +240,7 @@ export const Message: React.FC<MessageProps> = ({
 
         {/* Add suggested questions if this is the last message */}
         {suggestedQuestions.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 20 }}
-            transition={{ duration: 0.5 }}
-            className="w-full max-w-xl sm:max-w-2xl mt-6"
-          >
+          <div className="w-full max-w-xl sm:max-w-2xl mt-6">
             <div className="flex items-center gap-2 mb-4">
               <h2 className="font-medium text-neutral-800 dark:text-neutral-200">More Curated Questions</h2>
             </div>
@@ -267,7 +256,7 @@ export const Message: React.FC<MessageProps> = ({
                 </Button>
               ))}
             </div>
-          </motion.div>
+          </div>
         )}
       </>
     );

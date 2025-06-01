@@ -89,14 +89,14 @@ export default function AddToJournalButton({
       disabled={isAdding || isAdded}
       className={`
         inline-flex items-center gap-1.5 px-2 py-1 text-xs rounded-md
-        transition-all duration-200 hover:scale-105
+        transition-all duration-200 hover:scale-90
         ${isAdded 
           ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' 
           : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-neutral-700'
         }
         ${className}
       `}
-      whileHover={{ scale: 1.05 }}
+      whileHover={{ scale: 0.95 }}
       whileTap={{ scale: 0.95 }}
     >
       <AnimatePresence mode="wait">

@@ -187,17 +187,17 @@ export const Message: React.FC<MessageProps> = ({
           ) : (
             <div className="group relative">
               {/* Header section with user info and buttons - similar to AI messages */}
-              <div className="flex items-center justify-between mt-5 mb-2">
+              <div className="flex items-center justify-between mt-5 mb-2 overflow-hidden pr-1">
                 {!isEditingMessage && index === lastUserMessageIndex && (
                   <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => handleMessageEdit(index)}
-                      className="h-8 px-2 text-xs rounded-full"
+                      className="h-7 w-7 p-0 rounded-full flex items-center justify-center"
                       disabled={status === 'submitted' || status === 'streaming'}
                     >
-                      <Edit className="h-4 w-4" />
+                      <Edit className="h-3.5 w-3.5" />
                     </Button>
                     <Button
                       variant="ghost"
@@ -206,9 +206,9 @@ export const Message: React.FC<MessageProps> = ({
                         navigator.clipboard.writeText(message.content);
                         toast.success("Copied to clipboard");
                       }}
-                      className="h-8 px-2 text-xs rounded-full"
+                      className="h-7 w-7 p-0 rounded-full flex items-center justify-center"
                     >
-                      <Copy className="h-4 w-4" />
+                      <Copy className="h-3.5 w-3.5" />
                     </Button>
                   </div>
                 )}
@@ -260,7 +260,7 @@ export const Message: React.FC<MessageProps> = ({
                 <Button
                   key={i}
                   variant="ghost"
-                  className="w-fit font-medium rounded-2xl p-1 justify-start text-left h-auto py-2 px-4 bg-neutral-100 dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 hover:bg-neutral-200 dark:hover:bg-neutral-700 whitespace-normal"
+                  className="w-fit font-medium rounded-2xl p-1 justify-start text-left h-auto py-2 px-4 bg-neutral-100 dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 hover:bg-neutral-200 dark:hover:bg-neutral-700 whitespace-normal max-w-full"
                   onClick={() => handleSuggestedQuestionClick(question)}
                 >
                   {question}

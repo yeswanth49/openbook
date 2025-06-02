@@ -3,6 +3,8 @@
 import * as React from 'react';
 import type { ReactNode } from 'react';
 import { generateConversationName, shouldUpdateConversationName } from '@/lib/conversation-utils';
+import { useUser } from './UserContext';
+import { useLimitModal } from './LimitModalContext';
 
 export type ChatMessage = {
   id: string;
@@ -36,7 +38,7 @@ export interface SpacesContextType {
   spaces: Space[];
   currentSpaceId: string;
   currentSpace?: Space;
-  createSpace: (name: string, notebook_id?: string) => string;
+  createSpace: (name: string, notebook_id?: string) => string | null;
   deleteSpace: (id: string) => void;
   archiveSpace: (id: string) => void;
   renameSpace: (id: string, name: string, isManualRename?: boolean) => void;
@@ -62,6 +64,8 @@ const STORAGE_KEY = 'openbook_spaces_data';
 export const SpacesProvider = ({ children }: { children: ReactNode }) => {
   const [spaces, setSpaces] = React.useState<Space[]>([]);
   const [currentSpaceId, setCurrentSpaceId] = React.useState<string>('');
+  const { premium } = useUser();
+  const { showLimitModal } = useLimitModal();
 
   // Load from localStorage
   React.useEffect(() => {
@@ -209,6 +213,15 @@ export const SpacesProvider = ({ children }: { children: ReactNode }) => {
   }, [spaces, generateNameWithDelay]);
   
   const createSpace = (name: string, notebook_id?: string) => {
+    if (!premium && notebook_id) {
+      // Count existing spaces for this notebook
+      const notebookSpaces = spaces.filter(space => space.notebook_id === notebook_id);
+      if (notebookSpaces.length >= 3) {
+        showLimitModal('You\'ve reached the maximum of 3 spaces per notebook in the free plan. Upgrade to premium for unlimited spaces.', 'space');
+        return null;
+      }
+    }
+    
     const newSpace: Space = {
       id: crypto.randomUUID(),
       name,

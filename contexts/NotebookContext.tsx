@@ -2,12 +2,14 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Notebook } from '@/lib/types';
+import { useUser } from './UserContext';
+import { useLimitModal } from './LimitModalContext';
 
 export interface NotebookContextType {
   notebooks: Notebook[];
   currentNotebookId: string;
   currentNotebook?: Notebook;
-  createNotebook: (name: string) => string;
+  createNotebook: (name: string) => string | null;
   deleteNotebook: (id: string) => void;
   renameNotebook: (id: string, name: string) => void;
   switchNotebook: (id: string) => void;
@@ -21,6 +23,8 @@ const STORAGE_KEY = 'openbook_notebooks_data';
 export const NotebookProvider = ({ children }: { children: ReactNode }) => {
   const [notebooks, setNotebooks] = useState<Notebook[]>([]);
   const [currentNotebookId, setCurrentNotebookId] = useState<string>('');
+  const { premium } = useUser();
+  const { showLimitModal } = useLimitModal();
 
   // Load from localStorage
   useEffect(() => {
@@ -59,7 +63,13 @@ export const NotebookProvider = ({ children }: { children: ReactNode }) => {
 
   const currentNotebook = notebooks.find(notebook => notebook.id === currentNotebookId);
 
-  const createNotebook = (name: string): string => {
+  const createNotebook = (name: string): string | null => {
+    // Check if limit is reached for free users
+    if (!premium && notebooks.length >= 3) {
+      showLimitModal('You\'ve reached the maximum of 3 notebooks in the free plan. Upgrade to premium for unlimited notebooks.', 'notebook');
+      return null;
+    }
+
     const newNotebook: Notebook = {
       id: crypto.randomUUID(),
       name,

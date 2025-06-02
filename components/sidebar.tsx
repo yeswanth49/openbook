@@ -1,13 +1,13 @@
 "use client";
 
 import { useState, useEffect, useRef } from 'react';
-import { BookOpen, ChevronLeft, ChevronRight, Plus, Search, PenLine, ChevronDown, Settings, Crown, MessageSquare, Flag, HelpCircle, LogOut, FolderPlus, Trash2, Edit2, MoreHorizontal, X, Pin, PinOff, RefreshCw, Clock } from 'lucide-react';
+import { BookOpen, ChevronLeft, ChevronRight, Plus, Search, PenLine, ChevronDown, Settings, Crown, MessageSquare, Flag, HelpCircle, LogOut, FolderPlus, Trash2, Edit2, MoreHorizontal, X, Pin, PinOff, RefreshCw, Clock, Star } from 'lucide-react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import Link from 'next/link';
 import { useSpaces, Space as SpaceType } from '@/contexts/SpacesContext';
 import { useNotebooks } from '@/contexts/NotebookContext';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useJournal } from '@/hooks/useJournal';
 import { cn } from '@/lib/utils';
 import { ConversationMetadata } from '@/components/conversation-metadata';
@@ -15,6 +15,7 @@ import { ConversationNameDisplay, NameLoading } from '@/components/name-loading'
 import { format } from 'date-fns';
 import SidebarNotebook from '@/components/SidebarNotebook';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useUser } from '@/contexts/UserContext';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -32,8 +33,8 @@ const animationConfig = {
   // Spring configuration
   spring: {
     type: 'spring',
-    stiffness: 400,
-    damping: 30
+    stiffness: 500,  // Increased for faster animation
+    damping: 40      // Balanced for less bounce but still responsive
   },
 
   // Fade in/out preset
@@ -41,7 +42,7 @@ const animationConfig = {
     initial: { opacity: 0 },
     animate: { opacity: 1 },
     exit: { opacity: 0 },
-    transition: { duration: 0.2 }
+    transition: { duration: 0.15 } // Faster fade
   },
   
   // Hover animation preset
@@ -60,12 +61,20 @@ const animationConfig = {
 const sidebarVariants = {
   open: (isMobile: boolean) => ({
     width: isMobile ? '80%' : '256px',
-    transition: animationConfig.spring
+    transition: {
+      type: 'spring',
+      stiffness: 500,
+      damping: 40,
+      duration: 0.2 // Limit maximum duration
+    }
   }),
   closed: {
     width: '0px',
     transition: {
-      ...animationConfig.spring,
+      type: 'spring',
+      stiffness: 500,
+      damping: 40,
+      duration: 0.2, // Limit maximum duration
       when: "afterChildren"
     }
   }
@@ -76,14 +85,14 @@ const contentVariants = {
   open: {
     opacity: 1,
     transition: {
-      delay: 0.1,
-      duration: 0.2
+      delay: 0.05, // Reduced delay
+      duration: 0.15, // Faster fade in
     }
   },
   closed: {
     opacity: 0,
     transition: {
-      duration: 0.1
+      duration: 0.1, // Faster fade out
     }
   }
 };
@@ -93,12 +102,16 @@ const backdropVariants = {
   open: {
     opacity: 1,
     backdropFilter: 'blur(2px)',
-    transition: animationConfig.transition
+    transition: {
+      duration: 0.15, // Faster transition
+    }
   },
   closed: {
     opacity: 0,
     backdropFilter: 'blur(0px)',
-    transition: animationConfig.transition
+    transition: {
+      duration: 0.1, // Faster transition
+    }
   }
 };
 
@@ -107,28 +120,63 @@ const toggleButtonVariants = {
   open: (isMobile: boolean) => ({
     x: isMobile ? 0 : 256,
     rotate: 0,
-    transition: animationConfig.spring
+    transition: {
+      type: 'spring',
+      stiffness: 500,
+      damping: 40,
+      duration: 0.2 // Limit maximum duration
+    }
   }),
   closed: {
     x: 0,
     rotate: 180,
-    transition: animationConfig.spring
+    transition: {
+      type: 'spring',
+      stiffness: 500,
+      damping: 40,
+      duration: 0.2 // Limit maximum duration
+    }
   }
 };
 
 // Modal variants
 const modalVariants = {
-  initial: { opacity: 0, scale: 0.95, y: 10 },
-  animate: { opacity: 1, scale: 1, y: 0 },
-  exit: { opacity: 0, scale: 0.98, y: 10 },
-  transition: animationConfig.spring
+  initial: { opacity: 0, scale: 0.98, y: 5 },
+  animate: { 
+    opacity: 1, 
+    scale: 1, 
+    y: 0,
+    transition: {
+      duration: 0.15 // Faster animation
+    }
+  },
+  exit: { 
+    opacity: 0, 
+    scale: 0.98, 
+    y: 5,
+    transition: {
+      duration: 0.1 // Faster exit
+    }
+  }
 };
 
 // List item variants
 const itemVariants = {
-  initial: { opacity: 0, y: 5 },
-  animate: { opacity: 1, y: 0 },
-  transition: { duration: 0.2 }
+  initial: { opacity: 0, y: 3 },
+  animate: { 
+    opacity: 1, 
+    y: 0,
+    transition: {
+      duration: 0.15 // Faster animation
+    }
+  },
+  exit: {
+    opacity: 0,
+    y: 3,
+    transition: {
+      duration: 0.1 // Faster exit
+    }
+  }
 };
 
 export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
@@ -151,22 +199,51 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
   const { entries, deleteEntry } = useJournal();
   const { spaces, switchSpace, deleteSpace } = useSpaces();
   const router = useRouter();
+  const pathname = usePathname();
+  const { premium, setPremium } = useUser();
 
   // Get current path and parse current page type and ID
-  const pathname = typeof window !== 'undefined' ? window.location.pathname : '';
-  
-  // Extract IDs directly from pathname - more reliable than using context
-  const currentPageType = pathname.startsWith('/journal/') 
+  const currentPageType = pathname?.startsWith('/journal/') 
     ? 'journal' 
-    : pathname.startsWith('/space/') 
+    : pathname?.startsWith('/space/') 
       ? 'space' 
       : '';
   
-  const currentPageId = currentPageType === 'journal'
+  const currentPageId = currentPageType === 'journal' && pathname
     ? pathname.split('/journal/')[1]?.split(/[/?#]/)[0] || ''
-    : currentPageType === 'space'
+    : currentPageType === 'space' && pathname
       ? pathname.split('/space/')[1]?.split(/[/?#]/)[0] || ''
       : '';
+  
+  // Detect path changes and ensure sidebar state is preserved
+  const lastPathRef = useRef(pathname);
+  useEffect(() => {
+    // If path changed, ensure we're using the stored sidebar state
+    if (pathname !== lastPathRef.current && typeof window !== 'undefined') {
+      const savedState = localStorage.getItem('sidebar-isOpen');
+      if (savedState !== null) {
+        setIsOpen(savedState === 'true');
+      }
+      lastPathRef.current = pathname;
+    }
+  }, [pathname, setIsOpen]);
+
+  // Persist sidebar state to localStorage when it changes
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('sidebar-isOpen', String(isOpen));
+    }
+  }, [isOpen]);
+
+  // Initialize sidebar state from localStorage on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const savedState = localStorage.getItem('sidebar-isOpen');
+      if (savedState !== null) {
+        setIsOpen(savedState === 'true');
+      }
+    }
+  }, []);
   
   // Only expand sections on initial page load, not when manually collapsed
   useEffect(() => {
@@ -353,15 +430,15 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
   return (
     <>
       {/* Mobile backdrop overlay */}
-      <AnimatePresence>
+      <AnimatePresence mode="wait">
         {isMobile && isOpen && (
           <motion.div 
             className="fixed inset-0 bg-black/30 backdrop-blur-[2px] z-40"
             onClick={handleBackdropClick}
-            initial="closed"
-            animate="open"
-            exit="closed"
-            variants={backdropVariants}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
           />
         )}
       </AnimatePresence>
@@ -373,7 +450,14 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
           "rounded-r-md p-2 shadow-sm",
           "hover:bg-neutral-100 dark:hover:bg-neutral-800 opacity-40 hover:opacity-90"
         )}
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={() => {
+          const newState = !isOpen;
+          setIsOpen(newState);
+          // Explicitly update localStorage when toggling
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('sidebar-isOpen', String(newState));
+          }
+        }}
         aria-label={isOpen ? "Collapse sidebar" : "Expand sidebar"}
         custom={isMobile}
         initial="closed"
@@ -425,7 +509,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                 >
                   <div className="p-1">
                     <motion.button
-                      whileHover={{ x: 3 }}
+                      whileHover={{ x: 2 }}
                       whileTap={animationConfig.tap}
                       className="flex items-center gap-2 w-full text-left p-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded"
                       onClick={handleCreateNotebook}
@@ -503,7 +587,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                   
                   {/* New Notebook button */}
                   <motion.button
-                    whileHover={{ x: 3 }}
+                    whileHover={{ x: 2 }}
                     whileTap={animationConfig.tap}
                     onClick={handleCreateNotebook}
                     className="w-full flex items-center gap-2 text-left px-4 py-1.5 mt-1 text-sm text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800"
@@ -520,7 +604,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
           <div className="border-t border-neutral-100 dark:border-neutral-800 py-3 px-4">
             <div className="space-y-1">
               <motion.button 
-                whileHover={{ x: 3 }}
+                whileHover={{ x: 2 }}
                 whileTap={animationConfig.tap}
                 className="flex items-center gap-2 w-full text-left px-2 py-1.5 text-sm text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded"
               >
@@ -529,7 +613,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
               </motion.button>
               <Link href="https://x.com/GoOpenBook" target="_blank" className="block">
                 <motion.button 
-                  whileHover={{ x: 3 }}
+                  whileHover={{ x: 2 }}
                   whileTap={animationConfig.tap}
                   className="flex items-center gap-2 w-full text-left px-2 py-1.5 text-sm text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded"
                 >
@@ -538,7 +622,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                 </motion.button>
               </Link>
               <motion.button 
-                whileHover={{ x: 3 }}
+                whileHover={{ x: 2 }}
                 whileTap={animationConfig.tap}
                 className="flex items-center gap-2 w-full text-left px-2 py-1.5 text-sm text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded"
               >
@@ -546,7 +630,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                 <span>Report Bug</span>
               </motion.button>
               <motion.button 
-                whileHover={{ x: 3 }}
+                whileHover={{ x: 2 }}
                 whileTap={animationConfig.tap}
                 className="flex items-center gap-2 w-full text-left px-2 py-1.5 text-sm text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded"
               >
@@ -554,13 +638,22 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                 <span>Help</span>
               </motion.button>
               <motion.button 
-                whileHover={{ x: 3 }}
+                whileHover={{ x: 2 }}
                 whileTap={animationConfig.tap}
                 onClick={() => setShowClearDataConfirm(true)}
                 className="flex items-center gap-2 w-full text-left px-2 py-1.5 text-sm text-red-600 dark:text-red-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded"
               >
                 <Trash2 className="h-4 w-4 text-red-500" />
                 <span>Delete all local data</span>
+              </motion.button>
+              <motion.button 
+                whileHover={{ x: 2 }}
+                whileTap={animationConfig.tap}
+                onClick={() => setPremium(!premium)}
+                className="flex items-center gap-2 w-full text-left px-2 py-1.5 text-sm text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded"
+              >
+                <Star className="h-4 w-4 text-neutral-400" />
+                <span>{premium ? "Disable Premium" : "Enable Premium"}</span>
               </motion.button>
             </div>
           </div>
@@ -638,7 +731,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                                       animate="animate"
                                       exit="exit"
                                       variants={itemVariants}
-                                      whileHover={{ x: 3 }}
+                                      whileHover={{ x: 2 }}
                                       whileTap={animationConfig.tap}
                                       className="flex flex-col w-full text-left px-2 py-2 text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-md"
                                       onClick={() => {
@@ -675,7 +768,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                                       exit="exit"
                                       variants={itemVariants}
                                       transition={{ delay: index * 0.03 }}
-                                      whileHover={{ x: 3 }}
+                                      whileHover={{ x: 2 }}
                                       whileTap={animationConfig.tap}
                                       className="flex flex-col w-full text-left px-2 py-2 text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-md"
                                       onClick={() => {
@@ -715,7 +808,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
               
               <div className="border-t border-neutral-100 dark:border-neutral-800 p-2 flex justify-end">
                 <motion.button
-                  whileHover={{ x: 3 }}
+                  whileHover={{ x: 2 }}
                   whileTap={animationConfig.tap}
                   className="px-2 py-1 text-xs rounded text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-300 transition-colors"
                   onClick={() => {
@@ -761,7 +854,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                 
                 <div className="flex justify-end gap-2">
                   <motion.button
-                    whileHover={{ x: 3 }}
+                    whileHover={{ x: 2 }}
                     whileTap={animationConfig.tap}
                     className="px-3 py-1.5 text-xs font-medium rounded-md bg-white dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors border border-neutral-200 dark:border-neutral-700"
                     onClick={() => setShowDeleteConfirm(false)}
@@ -770,7 +863,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                     Cancel
                   </motion.button>
                   <motion.button
-                    whileHover={{ x: 3 }}
+                    whileHover={{ x: 2 }}
                     whileTap={animationConfig.tap}
                     className="px-3 py-1.5 text-xs font-medium rounded-md bg-red-500/80 text-white hover:bg-red-600 transition-colors"
                     onClick={() => {
@@ -824,7 +917,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                 
                 <div className="flex justify-end gap-2">
                   <motion.button
-                    whileHover={{ x: 3 }}
+                    whileHover={{ x: 2 }}
                     whileTap={animationConfig.tap}
                     className="px-3 py-1.5 text-xs font-medium rounded-md bg-white dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors border border-neutral-200 dark:border-neutral-700"
                     onClick={() => setShowClearDataConfirm(false)}
@@ -833,7 +926,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                     Cancel
                   </motion.button>
                   <motion.button
-                    whileHover={{ x: 3 }}
+                    whileHover={{ x: 2 }}
                     whileTap={animationConfig.tap}
                     className="px-3 py-1.5 text-xs font-medium rounded-md bg-red-500/80 text-white hover:bg-red-600 transition-colors"
                     onClick={handleClearAllData}

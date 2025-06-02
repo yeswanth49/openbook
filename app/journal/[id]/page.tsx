@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import Sidebar from "@/components/sidebar";
 import Editor from "@/components/journal/editor/editor";
@@ -13,6 +13,15 @@ export default function JournalEntryPage() {
   const idParam = params.id;
   const { getEntry, updateEntry, initialized } = useJournal();
   const [sidebarOpen, setSidebarOpen] = useState(true);
+
+  // Always ensure sidebar is open when navigating to a journal page
+  useEffect(() => {
+    // Force sidebar to be open on journal pages for better UX
+    setSidebarOpen(true);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('sidebar-isOpen', 'true');
+    }
+  }, [idParam]); // Re-run when journal ID changes
 
   if (!initialized) {
     return null;

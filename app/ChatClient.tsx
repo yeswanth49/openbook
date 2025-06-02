@@ -88,7 +88,29 @@ const HomeContent = () => {
     const [hasManuallyScrolled, setHasManuallyScrolled] = useState(false);
     const isAutoScrollingRef = useRef(false);
     const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1024);
-    const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [sidebarOpen, setSidebarOpen] = useState(true);
+
+    // Ensure sidebar state is consistent across navigation
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            // Get saved state from localStorage
+            const savedState = localStorage.getItem('sidebar-isOpen');
+            if (savedState !== null) {
+                const isOpen = savedState === 'true';
+                setSidebarOpen(isOpen);
+            } else {
+                // If no saved state, set a default and save it
+                localStorage.setItem('sidebar-isOpen', String(sidebarOpen));
+            }
+        }
+    }, [currentSpaceId]); // Re-run when space changes
+
+    // Update localStorage when sidebar state changes
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            localStorage.setItem('sidebar-isOpen', String(sidebarOpen));
+        }
+    }, [sidebarOpen]);
 
     // Get stored user ID
     const userId = useMemo(() => getUserId(), []);

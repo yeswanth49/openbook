@@ -1,11 +1,15 @@
 import { useState, useEffect, useCallback } from 'react'
 import { JournalEntry, Block } from '../lib/types'
+import { useUser } from '@/contexts/UserContext'
+import { useLimitModal } from '@/contexts/LimitModalContext'
 
 const STORAGE_KEY = 'journalEntries'
 
 export function useJournal() {
   const [entries, setEntries] = useState<JournalEntry[]>([])
   const [initialized, setInitialized] = useState(false)
+  const { premium } = useUser()
+  const { showLimitModal } = useLimitModal()
 
   // Load entries from localStorage on mount
   useEffect(() => {
@@ -45,6 +49,15 @@ export function useJournal() {
   }, [])
 
   const createEntry = useCallback((title: string, notebook_id?: string) => {
+    if (!premium && notebook_id) {
+      // Count existing entries for this notebook
+      const notebookEntries = entries.filter(entry => entry.notebook_id === notebook_id)
+      if (notebookEntries.length >= 3) {
+        showLimitModal('You\'ve reached the maximum of 3 journals per notebook in the free plan. Upgrade to premium for unlimited journals.', 'journal')
+        return null
+      }
+    }
+
     const now = new Date().toISOString()
     const id =
       typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
@@ -70,7 +83,7 @@ export function useJournal() {
     })
     
     return newEntry
-  }, [])
+  }, [entries, premium, showLimitModal])
 
   const updateEntry = useCallback((id: string, updates: Partial<Pick<JournalEntry, 'title' | 'blocks'>>) => {
     setEntries(prev => {

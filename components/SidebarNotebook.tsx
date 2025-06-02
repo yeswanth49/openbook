@@ -11,6 +11,7 @@ import { useJournal } from '@/hooks/useJournal';
 import { useRouter } from 'next/navigation';
 import { ConversationNameDisplay } from '@/components/name-loading';
 import { format } from 'date-fns';
+import { LimitIndicator } from './LimitIndicator';
 
 // Define types for animation config
 interface AnimationConfig {
@@ -44,7 +45,7 @@ const containerVariants = {
   visible: { 
     opacity: 1,
     transition: {
-      staggerChildren: 0.05
+      staggerChildren: 0.03
     }
   }
 };
@@ -56,11 +57,12 @@ const sectionVariants = {
     transition: {
       height: {
         type: "spring",
-        stiffness: 400,
-        damping: 30
+        stiffness: 500,
+        damping: 40,
+        duration: 0.2
       },
       opacity: {
-        duration: 0.2
+        duration: 0.15
       }
     }
   },
@@ -70,11 +72,12 @@ const sectionVariants = {
     transition: {
       height: {
         type: "spring",
-        stiffness: 400,
-        damping: 30
+        stiffness: 500,
+        damping: 40,
+        duration: 0.2
       },
       opacity: {
-        duration: 0.2
+        duration: 0.1
       }
     }
   }
@@ -160,25 +163,40 @@ export default function SidebarNotebook({
   const handleCreateJournal = () => {
     const defaultTitle = `Journal - ${new Date().toLocaleDateString()}`;
     const newEntry = createEntry(defaultTitle, notebook.id);
-    setEditingJournalId(newEntry.id);
-    setEditingJournalTitle(defaultTitle);
-    if (!journalsOpen) setJournalsOpen(true);
+    if (newEntry) {
+      setEditingJournalId(newEntry.id);
+      setEditingJournalTitle(defaultTitle);
+      if (!journalsOpen) setJournalsOpen(true);
+    }
   };
 
   const handleCreateSpace = () => {
     const defaultTitle = `Untitled`;
     const newSpaceId = createSpace(defaultTitle, notebook.id);
-    setEditingSpaceId(newSpaceId);
-    setEditingSpaceName(defaultTitle);
-    if (!spacesOpen) setSpacesOpen(true);
+    if (newSpaceId) {
+      setEditingSpaceId(newSpaceId);
+      setEditingSpaceName(defaultTitle);
+      if (!spacesOpen) setSpacesOpen(true);
+    }
   };
 
   const handleJournalClick = (entryId: string) => {
+    // Explicitly save sidebar state to ensure it's preserved during navigation
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('sidebar-isOpen', 'true'); // Force sidebar to stay open
+    }
     router.push(`/journal/${entryId}`);
   };
 
   const handleSpaceClick = (spaceId: string) => {
+    // Switch space first
     switchSpace(spaceId);
+    
+    // Explicitly save sidebar state to ensure it's preserved during navigation
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('sidebar-isOpen', 'true'); // Force sidebar to stay open
+    }
+    
     router.push(`/space/${spaceId}`);
   };
 
@@ -232,14 +250,15 @@ export default function SidebarNotebook({
 
   // Define item variants here for consistent animations
   const itemVariants = {
-    hidden: { opacity: 0, y: 5 },
+    hidden: { opacity: 0, y: 3 },
     visible: { 
       opacity: 1, 
       y: 0,
       transition: { 
         type: "spring",
-        stiffness: 400,
-        damping: 30
+        stiffness: 500,
+        damping: 40,
+        duration: 0.15
       }
     }
   };
@@ -249,13 +268,13 @@ export default function SidebarNotebook({
     initial: { opacity: 0 },
     animate: { opacity: 1 },
     exit: { opacity: 0 },
-    transition: { duration: 0.2 }
+    transition: { duration: 0.15 }
   };
 
   const tapAnimation = animationConfig?.tap || { scale: 0.98 };
   
   // Use consistent hover animation
-  const hoverAnimation = { x: 3 };
+  const hoverAnimation = { x: 2 };
 
   return (
     <div className="mb-2">
@@ -347,8 +366,8 @@ export default function SidebarNotebook({
                 >
                   <motion.div
                     initial={{ rotate: 0 }}
-                    whileHover={{ rotate: 15 }}
-                    transition={{ type: "spring", stiffness: 300, damping: 10 }}
+                    whileHover={{ rotate: 10 }}
+                    transition={{ type: "spring", stiffness: 500, damping: 40 }}
                   >
                     <ChevronRight className="h-4 w-4 text-neutral-400 flex-shrink-0" />
                   </motion.div>
@@ -404,7 +423,7 @@ export default function SidebarNotebook({
                 <h4 className="text-xs font-medium text-neutral-500 dark:text-neutral-400 tracking-wider">JOURNALS</h4>
                 <motion.div
                   animate={{ rotate: journalsOpen ? 180 : 0 }}
-                  transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                  transition={{ type: "spring", stiffness: 500, damping: 40, duration: 0.2 }}
                 >
                   <ChevronDown className="h-3 w-3 text-neutral-400" />
                 </motion.div>
@@ -509,9 +528,9 @@ export default function SidebarNotebook({
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 1 }}
                           transition={{ delay: 0.1 }}
-                          className="ml-9 px-4 mt-0 pb-0.5 overflow-hidden max-h-8"
+                          className="ml-9 px-4 mt-0 pb-0.5 overflow-hidden"
                         >
-                          <div className="flex items-center gap-1.5 text-xs text-neutral-500 dark:text-neutral-400">
+                          <div className="flex items-center gap-1.5 text-xs text-neutral-500 dark:text-neutral-400 h-0 overflow-hidden group-hover:h-auto transition-all duration-150">
                             <Clock className="h-2.5 w-2.5 mr-0.5" />
                             <span>{format(new Date(entry.updatedAt), 'MMM d, yyyy')}</span>
                           </div>
@@ -534,7 +553,7 @@ export default function SidebarNotebook({
                 <h4 className="text-xs font-medium text-neutral-500 dark:text-neutral-400 tracking-wider">SPACES</h4>
                 <motion.div
                   animate={{ rotate: spacesOpen ? 180 : 0 }}
-                  transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                  transition={{ type: "spring", stiffness: 500, damping: 40, duration: 0.2 }}
                 >
                   <ChevronDown className="h-3 w-3 text-neutral-400" />
                 </motion.div>
@@ -683,6 +702,9 @@ export default function SidebarNotebook({
                 )}
               </AnimatePresence>
             </div>
+
+            {/* Render the LimitIndicator */}
+            {notebook.isExpanded && <LimitIndicator notebookId={notebook.id} />}
           </motion.div>
         )}
       </AnimatePresence>

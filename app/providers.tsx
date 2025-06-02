@@ -6,6 +6,8 @@ import posthog from 'posthog-js';
 import { PostHogProvider } from 'posthog-js/react';
 import { ReactNode } from "react";
 import { StudyModeProvider } from "@/contexts/StudyModeContext";
+import { UserProvider } from "@/contexts/UserContext";
+import { LimitModalProvider } from "@/contexts/LimitModalContext";
 
 if (typeof window !== 'undefined') {
   posthog.init(clientEnv.NEXT_PUBLIC_POSTHOG_KEY!, {
@@ -23,9 +25,13 @@ export function Providers({ children }: { children: ReactNode }) {
         enableSystem
         disableTransitionOnChange
       >
-        <StudyModeProvider>
-          {children}
-        </StudyModeProvider>
+        <UserProvider>
+          <LimitModalProvider>
+            <StudyModeProvider>
+              {children}
+            </StudyModeProvider>
+          </LimitModalProvider>
+        </UserProvider>
       </ThemeProvider>
     </PostHogProvider>
   )

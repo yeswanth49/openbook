@@ -1,2 +1,0 @@
-This directory contains a separate Next.js project that should be built independently.
-Run `cd terminal-chat && pnpm install && pnpm run build` to build it separately. 

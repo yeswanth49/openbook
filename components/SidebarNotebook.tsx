@@ -11,6 +11,7 @@ import { useJournal } from '@/hooks/useJournal';
 import { useRouter } from 'next/navigation';
 import { ConversationNameDisplay } from '@/components/name-loading';
 import { format } from 'date-fns';
+import { useMotion, useHoverAnimation, useElementTransition } from '@/hooks/useMotion';
 
 interface SidebarNotebookProps {
   notebook: Notebook;
@@ -23,6 +24,9 @@ export default function SidebarNotebook({ notebook, currentPageType, currentPage
   const { spaces, currentSpaceId, createSpace, switchSpace, deleteSpace, renameSpace, togglePinSpace, resetToAutoNaming } = useSpaces();
   const { createEntry, entries, deleteEntry, updateEntry } = useJournal();
   const router = useRouter();
+  const { settings, prefersReducedMotion } = useMotion();
+  const hoverAnimation = useHoverAnimation();
+  const elementTransition = useElementTransition();
 
   const [editingNotebookName, setEditingNotebookName] = useState(false);
   const [notebookName, setNotebookName] = useState(notebook.name);
@@ -72,9 +76,11 @@ export default function SidebarNotebook({ notebook, currentPageType, currentPage
   const handleCreateJournal = () => {
     const defaultTitle = `Journal - ${new Date().toLocaleDateString()}`;
     const newEntry = createEntry(defaultTitle, notebook.id);
-    setEditingJournalId(newEntry.id);
-    setEditingJournalTitle(defaultTitle);
-    if (!journalsOpen) setJournalsOpen(true);
+    if (newEntry) {
+      setEditingJournalId(newEntry.id);
+      setEditingJournalTitle(defaultTitle);
+      if (!journalsOpen) setJournalsOpen(true);
+    }
   };
 
   const handleCreateSpace = () => {
@@ -147,16 +153,15 @@ export default function SidebarNotebook({ notebook, currentPageType, currentPage
       {/* Back button and Notebook Header when expanded */}
       {notebook.isExpanded && (
         <motion.div 
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -10 }}
-          transition={{ duration: 0.2, ease: "easeOut" }}
+          initial={elementTransition.initial}
+          animate={elementTransition.animate}
+          exit={elementTransition.exit}
+          transition={elementTransition.transition}
           className="px-4 py-2 border-b border-neutral-100 dark:border-neutral-800 mb-2"
         >
           <div className="flex items-center gap-2">
             <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+              {...hoverAnimation}
               onClick={handleNotebookToggle}
               className="p-1 rounded hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors duration-150"
               title="Back to notebooks"
@@ -184,8 +189,7 @@ export default function SidebarNotebook({ notebook, currentPageType, currentPage
             {!editingNotebookName && (
               <div className="flex items-center gap-1">
                 <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+                  {...hoverAnimation}
                   onClick={handleNotebookRename}
                   className="p-1 rounded hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors duration-150"
                   title="Rename notebook"
@@ -193,8 +197,7 @@ export default function SidebarNotebook({ notebook, currentPageType, currentPage
                   <Edit2 className="h-3 w-3 text-neutral-500 dark:text-neutral-400" />
                 </motion.button>
                 <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+                  {...hoverAnimation}
                   onClick={() => deleteNotebook(notebook.id)}
                   className="p-1 rounded hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors duration-150"
                   title="Delete notebook"
@@ -210,17 +213,16 @@ export default function SidebarNotebook({ notebook, currentPageType, currentPage
       {/* Collapsed notebook view */}
       {!notebook.isExpanded && (
         <motion.div 
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.95 }}
-          transition={{ duration: 0.2, ease: "easeOut" }}
+          initial={elementTransition.initial}
+          animate={elementTransition.animate}
+          exit={elementTransition.exit}
+          transition={elementTransition.transition}
           className="group relative"
         >
           <div className="flex items-center justify-between px-4 py-2 hover:bg-neutral-50 dark:hover:bg-neutral-800/50 rounded-md transition-colors duration-150">
             <div className="flex items-center flex-1 min-w-0">
               <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
+                {...hoverAnimation}
                 onClick={handleNotebookToggle}
                 className="flex items-center gap-2 flex-1 min-w-0"
               >
@@ -234,8 +236,7 @@ export default function SidebarNotebook({ notebook, currentPageType, currentPage
             
             <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
               <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+                {...hoverAnimation}
                 onClick={handleNotebookRename}
                 className="p-1 rounded hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors duration-150"
                 title="Rename notebook"
@@ -243,8 +244,7 @@ export default function SidebarNotebook({ notebook, currentPageType, currentPage
                 <Edit2 className="h-3 w-3 text-neutral-500 dark:text-neutral-400" />
               </motion.button>
               <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+                {...hoverAnimation}
                 onClick={() => deleteNotebook(notebook.id)}
                 className="p-1 rounded hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors duration-150"
                 title="Delete notebook"

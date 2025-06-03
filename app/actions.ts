@@ -23,7 +23,7 @@ export async function suggestQuestions(history: any[]) {
       `You are a search engine query/questions generator. You MUST create EXACTLY 3 questions for the search engine based on the message history.
 
 ### Question Generation Guidelines:
-- Questions should be in a way, it enlightens the user with understanding of the topic, and ditch rote meorization
+- Questions should be in a way, it enlightens the user with understanding of the topic, and ditch rote memorization
 - Create exactly 3 questions that are open-ended and encourage further discussion
 - Questions must be concise (5-10 words each) but specific and contextually relevant
 - Each question must contain specific nouns, entities, or clear context markers

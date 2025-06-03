@@ -1,5 +1,6 @@
 "use client";
 
+import { useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Crown } from 'lucide-react';
 import { useUser } from '@/contexts/UserContext';
@@ -13,6 +14,59 @@ interface LimitReachedModalProps {
 
 export const LimitReachedModal = ({ isOpen, onClose, message, limitType }: LimitReachedModalProps) => {
   const { setPremium } = useUser();
+  const modalRef = useRef<HTMLDivElement>(null);
+  const previousFocusRef = useRef<HTMLElement | null>(null);
+  
+  // Store previously focused element and focus the modal when opened
+  useEffect(() => {
+    if (isOpen) {
+      previousFocusRef.current = document.activeElement as HTMLElement;
+      
+      // Focus the modal after animation completes
+      const timer = setTimeout(() => {
+        modalRef.current?.focus();
+      }, 100);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen]);
+  
+  // Return focus to previously focused element when modal closes
+  useEffect(() => {
+    return () => {
+      if (previousFocusRef.current && !isOpen) {
+        previousFocusRef.current.focus();
+      }
+    };
+  }, [isOpen]);
+  
+  // Handle focus trapping
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      onClose();
+      return;
+    }
+    
+    // Trap focus within modal
+    if (e.key === 'Tab') {
+      const focusableElements = modalRef.current?.querySelectorAll(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      );
+      
+      if (!focusableElements?.length) return;
+      
+      const firstElement = focusableElements[0] as HTMLElement;
+      const lastElement = focusableElements[focusableElements.length - 1] as HTMLElement;
+      
+      if (e.shiftKey && document.activeElement === firstElement) {
+        e.preventDefault();
+        lastElement.focus();
+      } else if (!e.shiftKey && document.activeElement === lastElement) {
+        e.preventDefault();
+        firstElement.focus();
+      }
+    }
+  };
 
   // Define different gradients in grayscale
   const getColors = () => {
@@ -47,6 +101,10 @@ export const LimitReachedModal = ({ isOpen, onClose, message, limitType }: Limit
     onClose();
   };
 
+  // Define IDs for accessibility
+  const modalTitleId = 'limit-reached-modal-title';
+  const modalDescriptionId = 'limit-reached-modal-description';
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -56,8 +114,16 @@ export const LimitReachedModal = ({ isOpen, onClose, message, limitType }: Limit
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           onClick={onClose}
+          role="presentation"
         >
           <motion.div
+            ref={modalRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={modalTitleId}
+            aria-describedby={modalDescriptionId}
+            tabIndex={-1}
+            onKeyDown={handleKeyDown}
             className={`bg-gradient-to-br ${getColors()} max-w-md w-full rounded-xl border backdrop-blur-md shadow-lg overflow-hidden bg-white/60 dark:bg-black/60`}
             initial={{ opacity: 0, scale: 0.95, y: 10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -68,40 +134,41 @@ export const LimitReachedModal = ({ isOpen, onClose, message, limitType }: Limit
             <div className="relative p-6">
               <button 
                 onClick={onClose}
+                aria-label="Close dialog"
                 className="absolute top-2 right-2 p-1.5 rounded-full hover:bg-white/20 dark:hover:bg-black/20 transition-colors"
               >
                 <X className="h-4 w-4 text-neutral-600 dark:text-neutral-300" />
               </button>
               
               <div className="flex flex-col items-center text-center">
-                <div className="text-4xl mb-4">{getEmoji()}</div>
-                <h3 className="text-lg font-medium text-neutral-800 dark:text-neutral-100 mb-2">
+                <div className="text-4xl mb-4" aria-hidden="true">{getEmoji()}</div>
+                <h3 id={modalTitleId} className="text-lg font-medium text-neutral-800 dark:text-neutral-100 mb-2">
                   Limit Reached
                 </h3>
-                <p className="text-sm text-neutral-600 dark:text-neutral-300 mb-6">
+                <p id={modalDescriptionId} className="text-sm text-neutral-600 dark:text-neutral-300 mb-6">
                   {message}
                 </p>
                 
                 <div className="w-full p-4 mb-4 bg-white/30 dark:bg-black/30 rounded-lg backdrop-blur-sm border border-white/30 dark:border-neutral-700/30">
                   <div className="flex items-center justify-center gap-2 mb-2">
-                    <Crown className="h-5 w-5 text-neutral-700 dark:text-neutral-300" />
+                    <Crown className="h-5 w-5 text-neutral-700 dark:text-neutral-300" aria-hidden="true" />
                     <span className="font-medium text-neutral-800 dark:text-neutral-100">Premium Benefits</span>
                   </div>
                   <ul className="text-xs text-left text-neutral-600 dark:text-neutral-300 space-y-1.5">
                     <li className="flex items-center gap-2">
-                      <span className="text-neutral-700 dark:text-neutral-300">✓</span>
+                      <span className="text-neutral-700 dark:text-neutral-300" aria-hidden="true">✓</span>
                       <span>Unlimited notebooks</span>
                     </li>
                     <li className="flex items-center gap-2">
-                      <span className="text-neutral-700 dark:text-neutral-300">✓</span>
+                      <span className="text-neutral-700 dark:text-neutral-300" aria-hidden="true">✓</span>
                       <span>Unlimited journals per notebook</span>
                     </li>
                     <li className="flex items-center gap-2">
-                      <span className="text-neutral-700 dark:text-neutral-300">✓</span>
+                      <span className="text-neutral-700 dark:text-neutral-300" aria-hidden="true">✓</span>
                       <span>Unlimited spaces per notebook</span>
                     </li>
                     <li className="flex items-center gap-2">
-                      <span className="text-neutral-700 dark:text-neutral-300">✓</span>
+                      <span className="text-neutral-700 dark:text-neutral-300" aria-hidden="true">✓</span>
                       <span>Enhanced AI capabilities</span>
                     </li>
                   </ul>

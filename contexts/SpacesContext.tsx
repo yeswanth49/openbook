@@ -214,9 +214,8 @@ export const SpacesProvider = ({ children }: { children: ReactNode }) => {
   
   const createSpace = (name: string, notebook_id?: string) => {
     if (!premium && notebook_id) {
-      // Count existing spaces for this notebook
-      const notebookSpaces = spaces.filter(space => space.notebook_id === notebook_id);
-      if (notebookSpaces.length >= 3) {
+      const notebookSpacesCount = spaces.filter(s => s.notebook_id === notebook_id).length;
+      if (notebookSpacesCount >= 3) {
         showLimitModal('You\'ve reached the maximum of 3 spaces per notebook in the free plan. Upgrade to premium for unlimited spaces.', 'space');
         return null;
       }
@@ -235,7 +234,21 @@ export const SpacesProvider = ({ children }: { children: ReactNode }) => {
         isGeneratingName: false
       }
     };
-    setSpaces(prev => [...prev, newSpace]);
+    
+    // Use functional form to prevent race conditions
+    setSpaces(prev => {
+      // Re-check the count inside the functional update to ensure atomicity
+      if (!premium && notebook_id) {
+        const currentNotebookSpacesCount = prev.filter(s => s.notebook_id === notebook_id).length;
+        if (currentNotebookSpacesCount >= 3) {
+          // This condition should rarely hit due to the earlier check,
+          // but it provides a safety net for race conditions
+          return prev;
+        }
+      }
+      return [...prev, newSpace];
+    });
+    
     setCurrentSpaceId(newSpace.id);
     return newSpace.id;
   };
@@ -251,11 +264,31 @@ export const SpacesProvider = ({ children }: { children: ReactNode }) => {
     }
     
     setSpaces(prev => prev.filter(s => s.id !== id));
-    if (currentSpaceId === id && spaces.length > 1) {
+    if (currentSpaceId === id) {
       // If deleting current space, switch to General space first, or any other space
-      const generalSpace = spaces.find(s => s.name === 'General');
+      const generalSpace = spaces.find(s => s.name === 'General' && s.id !== id);
       const fallback = generalSpace || spaces.find(s => s.id !== id);
-      if (fallback) setCurrentSpaceId(fallback.id);
+      
+      if (fallback) {
+        setCurrentSpaceId(fallback.id);
+      } else {
+        // No fallback space found, create a new General space
+        const newGeneralSpace: Space = {
+          id: crypto.randomUUID(),
+          name: 'General',
+          messages: [],
+          archived: false,
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+          metadata: {
+            manuallyRenamed: true, // Default space is considered manually renamed
+            isGeneratingName: false
+          }
+        };
+        
+        setSpaces(prev => [...prev, newGeneralSpace]);
+        setCurrentSpaceId(newGeneralSpace.id);
+      }
     }
   };
 

@@ -589,8 +589,14 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                 <button
                   className="px-3 py-1.5 text-xs font-medium rounded-md bg-red-500/80 text-white hover:bg-red-600 transition-colors"
                   onClick={() => {
-                    localStorage.clear();
-                    window.location.reload();
+                    // Clear only app-specific keys
+                    Object.keys(localStorage).forEach(key => {
+                      if (key.startsWith('openbook_')) {
+                        localStorage.removeItem(key);
+                      }
+                    });
+                    // Use router navigation instead of reload
+                    router.push('/');
                     setShowClearStorageConfirm(false);
                   }}
                 >

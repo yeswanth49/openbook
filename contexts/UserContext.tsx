@@ -12,6 +12,7 @@ const STORAGE_KEY = 'openbook_user_data';
 
 export const UserProvider = ({ children }: { children: ReactNode }) => {
   const [premium, setPremium] = useState<boolean>(false);
+  const [isInitialized, setIsInitialized] = useState<boolean>(false);
 
   // Load from localStorage
   useEffect(() => {
@@ -24,12 +25,14 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
         // ignore parse errors
       }
     }
+    setIsInitialized(true);
   }, []);
 
   // Persist to localStorage
   useEffect(() => {
+    if (!isInitialized) return;
     localStorage.setItem(STORAGE_KEY, JSON.stringify({ premium }));
-  }, [premium]);
+  }, [premium, isInitialized]);
 
   return (
     <UserContext.Provider value={{

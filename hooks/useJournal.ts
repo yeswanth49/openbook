@@ -4,6 +4,7 @@ import { useUser } from '@/contexts/UserContext'
 import { useLimitModal } from '@/contexts/LimitModalContext'
 
 const STORAGE_KEY = 'journalEntries'
+const JOURNAL_LIMIT = 3
 
 export function useJournal() {
   const [entries, setEntries] = useState<JournalEntry[]>([])
@@ -52,8 +53,8 @@ export function useJournal() {
     if (!premium && notebook_id) {
       // Count existing entries for this notebook
       const notebookEntries = entries.filter(entry => entry.notebook_id === notebook_id)
-      if (notebookEntries.length >= 3) {
-        showLimitModal('You\'ve reached the maximum of 3 journals per notebook in the free plan. Upgrade to premium for unlimited journals.', 'journal')
+      if (notebookEntries.length >= JOURNAL_LIMIT) {
+        showLimitModal(`You've reached the maximum of ${JOURNAL_LIMIT} journals per notebook in the free plan. Upgrade to premium for unlimited journals.`, 'journal')
         return null
       }
     }

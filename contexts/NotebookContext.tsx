@@ -19,6 +19,7 @@ export interface NotebookContextType {
 
 const NotebookContext = createContext<NotebookContextType | undefined>(undefined);
 const STORAGE_KEY = 'openbook_notebooks_data';
+const NOTEBOOK_LIMIT = 3;
 
 export const NotebookProvider = ({ children }: { children: ReactNode }) => {
   const [notebooks, setNotebooks] = useState<Notebook[]>([]);
@@ -65,8 +66,8 @@ export const NotebookProvider = ({ children }: { children: ReactNode }) => {
 
   const createNotebook = (name: string): string | null => {
     // Check if limit is reached for free users
-    if (!premium && notebooks.length >= 3) {
-      showLimitModal('You\'ve reached the maximum of 3 notebooks in the free plan. Upgrade to premium for unlimited notebooks.', 'notebook');
+    if (!premium && notebooks.length >= NOTEBOOK_LIMIT) {
+      showLimitModal(`You've reached the maximum of ${NOTEBOOK_LIMIT} notebooks in the free plan. Upgrade to premium for unlimited notebooks.`, 'notebook');
       return null;
     }
 

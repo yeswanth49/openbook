@@ -527,14 +527,11 @@ const HomeContent = () => {
                         {status === 'ready' && messages.length === 0 && (
                             <div className="text-center py-8 sm:py-12">
                                 <h1 className="text-xl xs:text-2xl sm:text-3xl md:text-4xl mb-3 sm:mb-4 md:mb-6 text-neutral-800 dark:text-neutral-100 font-syne!">
-                                    {currentSpace?.name && currentSpace.name !== 'General' 
-                                        ? `Continue your conversation in ${currentSpace.name}`
-                                        : 'What do you want to learn about?'
-                                    }
+                                    What do you want to learn about?
                                 </h1>
-                                {currentSpace?.name && currentSpace.name !== 'General' && (
+                                {currentSpace?.name && currentSpace.name !== 'General' && currentSpace.name.includes('Journal Discussion') && (
                                     <div>
-                                        {currentSpace.name.includes('Journal Discussion') && isProcessing ? (
+                                        {isProcessing ? (
                                             <div className="flex items-center gap-2 mb-4">
                                                 <div className="animate-spin h-4 w-4 border-2 border-green-500 rounded-full border-t-transparent"></div>
                                                 <p className="text-sm text-green-600 dark:text-green-400 font-medium">
@@ -543,9 +540,7 @@ const HomeContent = () => {
                                             </div>
                                         ) : (
                                             <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-4">
-                                                {currentSpace.name.includes('Journal Discussion') 
-                                                    ? "Your journal content has been analyzed. Feel free to ask follow-up questions." 
-                                                    : "This is your dedicated space for focused discussions"}
+                                                Your journal content has been analyzed. Feel free to ask follow-up questions.
                                             </p>
                                         )}
                                     </div>

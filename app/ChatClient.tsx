@@ -87,7 +87,9 @@ const HomeContent = () => {
     const [hasSubmitted, setHasSubmitted] = React.useState(false);
     const [hasManuallyScrolled, setHasManuallyScrolled] = useState(false);
     const isAutoScrollingRef = useRef(false);
-    const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1024);
+    const [windowWidth, setWindowWidth] = useState<number>(() => 
+        typeof window !== 'undefined' ? window.innerWidth : 1024
+    );
     const [sidebarOpen, setSidebarOpen] = useState(true);
 
     // Ensure sidebar state is consistent across navigation
@@ -98,9 +100,6 @@ const HomeContent = () => {
             if (savedState !== null) {
                 const isOpen = savedState === 'true';
                 setSidebarOpen(isOpen);
-            } else {
-                // If no saved state, set a default and save it
-                localStorage.setItem('sidebar-isOpen', String(sidebarOpen));
             }
         }
     }, [currentSpaceId]); // Re-run when space changes

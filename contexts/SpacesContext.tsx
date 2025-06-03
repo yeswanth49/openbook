@@ -66,6 +66,7 @@ export const SpacesProvider = ({ children }: { children: ReactNode }) => {
   const [currentSpaceId, setCurrentSpaceId] = React.useState<string>('');
   const { premium } = useUser();
   const { showLimitModal } = useLimitModal();
+  const pendingSpaceCreation = React.useRef<string | null>(null);
 
   // Load from localStorage
   React.useEffect(() => {
@@ -167,45 +168,37 @@ export const SpacesProvider = ({ children }: { children: ReactNode }) => {
     
     // Process each space sequentially to avoid multiple UI updates
     const processSpaces = async () => {
-      const updatedSpaces = [...spaces];
-      let hasChanges = false;
-      
       for (const space of spacesToUpdate) {
-        const spaceIndex = updatedSpaces.findIndex(s => s.id === space.id);
-        if (spaceIndex === -1) continue;
-        
         // Generate name with simulated delay
         const newName = await generateNameWithDelay(space);
         
-        // Only update if the name has actually changed
-        if (newName !== space.name) {
-          updatedSpaces[spaceIndex] = {
-            ...updatedSpaces[spaceIndex],
-            name: newName,
-            metadata: {
-              ...(updatedSpaces[spaceIndex].metadata || { manuallyRenamed: false }),
-              lastAutoNameUpdate: Date.now(),
-              isGeneratingName: false
-            }
-          };
-          hasChanges = true;
-        } else {
-          // Still update the metadata to mark it as no longer generating
-          updatedSpaces[spaceIndex] = {
-            ...updatedSpaces[spaceIndex],
-            metadata: {
-              ...(updatedSpaces[spaceIndex].metadata || { manuallyRenamed: false }),
-              lastAutoNameUpdate: Date.now(),
-              isGeneratingName: false
-            }
-          };
-          hasChanges = true;
-        }
-      }
-      
-      // Only update state if changes were made
-      if (hasChanges) {
-        setSpaces(updatedSpaces);
+        // Use functional update to ensure we're working with the latest state
+        setSpaces(prev => prev.map(s => {
+          if (s.id !== space.id) return s;
+          
+          // Only update if the name has actually changed
+          if (newName !== s.name) {
+            return {
+              ...s,
+              name: newName,
+              metadata: {
+                ...(s.metadata || { manuallyRenamed: false }),
+                lastAutoNameUpdate: Date.now(),
+                isGeneratingName: false
+              }
+            };
+          } else {
+            // Still update the metadata to mark it as no longer generating
+            return {
+              ...s,
+              metadata: {
+                ...(s.metadata || { manuallyRenamed: false }),
+                lastAutoNameUpdate: Date.now(),
+                isGeneratingName: false
+              }
+            };
+          }
+        }));
       }
     };
     
@@ -235,6 +228,9 @@ export const SpacesProvider = ({ children }: { children: ReactNode }) => {
       }
     };
     
+    // Store the ID we're attempting to create
+    pendingSpaceCreation.current = newSpace.id;
+    
     // Use functional form to prevent race conditions
     setSpaces(prev => {
       // Re-check the count inside the functional update to ensure atomicity
@@ -243,14 +239,20 @@ export const SpacesProvider = ({ children }: { children: ReactNode }) => {
         if (currentNotebookSpacesCount >= 3) {
           // This condition should rarely hit due to the earlier check,
           // but it provides a safety net for race conditions
+          pendingSpaceCreation.current = null; // Clear the pending ID since creation was aborted
           return prev;
         }
       }
+      
+      // Space creation allowed - will be added to spaces array
+      setCurrentSpaceId(newSpace.id);
       return [...prev, newSpace];
     });
     
-    setCurrentSpaceId(newSpace.id);
-    return newSpace.id;
+    // Return the ID (or null if aborted due to race condition)
+    const result = pendingSpaceCreation.current;
+    pendingSpaceCreation.current = null; // Reset after use
+    return result;
   };
 
   const deleteSpace = (id: string) => {

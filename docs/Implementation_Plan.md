@@ -1,46 +1,48 @@
 # Implementation Plan
 
-Project Goal: Build “OpenBook” – an offline-first, AI-assisted web application that offers persistent AI chat “Spaces”, a rich block-based **Journal**, and shared Motion & Global Search capabilities.
+Project Goal: Build “OpenBook” – an offline-first, AI-assisted web application that offers persistent AI chat “Spaces”, a rich block-based personal **Journal**, and shared Motion & Global Search features across the product.
 
 ---
 
 ## Phase 0: Repository Audit & Cleanup – Agent_Omega
 
-Objective: Establish a clean, tooling-consistent baseline before any feature work.
+Objective: Establish a clean, tooling-consistent baseline before any feature work begins.
 
 ### Task 0A – Agent_Omega: Execute `docs/o3-clean` Checklist
 
 1. Inventory repository against every item in `docs/o3-clean`.
-    - Guidance: Record each checklist item as ✅ / ⚠️ / ❌ for visibility.
+    - Guidance: Record each checklist item as ✅ / ⚠️ / ❌ to surface gaps early.
 2. Remove flagged assets, `.env` files and obsolete npm scripts.
-    - Guidance: Do **not** touch files beyond checklist scope without Manager approval.
+    - Guidance: Do **not** touch files outside the scope of the checklist without Manager approval.
 3. Produce `docs/clean-report.md` summarising actions, removals and outstanding questions.
 
 ### Task 0B – Agent_Omega: Purge Dead Code & Assets
 
-1. Run static-analysis tools (`ts-prune`, `webpack-bundle-analyzer`).
+1. Run static-analysis tools (`ts-prune`, `webpack-bundle-analyzer`) to detect unused exports and bundles.
 2. Delete confirmed-unused files and assets.
-3. Add CI script `scripts/verify-unused.ts` wired to `pnpm unused:check`.
+3. Add CI script `scripts/verify-unused.ts` and wire it to `pnpm unused:check`.
+    - Guidance: CI must exit non-zero on any unused export.
 
 ### Task 0C – Agent_Omega: Add Baseline Tooling
 
-1. Install & configure ESLint, Prettier and lint-staged.
+1. Install and configure ESLint, Prettier and lint-staged.
 2. Implement custom rule `eslint-plugin-no-style-regression` enforcing the **Global-Style-Guard**.
-3. Configure Husky pre-commit hooks and update CI to run `pnpm lint && pnpm test`.
+3. Configure Husky pre-commit hooks to run lints and tests.
+4. Update CI workflow so that `pnpm lint && pnpm test` passes before merge.
 
 ---
 
 ## Phase 1: System-wide Rename & Refactor – Agent_Sigma
 
-Objective: Apply naming changes from `docs/o3-rename` without breaking the public API.
+Objective: Apply the naming changes described in `docs/o3-rename` while maintaining API stability.
 
 ### Task 1A – Agent_Sigma: Apply Rename Mappings
 
 1. Extract rename tables from `docs/o3-rename`.
-2. Author codemod `scripts/rename.ts` to perform bulk refactor.
-3. Execute codemod and commit results on branch `rename-sweep`.
+2. Author codemod `scripts/rename.ts` that performs the bulk refactor automatically.
+3. Execute codemod and commit results under branch `rename-sweep`.
 
-### Task 1B – Agent_Sigma: Codemod Tests & CI Guard
+### Task 1B – Agent_Sigma: Codemod Script Tests & CI Guard
 
 1. Create fixture repositories and unit-test codemod edge-cases.
 2. Add CI job `scripts/rename-guard.mjs` that fails when legacy identifiers remain.
@@ -48,13 +50,13 @@ Objective: Apply naming changes from `docs/o3-rename` without breaking the publi
 ### Task 1C – Agent_Sigma: Update Docs & Storybook
 
 1. Search-and-replace outdated names in `/docs` and Storybook stories.
-2. Regenerate component screenshots to reflect new naming.
+2. Regenerate component screenshots to reflect the new naming.
 
 ---
 
 ## Phase 2: Core Architecture & State Layer – Agent_Alpha
 
-Objective: Lay a scalable foundation (types, global state, routing) with **no** visual changes.
+Objective: Lay a scalable foundation (types, global state, routing) with **no** visible UI change.
 
 ### Task 2A – Agent_Alpha: Shared Types & Storage Helpers
 
@@ -70,7 +72,7 @@ Objective: Lay a scalable foundation (types, global state, routing) with **no** 
 
 1. Initialise `/app` directory and create root `layout.tsx`.
 2. Add `_providers.tsx` composition wrapper.
-3. Upgrade to Tailwind v4 **add-only** (no existing classes may be removed).
+3. Upgrade to Tailwind v4 **add-only**; no existing classes may be removed.
 
 ---
 
@@ -80,14 +82,14 @@ Objective: Deliver functional chat “Spaces” with persistence (**no new styli
 
 ### Task 3A – Agent_Beta: Spaces CRUD & Persistence
 
-1. Define `Space` model.
+1. Define `Space` data model.
 2. Implement CRUD operations in context.
 3. Add auto-name algorithm for untitled spaces.
 
 ### Task 3B – Agent_Beta: Sidebar List UI
 
 1. Build `SidebarSpaces.tsx` reusing existing list styles.
-2. Add route `/app/space/[id]/page.tsx`.
+2. Add Next.js route `/app/space/[id]/page.tsx`.
 
 ### Task 3C – Agent_Beta: Message Skeleton & Export Placeholder
 
@@ -110,7 +112,7 @@ Objective: Provide rich personal Journal with block editor while upholding **Glo
 
 1. Integrate Tiptap editor.
 2. Add custom blocks (todo, code).
-3. Persist content JSON and ensure markdown export parity.
+3. Persist content JSON; ensure markdown export parity.
 
 ### Task 4C – Agent_Gamma: Sidebar List, Sort & Search
 
@@ -136,7 +138,7 @@ Objective: Introduce Slide & Settle motion presets **without** altering existing
 
 ### Task 5C – Agent_Delta: `usePrefersReducedMotion` Hook
 
-1. Implement media-query detection hook.
+1. Implement hook to detect media-query.
 2. Disable animations when preference is true.
 
 ---
@@ -158,7 +160,7 @@ Objective: Provide seamless search across Spaces & Journal with cross-linking su
 ### Task 6C – Agent_Epsilon: Premium-limit Gating
 
 1. Add limit context with configurable thresholds.
-2. Show modal using existing modal component when limit is hit.
+2. Show modal using existing modal component when limit hit.
 
 ---
 
@@ -168,13 +170,13 @@ Objective: Final polish, accessibility, test coverage and Vercel launch.
 
 ### Task 7A – Agent_Zeta: Performance & A11y Passes
 
-1. Run Lighthouse CI; address performance bottlenecks (target LCP < 2.5 s).
+1. Run Lighthouse CI and address performance bottlenecks (target LCP < 2.5 s).
 2. Execute Axe accessibility audit; fix critical issues.
 
 ### Task 7B – Agent_Zeta: Automated Tests
 
 1. Reach ≥85 % unit-test coverage.
-2. Add basic Playwright e2e suite; ensure CI green.
+2. Add basic Playwright e2e suite; ensure CI green across all suites.
 
 ### Task 7C – Agent_Zeta: Vercel Deployment & Docs
 
@@ -186,7 +188,7 @@ Objective: Final polish, accessibility, test coverage and Vercel launch.
 
 ## Memory Bank Structure
 
-The project’s scale (8 phases, 24 tasks, multiple specialised agents) warrants a **multi-file Memory Bank directory** with one sub-directory per phase and one log file per task, e.g.:
+The project’s complexity (eight phases, 24 distinct tasks, multiple specialised agents) warrants a **multi-file Memory Bank directory**. The agreed structure is:
 
 ```
 Memory/
@@ -196,10 +198,12 @@ Memory/
     Task_0C_Add_Baseline_Tooling_Log.md
   Phase_1_Systemwide_Rename_Refactor/
     Task_1A_Apply_Rename_Mappings_Log.md
-    … etc.
+    Task_1B_Codemod_CI_Guard_Log.md
+    Task_1C_Update_Docs_Storybook_Log.md
+  … (one sub-directory per phase, one log file per task)
 ```
 
-Each log file begins with the standard header defined in `prompts/02_Utility_Prompts_And_Format_Definitions/Memory_Bank_Log_Format.md`.
+Each log file starts with the standard header defined in `prompts/02_Utility_Prompts_And_Format_Definitions/Memory_Bank_Log_Format.md`.
 
 ---
 
@@ -209,11 +213,11 @@ Each log file begins with the standard header defined in `prompts/02_Utility_Pro
 • **Weeks 3–4**  Phase 2  
 • **Weeks 5–6**  Phase 3  
 • **Weeks 7–8**  Phase 4  
-• **Week 9**     Phase 5  
-• **Week 10**    Phase 6  
-• **Week 11**    Phase 7 & Final QA
+• **Week 9**    Phase 5  
+• **Week 10**   Phase 6  
+• **Week 11**   Phase 7 & Final QA
 
-Slack channels: `#ob-alpha`, `#ob-beta`, … (one per phase)  
+Slack channels: `#ob-alpha`, `#ob-beta`, …  
 Daily stand-ups via async thread; weekly demo every Friday.
 
 ---
@@ -222,15 +226,15 @@ Daily stand-ups via async thread; weekly demo every Friday.
 
 1. **Rename fallout** → codemod + CI guard (Phase 1B).  
 2. **Style regressions** → Global-Style-Guard + lint rule.  
-3. **LocalStorage data-loss** → versioned migrations + Jest coverage.  
+3. **LocalStorage data-loss** → versioned migrations, Jest coverage.  
 4. **Motion perf overhead** → prefers-reduced-motion guard.
 
 ---
 
 ## Note on Handover Protocol
 
-For long-running projects or situations requiring context transfer (e.g. approaching LLM context limits, swapping specialised agents), initiate the APM Handover Protocol. Detailed procedures are provided in:
+For long-running projects or situations requiring context transfer (e.g., exceeding LLM context limits, changing specialised agents), the APM Handover Protocol should be initiated. This ensures smooth transitions and preserves project knowledge. Detailed procedures are outlined in the framework guide:
 
 `prompts/01_Manager_Agent_Core_Guides/05_Handover_Protocol_Guide.md`
 
-The current Manager Agent or the User should trigger this protocol whenever needed.
+The current Manager Agent or the User should initiate this protocol as needed.

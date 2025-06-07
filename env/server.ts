@@ -28,6 +28,9 @@ export const serverEnv = createEnv({
     MEM0_ORG_ID: z.string().min(1).optional(),
     MEM0_PROJECT_ID: z.string().min(1).optional(),
     SMITHERY_API_KEY: z.string().min(1).optional(),
+    PROXY_IMAGE_ALLOWED_HOSTS: z.string().optional(),
   },
-  experimental__runtimeEnv: process.env,
+  experimental__runtimeEnv: {
+    NEXT_PUBLIC_MAPBOX_TOKEN: process.env.NEXT_PUBLIC_MAPBOX_TOKEN,
+  },
 })

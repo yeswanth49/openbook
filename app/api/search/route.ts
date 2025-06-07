@@ -10,7 +10,6 @@ import { anthropic } from "@ai-sdk/anthropic";
 import { tavily } from '@tavily/core';
 import {
     convertToCoreMessages,
-    smoothStream,
     streamText,
     tool,
     createDataStreamResponse,
@@ -123,10 +122,6 @@ export async function POST(req: Request) {
                 experimental_activeTools: [...activeTools], // Active tools might need filtering based on available ones
                 system: instructions,
                 toolChoice: 'auto',
-                experimental_transform: smoothStream({
-                    chunking: 'word',
-                    delayInMs: 15,
-                }),
                 providerOptions: { // Keeping provider options for potential model usage
                     neuman: {
                         ...(model === 'neuman-default' ?

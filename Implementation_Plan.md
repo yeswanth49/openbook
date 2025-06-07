@@ -1,236 +1,283 @@
 # Implementation Plan
 
-Project Goal: Build “OpenBook” – an offline-first, AI-assisted web application that offers persistent AI chat “Spaces”, a rich block-based **Journal**, and shared Motion & Global Search capabilities.
+Project Goal: Continue development of OpenBook, an AI-powered knowledge exploration platform with interconnected note-taking (Journal) and AI chat (Spaces) features that enhance learning through structured knowledge management and intelligent assistance.
 
----
+## Phase 7: Advanced Features & Polish - Agent Group Eta (Agent_Feature_Dev, Agent_UX_Specialist)
 
-## Phase 0: Repository Audit & Cleanup – Agent_Omega
+### Task 7.1 - Agent_Feature_Dev: Enhanced Journal Features
 
-Objective: Establish a clean, tooling-consistent baseline before any feature work.
+Objective: Implement advanced journal functionality including collections, calendar view, and enhanced block types.
 
-### Task 0A – Agent_Omega: Execute `docs/o3-clean` Checklist
+1. Implement Journal Collections System.
 
-1. Inventory repository against every item in `docs/o3-clean`.
-    - Guidance: Record each checklist item as ✅ / ⚠️ / ❌ for visibility.
-2. Remove flagged assets, `.env` files and obsolete npm scripts.
-    - Guidance: Do **not** touch files beyond checklist scope without Manager approval.
-3. Produce `docs/clean-report.md` summarising actions, removals and outstanding questions.
+   - Create `JournalCollection` data model with fields: id, name, description, color, entryIds[], createdAt, updatedAt.
+   - Add collection management UI in journal sidebar with create, edit, delete, and assign operations.
+   - Implement drag-and-drop functionality for assigning entries to collections.
+   - Add collection filtering and organization in the journal interface.
+   - Guidance: Use the existing `NotebookContext` pattern for state management and LocalStorage persistence.
 
-### Task 0B – Agent_Omega: Purge Dead Code & Assets
+2. Develop Calendar View for Journal Entries.
 
-1. Run static-analysis tools (`ts-prune`, `webpack-bundle-analyzer`).
-2. Delete confirmed-unused files and assets.
-3. Add CI script `scripts/verify-unused.ts` wired to `pnpm unused:check`.
+   - Create calendar component using date-fns for date manipulation and display.
+   - Implement month, week, and day view modes with entry visualization.
+   - Add click-to-create functionality for new entries on specific dates.
+   - Integrate with existing journal search and filtering capabilities.
+   - Guidance: Follow the motion design patterns from `lib/motion-config.ts` for calendar transitions.
 
-### Task 0C – Agent_Omega: Add Baseline Tooling
+3. Enhance Rich Text Editor with Advanced Block Types.
 
-1. Install & configure ESLint, Prettier and lint-staged.
-2. Implement custom rule `eslint-plugin-no-style-regression` enforcing the **Global-Style-Guard**.
-3. Configure Husky pre-commit hooks and update CI to run `pnpm lint && pnpm test`.
+   - Implement LaTeX math block with KaTeX rendering integration.
+   - Add file upload and attachment blocks with drag-and-drop support.
+   - Create table editing capabilities with Tiptap table extensions.
+   - Implement code block with syntax highlighting using highlight.js.
+   - Add drawing/sketch block for visual note-taking.
+   - Guidance: Extend the existing Tiptap editor configuration in `components/journal/editor/`.
 
----
+4. Implement Journal Entry Templates.
+   - Create template system for common entry types (daily notes, meeting notes, research notes).
+   - Add template selection UI in the new entry creation flow.
+   - Implement template customization and user-defined templates.
+   - Store templates in LocalStorage with export/import capabilities.
 
-## Phase 1: System-wide Rename & Refactor – Agent_Sigma
+### Task 7.2 - Agent_Feature_Dev: Spaces Enhancement & Management
 
-Objective: Apply naming changes from `docs/o3-rename` without breaking the public API.
+Objective: Improve conversation management, search capabilities, and data portability for Spaces.
 
-### Task 1A – Agent_Sigma: Apply Rename Mappings
+1. Implement Advanced Conversation Search.
 
-1. Extract rename tables from `docs/o3-rename`.
-2. Author codemod `scripts/rename.ts` to perform bulk refactor.
-3. Execute codemod and commit results on branch `rename-sweep`.
+   - Enhance search functionality to include semantic search across message content.
+   - Add search filters by date range, message type, and conversation metadata.
+   - Implement search result highlighting and context preview.
+   - Add search history and saved search queries.
+   - Guidance: Extend the existing `searchSpaces` function in `SpacesContext.tsx`.
 
-### Task 1B – Agent_Sigma: Codemod Tests & CI Guard
+2. Develop Export/Import System for Spaces.
 
-1. Create fixture repositories and unit-test codemod edge-cases.
-2. Add CI job `scripts/rename-guard.mjs` that fails when legacy identifiers remain.
+   - Create export functionality for individual conversations and bulk export.
+   - Support multiple export formats: JSON, Markdown, PDF.
+   - Implement import system for conversation data with validation.
+   - Add backup and restore capabilities for all spaces data.
+   - Guidance: Use the existing conversation utilities in `lib/conversation-utils.ts` as foundation.
 
-### Task 1C – Agent_Sigma: Update Docs & Storybook
+3. Enhance Conversation Management Features.
 
-1. Search-and-replace outdated names in `/docs` and Storybook stories.
-2. Regenerate component screenshots to reflect new naming.
+   - Implement conversation tagging system with custom tags.
+   - Add conversation templates for common use cases (research, brainstorming, learning).
+   - Create conversation analytics (message count, duration, topics).
+   - Implement conversation sharing capabilities with privacy controls.
 
----
+4. Improve AI Provider Management.
+   - Add dynamic AI provider switching within conversations.
+   - Implement provider-specific settings and configurations.
+   - Create usage tracking and quota management for different providers.
+   - Add provider comparison and recommendation features.
+   - Guidance: Extend the existing AI SDK integration in `app/actions.ts`.
 
-## Phase 2: Core Architecture & State Layer – Agent_Alpha
+### Task 7.3 - Agent_UX_Specialist: Cross-Feature Integration & Unified Experience
 
-Objective: Lay a scalable foundation (types, global state, routing) with **no** visual changes.
+Objective: Create seamless integration between Spaces and Journal features with unified search and navigation.
 
-### Task 2A – Agent_Alpha: Shared Types & Storage Helpers
+1. Implement Global Search Across Features.
 
-1. Draft domain types in `lib/types/*.ts`.
-2. Implement versioned LocalStorage wrapper with JSON-schema validation.
+   - Create unified search interface that searches both spaces and journal entries.
+   - Implement search result categorization and filtering by feature type.
+   - Add cross-referencing capabilities between journal entries and conversations.
+   - Create search result preview with context and quick actions.
+   - Guidance: Combine search logic from both `SpacesContext.tsx` and journal search functions.
 
-### Task 2B – Agent_Alpha: React Contexts & Hooks
+2. Develop Cross-Feature Linking System.
 
-1. Implement `SpacesProvider` and `NotebookProvider` contexts.
-2. Expose hooks `useSpaces` and `useJournal` that guard against null context.
+   - Implement ability to link journal entries to specific conversations.
+   - Add conversation references within journal entries using @ mentions.
+   - Create bidirectional navigation between linked content.
+   - Implement link preview and context display.
 
-### Task 2C – Agent_Alpha: Next.js App-Router Skeleton
+3. Enhance Navigation and User Experience.
 
-1. Initialise `/app` directory and create root `layout.tsx`.
-2. Add `_providers.tsx` composition wrapper.
-3. Upgrade to Tailwind v4 **add-only** (no existing classes may be removed).
+   - Improve sidebar navigation with unified space/journal switching.
+   - Implement breadcrumb navigation for complex content hierarchies.
+   - Add keyboard shortcuts for common actions across features.
+   - Create onboarding flow for new users explaining both features.
+   - Guidance: Follow the existing sidebar patterns in `components/sidebar.tsx` and `components/SidebarNotebook.tsx`.
 
----
+4. Implement Unified Settings and Preferences.
+   - Create centralized settings panel for both features.
+   - Add theme customization with dark/light mode improvements.
+   - Implement user preferences for default behaviors and layouts.
+   - Add data management tools (storage usage, cleanup, export all).
 
-## Phase 3: Spaces Feature MVP – Agent_Beta
+## Phase 8: Performance Optimization & Mobile Experience - Agent Group Theta (Agent_Performance, Agent_Mobile_Dev)
 
-Objective: Deliver functional chat “Spaces” with persistence (**no new styling**).
+### Task 8.1 - Agent_Performance: Performance & Loading Optimization
 
-### Task 3A – Agent_Beta: Spaces CRUD & Persistence
+Objective: Optimize application performance, loading times, and resource usage.
 
-1. Define `Space` model.
-2. Implement CRUD operations in context.
-3. Add auto-name algorithm for untitled spaces.
+1. Implement Advanced Caching Strategies.
 
-### Task 3B – Agent_Beta: Sidebar List UI
+   - Add intelligent caching for conversation and journal data.
+   - Implement service worker for offline functionality enhancement.
+   - Create lazy loading for large conversation histories and journal entries.
+   - Add prefetching for commonly accessed content.
+   - Guidance: Use Next.js caching strategies and consider IndexedDB for large datasets.
 
-1. Build `SidebarSpaces.tsx` reusing existing list styles.
-2. Add route `/app/space/[id]/page.tsx`.
+2. Optimize Bundle Size and Loading Performance.
 
-### Task 3C – Agent_Beta: Message Skeleton & Export Placeholder
+   - Implement code splitting for feature-specific components.
+   - Add dynamic imports for heavy dependencies (Tiptap, AI providers).
+   - Optimize image loading and implement progressive enhancement.
+   - Create loading skeletons and progressive content loading.
+   - Guidance: Use Next.js dynamic imports and the existing loading components.
 
-1. Render message history skeleton in `components/SpaceChat.tsx`.
-2. Implement typing animation placeholder.
-3. Stub “Export chat” feature for later expansion.
+3. Enhance Data Management and Storage.
 
----
+   - Implement data compression for LocalStorage optimization.
+   - Add automatic data cleanup and archiving for old content.
+   - Create data migration system for schema updates.
+   - Implement data integrity checks and repair mechanisms.
 
-## Phase 4: Journal Feature MVP – Agent_Gamma
+4. Add Performance Monitoring and Analytics.
+   - Integrate performance monitoring with Vercel Analytics.
+   - Add custom performance metrics for feature-specific operations.
+   - Implement error tracking and reporting system.
+   - Create performance dashboard for monitoring application health.
 
-Objective: Provide rich personal Journal with block editor while upholding **Global-Style-Guard**.
+### Task 8.2 - Agent_Mobile_Dev: Mobile Responsiveness & PWA Features
 
-### Task 4A – Agent_Gamma: Journal CRUD & Persistence
+Objective: Enhance mobile experience and implement Progressive Web App capabilities.
 
-1. Define `JournalEntry` and `Notebook` models.
-2. Implement CRUD logic in `useJournal` hook.
+1. Optimize Mobile User Interface.
 
-### Task 4B – Agent_Gamma: Tiptap Editor + Blocks
+   - Improve responsive design for all screen sizes and orientations.
+   - Enhance touch interactions and gesture support.
+   - Optimize sidebar and navigation for mobile devices.
+   - Implement mobile-specific UI patterns and components.
+   - Guidance: Follow Tailwind CSS responsive design patterns and test across devices.
 
-1. Integrate Tiptap editor.
-2. Add custom blocks (todo, code).
-3. Persist content JSON and ensure markdown export parity.
+2. Implement Progressive Web App Features.
 
-### Task 4C – Agent_Gamma: Sidebar List, Sort & Search
+   - Add service worker for offline functionality and caching.
+   - Create app manifest for installable web app experience.
+   - Implement push notifications for important updates.
+   - Add background sync for data synchronization.
+   - Guidance: Use Next.js PWA capabilities and the existing manifest configuration.
 
-1. Build list component reusing existing styles.
-2. Implement sort options (date, title).
-3. Add local search filter (<100 ms response).
+3. Enhance Mobile Editor Experience.
 
----
+   - Optimize Tiptap editor for mobile input and editing.
+   - Implement mobile-friendly toolbar and formatting options.
+   - Add voice-to-text input capabilities for journal entries.
+   - Create mobile-optimized block selection and manipulation.
 
-## Phase 5: Motion Implementation (Add-only) – Agent_Delta
+4. Implement Mobile-Specific Features.
+   - Add camera integration for image capture in journal entries.
+   - Implement location services for context-aware entries.
+   - Create mobile sharing capabilities with native share API.
+   - Add haptic feedback for enhanced mobile interactions.
 
-Objective: Introduce Slide & Settle motion presets **without** altering existing styles.
+## Phase 9: Cloud Integration & Collaboration Preparation - Agent Group Iota (Agent_Backend_Dev, Agent_Security)
 
-### Task 5A – Agent_Delta: `lib/motion-config.ts`
+### Task 9.1 - Agent_Backend_Dev: Cloud Sync Infrastructure
 
-1. Define Framer-Motion variants.
-2. Export helper utilities with snapshot unit tests.
+Objective: Prepare infrastructure for cloud synchronization and multi-device support.
 
-### Task 5B – Agent_Delta: Apply Animations
+1. Design Cloud Sync Architecture.
 
-1. Wrap sidebars & modals with `motion.div`.
-2. Honour prefers-reduced-motion user setting.
+   - Create data synchronization strategy for spaces and journal entries.
+   - Design conflict resolution mechanisms for concurrent edits.
+   - Implement incremental sync to minimize data transfer.
+   - Create offline-first architecture with eventual consistency.
+   - Guidance: Consider using operational transforms or CRDTs for conflict resolution.
 
-### Task 5C – Agent_Delta: `usePrefersReducedMotion` Hook
+2. Implement User Authentication System.
 
-1. Implement media-query detection hook.
-2. Disable animations when preference is true.
+   - Add user registration and login functionality.
+   - Implement secure session management and token handling.
+   - Create user profile management and preferences sync.
+   - Add social authentication options (Google, GitHub, etc.).
+   - Guidance: Use NextAuth.js or similar authentication library.
 
----
+3. Develop Data Migration and Backup Systems.
 
-## Phase 6: Global Search & Integration – Agent_Epsilon
+   - Create migration tools from LocalStorage to cloud storage.
+   - Implement automatic backup and restore capabilities.
+   - Add data export/import for user data portability.
+   - Create data retention and deletion policies.
 
-Objective: Provide seamless search across Spaces & Journal with cross-linking support.
+4. Implement Real-time Synchronization.
+   - Add WebSocket or Server-Sent Events for real-time updates.
+   - Implement presence indicators for multi-device usage.
+   - Create sync status indicators and conflict resolution UI.
+   - Add bandwidth optimization for mobile and slow connections.
 
-### Task 6A – Agent_Epsilon: Unified Sidebar Search
+### Task 9.2 - Agent_Security: Security Audit & Privacy Implementation
 
-1. Index Spaces & Journal entities.
-2. Build `GlobalSearch.tsx` component reusing existing input styles.
+Objective: Conduct comprehensive security review and implement privacy-focused features.
 
-### Task 6B – Agent_Epsilon: Cross-linking Logic
+1. Conduct Security Vulnerability Assessment.
 
-1. Allow chat message deep-link to journal entry.
-2. Permit journal entry reference to open a chat space.
+   - Perform comprehensive security audit of client-side code.
+   - Review data handling and storage security practices.
+   - Assess third-party dependency security and update policies.
+   - Create security testing and monitoring procedures.
+   - Guidance: Use tools like npm audit, Snyk, and manual code review.
 
-### Task 6C – Agent_Epsilon: Premium-limit Gating
+2. Implement End-to-End Encryption.
 
-1. Add limit context with configurable thresholds.
-2. Show modal using existing modal component when limit is hit.
+   - Design encryption strategy for sensitive user data.
+   - Implement client-side encryption for journal entries and conversations.
+   - Create secure key management and recovery systems.
+   - Add encryption status indicators and user controls.
 
----
+3. Enhance Privacy Controls and Data Protection.
 
-## Phase 7: Performance, QA & Deployment – Agent_Zeta
+   - Implement granular privacy settings for different content types.
+   - Add data anonymization and pseudonymization features.
+   - Create GDPR-compliant data handling and deletion procedures.
+   - Implement privacy-focused analytics and tracking controls.
 
-Objective: Final polish, accessibility, test coverage and Vercel launch.
+4. Develop Security Monitoring and Incident Response.
+   - Create security event logging and monitoring systems.
+   - Implement automated threat detection and response.
+   - Add security incident reporting and resolution procedures.
+   - Create security documentation and user education materials.
 
-### Task 7A – Agent_Zeta: Performance & A11y Passes
+## General Project Notes
 
-1. Run Lighthouse CI; address performance bottlenecks (target LCP < 2.5 s).
-2. Execute Axe accessibility audit; fix critical issues.
+### Memory Bank System
 
-### Task 7B – Agent_Zeta: Automated Tests
+Memory Bank System: Directory `/Memory/` with log files per phase, organized as `Memory/Phase_X_Description/Task_X.X_Description_Log.md`, as detailed in `Memory/README.md`. This multi-file system is appropriate for the project's complexity and multiple specialized agent groups.
 
-1. Reach ≥85 % unit-test coverage.
-2. Add basic Playwright e2e suite; ensure CI green.
+### Technology Stack Considerations
 
-### Task 7C – Agent_Zeta: Vercel Deployment & Docs
+- **Frontend**: Next.js 15+ with App Router, React 18, TypeScript
+- **Styling**: Tailwind CSS v4 with CSS variables and custom themes
+- **State Management**: React Contexts with custom hooks
+- **Editor**: Tiptap with custom extensions for rich text editing
+- **AI Integration**: AI SDK with multiple provider support (OpenAI, Anthropic, Google, Groq, XAI)
+- **Analytics**: Vercel Analytics and Speed Insights
+- **Deployment**: Vercel platform with edge functions
 
-1. Configure `vercel.json`.
-2. Draft `docs/deployment.md`.
-3. Tag release `v1.0.0` and verify production smoke test.
+### Development Workflow
 
----
+- All tasks should follow the existing code patterns and architectural decisions
+- Maintain consistency with the established "Slide & Settle" motion design system
+- Ensure accessibility compliance and mobile responsiveness
+- Follow the existing testing patterns and add comprehensive test coverage
+- Maintain documentation and update specifications as features evolve
 
-## Memory Bank Structure
+### Integration Points
 
-The project’s scale (8 phases, 24 tasks, multiple specialised agents) warrants a **multi-file Memory Bank directory** with one sub-directory per phase and one log file per task, e.g.:
-
-```
-Memory/
-  Phase_0_Repository_Audit_Cleanup/
-    Task_0A_Execute_o3_clean_Checklist_Log.md
-    Task_0B_Purge_Dead_Code_Log.md
-    Task_0C_Add_Baseline_Tooling_Log.md
-  Phase_1_Systemwide_Rename_Refactor/
-    Task_1A_Apply_Rename_Mappings_Log.md
-    … etc.
-```
-
-Each log file begins with the standard header defined in `prompts/02_Utility_Prompts_And_Format_Definitions/Memory_Bank_Log_Format.md`.
-
----
-
-## Timeline & Milestones
-
-• **Weeks 1–2**  Phase 0 → Phase 1  
-• **Weeks 3–4**  Phase 2  
-• **Weeks 5–6**  Phase 3  
-• **Weeks 7–8**  Phase 4  
-• **Week 9**     Phase 5  
-• **Week 10**    Phase 6  
-• **Week 11**    Phase 7 & Final QA
-
-Slack channels: `#ob-alpha`, `#ob-beta`, … (one per phase)  
-Daily stand-ups via async thread; weekly demo every Friday.
-
----
-
-## Risks & Mitigations
-
-1. **Rename fallout** → codemod + CI guard (Phase 1B).  
-2. **Style regressions** → Global-Style-Guard + lint rule.  
-3. **LocalStorage data-loss** → versioned migrations + Jest coverage.  
-4. **Motion perf overhead** → prefers-reduced-motion guard.
+- Maintain compatibility with existing LocalStorage data structures
+- Ensure smooth migration paths for users upgrading to new features
+- Preserve existing user preferences and customizations
+- Maintain API compatibility for future backend integration
 
 ---
 
 ## Note on Handover Protocol
 
-For long-running projects or situations requiring context transfer (e.g. approaching LLM context limits, swapping specialised agents), initiate the APM Handover Protocol. Detailed procedures are provided in:
+For long-running projects or situations requiring context transfer (e.g., exceeding LLM context limits, changing specialized agents), the APM Handover Protocol should be initiated. This ensures smooth transitions and preserves project knowledge. Detailed procedures are outlined in the framework guide:
 
-`prompts/01_Manager_Agent_Core_Guides/05_Handover_Protocol_Guide.md`
+`agentic-project-m/prompts/01_Manager_Agent_Core_Guides/05_Handover_Protocol_Guide.md`
 
-The current Manager Agent or the User should trigger this protocol whenever needed.
+The current Manager Agent or the User should initiate this protocol as needed.

@@ -1,9 +1,9 @@
-import Editor from "../../components/journal/editor/editor"
+import Editor from '../../components/journal/editor/editor';
 
 export default function Home() {
-  return (
-    <main className="flex min-h-screen flex-col">
-      <Editor />
-    </main>
-  )
+    return (
+        <main className="flex min-h-screen flex-col">
+            <Editor />
+        </main>
+    );
 }

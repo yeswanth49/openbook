@@ -1,20 +1,15 @@
 import { serverEnv } from '@/env/server';
 import { xai } from '@ai-sdk/xai';
 import { tavily } from '@tavily/core';
-import {
-    convertToCoreMessages,
-    tool,
-    customProvider,
-    generateText
-} from 'ai';
+import { convertToCoreMessages, tool, customProvider, generateText } from 'ai';
 import Exa from 'exa-js';
 import { z } from 'zod';
 
 const neuman = customProvider({
     languageModels: {
-        'neuman-default': xai("grok-3-beta"),
-    }
-})
+        'neuman-default': xai('grok-3-beta'),
+    },
+});
 
 export const maxDuration = 60;
 
@@ -38,7 +33,7 @@ const deduplicateByDomainAndUrl = <T extends { url: string }>(items: T[]): T[] =
     const seenDomains = new Set<string>();
     const seenUrls = new Set<string>();
 
-    return items.filter(item => {
+    return items.filter((item) => {
         const domain = extractDomain(item.url);
         const isNewUrl = !seenUrls.has(item.url);
         const isNewDomain = !seenDomains.has(domain);
@@ -56,7 +51,7 @@ const deduplicateByDomainAndUrl = <T extends { url: string }>(items: T[]): T[] =
 const groupSystemPrompts = {
     web: `You are Neuman for Raycast, a powerful AI web search assistant.
 
-Today's Date: ${new Date().toLocaleDateString("en-US", { year: "numeric", month: "short", day: "2-digit", weekday: "short" })}
+Today's Date: ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: '2-digit', weekday: 'short' })}
 
 ### Core Guidelines:
 - Always run the web_search tool first before composing your response.
@@ -87,7 +82,7 @@ Today's Date: ${new Date().toLocaleDateString("en-US", { year: "numeric", month:
 Remember, you are designed to be efficient and helpful in the Raycast environment, providing quick access to web information.`,
 
     x: `You are a X/Twitter content curator that helps find relevant posts.
-    The current date is ${new Date().toLocaleDateString("en-US", { year: "numeric", month: "short", day: "2-digit", weekday: "short" })}.
+    The current date is ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: '2-digit', weekday: 'short' })}.
     Once you get the content from the tools only write in paragraphs.
     No need to say that you are calling the tool, just call the tools first and run the search;
     then talk in long details in 2-6 paragraphs.
@@ -98,21 +93,26 @@ Remember, you are designed to be efficient and helpful in the Raycast environmen
     
     # Latex and Currency Formatting to be used:
     - Always use '$' for inline equations and '$$' for block equations.
-    - Avoid using '$' for dollar currency. Use "USD" instead.`
+    - Avoid using '$' for dollar currency. Use "USD" instead.`,
 };
 
 // Modify the POST function to use the new handler
 export async function POST(req: Request) {
     const { messages, model, group = 'web' } = await req.json();
 
-    console.log("Running with model: ", model.trim());
-    console.log("Group: ", group);
+    console.log('Running with model: ', model.trim());
+    console.log('Group: ', group);
 
     // Get the appropriate system prompt based on the group
     const systemPrompt = groupSystemPrompts[group as keyof typeof groupSystemPrompts];
 
     // Determine which tools to activate based on the group
-    const activeTools = group === 'x' ? ["x_search" as const] : group === 'web' ? ["web_search" as const] : ["web_search" as const, "x_search" as const];
+    const activeTools =
+        group === 'x'
+            ? ['x_search' as const]
+            : group === 'web'
+              ? ['web_search' as const]
+              : ['web_search' as const, 'x_search' as const];
 
     const { text, steps } = await generateText({
         model: neuman.languageModel(model),
@@ -130,7 +130,10 @@ export async function POST(req: Request) {
                         z.number().describe('Array of maximum number of results to return per query.').default(10),
                     ),
                     topics: z.array(
-                        z.enum(['general', 'news', "finance"]).describe('Array of topic types to search for.').default('general'),
+                        z
+                            .enum(['general', 'news', 'finance'])
+                            .describe('Array of topic types to search for.')
+                            .default('general'),
                     ),
                     searchDepth: z.array(
                         z.enum(['basic', 'advanced']).describe('Array of search depths to use.').default('basic'),
@@ -173,7 +176,6 @@ export async function POST(req: Request) {
                             excludeDomains: exclude_domains,
                         });
 
-
                         return {
                             query,
                             results: deduplicateByDomainAndUrl(data.results).map((obj: any) => ({
@@ -196,7 +198,9 @@ export async function POST(req: Request) {
             x_search: tool({
                 description: 'Search X (formerly Twitter) posts.',
                 parameters: z.object({
-                    query: z.string().describe('The search query, if a username is provided put in the query with @username'),
+                    query: z
+                        .string()
+                        .describe('The search query, if a username is provided put in the query with @username'),
                     startDate: z.string().describe('The start date of the search in the format YYYY-MM-DD'),
                     endDate: z.string().describe('The end date of the search in the format YYYY-MM-DD'),
                 }),
@@ -248,11 +252,11 @@ export async function POST(req: Request) {
                     }
                 },
             }),
-        }
+        },
     });
 
-    console.log("Text: ", text);
-    console.log("Steps: ", steps);
+    console.log('Text: ', text);
+    console.log('Steps: ', steps);
 
     return new Response(text);
 }

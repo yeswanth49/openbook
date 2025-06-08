@@ -25,11 +25,14 @@ export async function POST(request: NextRequest) {
         // Validate file type using actual file content
         const fileType = await fileTypeFromBlob(file);
         const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
-        
+
         if (!fileType || !allowedTypes.includes(fileType.mime)) {
-            return NextResponse.json({ 
-                error: 'Invalid file type. Only JPEG, PNG, WebP, and GIF images are allowed' 
-            }, { status: 415 });
+            return NextResponse.json(
+                {
+                    error: 'Invalid file type. Only JPEG, PNG, WebP, and GIF images are allowed',
+                },
+                { status: 415 },
+            );
         }
 
         // Generate randomized path with user ID and date to avoid enumeration
@@ -37,7 +40,7 @@ export async function POST(request: NextRequest) {
         const date = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
         const timestamp = Date.now();
         const extension = fileType.ext;
-        
+
         const fileName = `${userId}/${date}/image-${timestamp}.${extension}`;
         const fullPath = `mplx/${fileName}`;
 

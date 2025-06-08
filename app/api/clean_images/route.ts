@@ -14,16 +14,16 @@ export async function GET(req: NextRequest) {
         return new NextResponse(`Cleanup completed. ${result.message}`, {
             status: 200,
             headers: {
-                'Cache-Control': 'public, max-age=0, s-maxage=3600, stale-while-revalidate=86400'
-            }
+                'Cache-Control': 'public, max-age=0, s-maxage=3600, stale-while-revalidate=86400',
+            },
         });
     } catch (error) {
         console.error('An error occurred:', error);
         return new NextResponse('An error occurred while deleting images', {
             status: 500,
             headers: {
-                'Cache-Control': 'public, max-age=0, s-maxage=3600, stale-while-revalidate=3600'
-            }
+                'Cache-Control': 'public, max-age=0, s-maxage=3600, stale-while-revalidate=3600',
+            },
         });
     }
 }
@@ -75,6 +75,6 @@ async function deleteAllBlobsInFolder(folderPrefix: string): Promise<{ message: 
     const duration = Date.now() - started;
     const message = `Cleanup completed successfully. Deleted ${totalDeleted} blobs in ${batchCount} batches. Duration: ${duration}ms`;
     console.log(message);
-    
+
     return { message, totalDeleted };
 }

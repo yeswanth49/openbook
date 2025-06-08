@@ -9,18 +9,17 @@ import { google } from '@ai-sdk/google';
 import { z } from 'zod';
 
 export async function suggestQuestions(history: any[]) {
-  'use server';
+    'use server';
 
-  console.log(history);
+    console.log(history);
 
-  const { object } = await generateObject({
-    model: openai("gpt-4o-mini"),
-    temperature: 0,
-    maxTokens: 300,
-    topP: 0.3,
-    topK: 7,
-    system:
-      `You are a search engine query/questions generator. You MUST create EXACTLY 3 questions for the search engine based on the message history.
+    const { object } = await generateObject({
+        model: openai('gpt-4o-mini'),
+        temperature: 0,
+        maxTokens: 300,
+        topP: 0.3,
+        topK: 7,
+        system: `You are a search engine query/questions generator. You MUST create EXACTLY 3 questions for the search engine based on the message history.
 
 ### Question Generation Guidelines:
 - Questions should be in a way, it enlightens the user with understanding of the topic, and ditch rote memorization
@@ -44,28 +43,28 @@ export async function suggestQuestions(history: any[]) {
 - Each question must end with a question mark
 - Questions must be diverse and not redundant
 - Do not include instructions or meta-commentary in the questions`,
-    messages: history,
-    schema: z.object({
-      questions: z.array(z.string()).describe('The generated questions based on the message history.')
-    }),
-  });
+        messages: history,
+        schema: z.object({
+            questions: z.array(z.string()).describe('The generated questions based on the message history.'),
+        }),
+    });
 
-  return {
-    questions: object.questions
-  };
+    return {
+        questions: object.questions,
+    };
 }
 
 const groupTools = {
-  chat: [] as const,
-  web: [] as const,
-  extreme: ['code_interpreter','reason_search','academic_search','datetime'] as const,
+    chat: [] as const,
+    web: [] as const,
+    extreme: ['code_interpreter', 'reason_search', 'academic_search', 'datetime'] as const,
 } as const;
 
 const groupInstructions = {
-  extreme: `
+    extreme: `
   ⚠️ CRITICAL: YOU MUST RUN THE ACADEMIC_SEARCH TOOL FIRST BEFORE ANY ANALYSIS OR RESPONSE!
   You are an academic research assistant that helps find and analyze scholarly content.
-  The current date is ${new Date().toLocaleDateString("en-US", { year: "numeric", month: "short", day: "2-digit", weekday: "short" })}.
+  The current date is ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: '2-digit', weekday: 'short' })}.
 
   ### Tool Guidelines:
   #### Academic Search Tool:
@@ -122,9 +121,9 @@ const groupInstructions = {
   - Apply markdown formatting for clarity
   - Tables for data comparison only when necessary`,
 
-  chat: `
+    chat: `
 You are OpenBook, a digital friend that helps users with fun and engaging conversations sometimes likes to be funny but serious at the same time.
-Today's date is ${new Date().toLocaleDateString("en-US", { year: "numeric", month: "short", day: "2-digit", weekday: "short" })}.
+Today's date is ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: '2-digit', weekday: 'short' })}.
 
 ### Core Guidelines:
 - You do not have access to any tools, but you can write and execute code snippets if needed (e.g., for calculations).
@@ -152,21 +151,21 @@ Today's date is ${new Date().toLocaleDateString("en-US", { year: "numeric", mont
 - Handle memory updates and deletions carefully, confirming with the user if needed.
 - Maintain a friendly, personal tone during memory interactions.
 - Always save the memory user explicitly asks you to save.
-  `
+  `,
 };
 
 const groupPrompts = {
-  chat: `${groupInstructions.chat}`,
-  extreme: `${groupInstructions.extreme}`,
+    chat: `${groupInstructions.chat}`,
+    extreme: `${groupInstructions.extreme}`,
 } as const;
 
 export async function getGroupConfig(groupId: SearchGroupId = 'chat') {
-  "use server";
-  const tools = groupTools[groupId];
-  const instructions = groupInstructions[groupId];
-  
-  return {
-    tools,
-    instructions
-  };
+    'use server';
+    const tools = groupTools[groupId];
+    const instructions = groupInstructions[groupId];
+
+    return {
+        tools,
+        instructions,
+    };
 }

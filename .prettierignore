@@ -1,0 +1,79 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build outputs
+.next/
+out/
+build/
+dist/
+
+# Environment files
+.env*
+
+# Generated files
+.eslintcache
+*.tsbuildinfo
+.nyc_output
+
+# Version control
+.git/
+
+# Package manager files
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Documentation files that might have specific formatting
+*.md
+CHANGELOG.md
+LICENSE*
+
+# Config files that might need specific formatting
+.vscode/
+.idea/
+
+# Auto-generated files
+coverage/
+storybook-static/
+
+# Database
+*.db
+*.sqlite
+
+# Logs
+logs
+*.log
+
+# All documentation and markdown files
+docs/
+Memory/
+Task_Assignment_Prompts/
+agentic-project-m/
+ai_docs/
+specs/
+
+# Config files (keep formatting minimal)
+*.config.js
+*.config.ts
+*.config.mjs
+tailwind.config.js
+next.config.js
+eslint.config.js
+postcss.config.mjs
+dangerfile.js
+
+# Specific files to ignore
+Implementation_Plan.md
+README.md
+vercel.json
+components.json
+public/
+
+# Only format core source files:
+# app/**/*.{ts,tsx}
+# components/**/*.{ts,tsx}
+# contexts/**/*.{ts,tsx}
+# hooks/**/*.{ts,tsx}
+# lib/**/*.{ts,tsx} 

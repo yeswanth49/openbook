@@ -11,3 +11,6 @@ trash/
 
 # TS build cache
 *.tsbuildinfo
+
+# macOS system files
+.DS_Store

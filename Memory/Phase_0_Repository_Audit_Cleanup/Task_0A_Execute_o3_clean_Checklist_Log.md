@@ -184,7 +184,7 @@ await new Promise((resolve) => setTimeout(resolve, 200));
 
 ### 6. Streaming Memory Optimization ✅
 
-**File Modified:** `app/api/search/route.ts`
+**File Modified:** `app/api/chat/route.ts`
 
 **Performance Implementation:**
 

@@ -34,7 +34,7 @@ export default function AIAssistant({
         handleSubmit,
         isLoading: chatLoading,
     } = useChat({
-        api: '/api/search',
+        api: '/api/chat',
         body: {
             model: 'neuman-google',
             group: 'chat',
@@ -51,7 +51,7 @@ export default function AIAssistant({
             const context = selectedBlocks.map((block) => block.content).join('\n\n');
             console.log('Sending explanation request with context:', context);
 
-            const response = await fetch('/api/search', {
+            const response = await fetch('/api/chat', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -193,7 +193,7 @@ export default function AIAssistant({
             // If no data was received through streaming, try a fallback approach
             if (!hasReceivedData) {
                 console.log('No streaming data received, trying fallback...');
-                const fallbackResponse = await fetch('/api/search', {
+                const fallbackResponse = await fetch('/api/chat', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -282,7 +282,7 @@ Please provide a thoughtful suggestion that would enhance this journal entry:`;
 
             console.log('Sending suggestion request with prompt:', prompt);
 
-            const response = await fetch('/api/search', {
+            const response = await fetch('/api/chat', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -418,7 +418,7 @@ Please provide a thoughtful suggestion that would enhance this journal entry:`;
             // If no data was received through streaming, try a fallback approach
             if (!hasReceivedData) {
                 console.log('No suggestion streaming data received, trying fallback...');
-                const fallbackResponse = await fetch('/api/search', {
+                const fallbackResponse = await fetch('/api/chat', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -569,7 +569,7 @@ Please provide a thoughtful suggestion that would enhance this journal entry:`;
                                         onClick={async () => {
                                             console.log('Testing API connection with detailed response parsing...');
                                             try {
-                                                const response = await fetch('/api/search', {
+                                                const response = await fetch('/api/chat', {
                                                     method: 'POST',
                                                     headers: { 'Content-Type': 'application/json' },
                                                     body: JSON.stringify({

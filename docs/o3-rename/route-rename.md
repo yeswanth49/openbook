@@ -2,13 +2,13 @@
 
 ## Why
 
-Current names are misleading (`/api/search` is _chat_). Consistent naming improves DX.
+Current names are misleading (`/api/chat` is _chat_). Consistent naming improves DX.
 
 ## Mapping
 
 | Old            | New            |
 | -------------- | -------------- |
-| `/api/search`  | `/api/ai`      |
+| `/api/chat`  | `/api/ai`      |
 
 ## Steps
 
@@ -20,12 +20,12 @@ Current names are misleading (`/api/search` is _chat_). Consistent naming improv
    }
    ```
 3. Grep-replace internal fetches:  
-   `grep -Rl "/api/search" | xargs sed -i '' 's/\/api\/search/\/api\/ai/g'`
+   `grep -Rl "/api/chat" | xargs sed -i '' 's/\/api\/search/\/api\/ai/g'`
 4. Rename components with IDE “rename symbol” to update imports.
 5. Delete old files after CI pass.
 
 ## Checklist
 
-- GET `/api/search` → 308 to `/api/ai`.
+- GET `/api/chat` → 308 to `/api/ai`.
 
 Commit: `refactor: route + component rename`

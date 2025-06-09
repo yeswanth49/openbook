@@ -1,6 +1,6 @@
 # Enable Back-Pressure in Streaming Search
 
-Target: `app/api/search/route.ts` (+ variants)
+Target: `app/api/chat/route.ts` (+ variants)
 
 ## Issue
 

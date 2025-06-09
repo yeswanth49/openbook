@@ -145,7 +145,7 @@ const HomeContent = () => {
 
     const chatOptions: UseChatOptions = useMemo(() => {
         // Determine API endpoint based on study mode
-        const apiEndpoint = currentStudyMode?.framework ? `/api/study/${currentStudyMode.framework}` : '/api/search';
+        const apiEndpoint = currentStudyMode?.framework ? `/api/study/${currentStudyMode.framework}` : '/api/chat';
 
         return {
             api: apiEndpoint,

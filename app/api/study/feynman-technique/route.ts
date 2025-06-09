@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
         const modifiedMessages = [{ role: 'system', content: systemPrompt }, ...messages];
 
         // Forward to the main chat API with the modified system prompt
-        const chatResponse = await fetch(`${request.nextUrl.origin}/api/search`, {
+        const chatResponse = await fetch(`${request.nextUrl.origin}/api/chat`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

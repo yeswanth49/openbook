@@ -4,7 +4,7 @@
 import { tool } from 'ai';
 import { z } from 'zod';
 import { ExaService } from '../../services/exa';
-import { serverEnv } from '@/env/server';
+import { serverEnv } from '@/lib/env/server';
 import type { AcademicSearchResult } from '../types';
 
 export const academicSearchTool = tool({

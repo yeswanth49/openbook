@@ -1,6 +1,6 @@
 'use client';
 
-import { clientEnv } from '@/env/client';
+import { clientEnv } from '@/lib/env/client';
 import { ThemeProvider } from 'next-themes';
 import posthog from 'posthog-js';
 import { PostHogProvider } from 'posthog-js/react';

@@ -1,7 +1,7 @@
 // app/actions.ts
 'use server';
 
-import { serverEnv } from '@/env/server';
+import { serverEnv } from '@/lib/env/server';
 import { SearchGroupId } from '@/lib/utils';
 import { openai } from '@ai-sdk/openai';
 import { generateObject } from 'ai';

@@ -1,4 +1,4 @@
-import { serverEnv } from '@/env/server';
+import { serverEnv } from '@/lib/env/server';
 import { del, list, ListBlobResult } from '@vercel/blob';
 import { NextRequest, NextResponse } from 'next/server';
 

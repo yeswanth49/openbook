@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import dns from 'dns/promises';
-import { serverEnv } from '@/env/server';
+import { serverEnv } from '@/lib/env/server';
 
 // Utility function to check if hostname is public and safe
 async function isPublicHostname(hostname: string): Promise<boolean> {

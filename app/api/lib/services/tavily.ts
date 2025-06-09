@@ -2,7 +2,7 @@
 // Encapsulates all Tavily API interactions
 
 import { tavily } from '@tavily/core';
-import { serverEnv } from '@/env/server';
+import { serverEnv } from '@/lib/env/server';
 
 export interface TavilySearchOptions {
   searchDepth?: 'basic' | 'advanced';

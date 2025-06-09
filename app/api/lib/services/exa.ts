@@ -2,7 +2,7 @@
 // Encapsulates all Exa API interactions
 
 import Exa from 'exa-js';
-import { serverEnv } from '@/env/server';
+import { serverEnv } from '@/lib/env/server';
 import type { ExaResult, AcademicSearchOptions } from '../ai/types';
 
 export class ExaService {

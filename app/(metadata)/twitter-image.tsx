@@ -11,6 +11,11 @@ export const size = {
 
 export const contentType = 'image/png';
 
+/**
+ * Generates a Twitter card image as a PNG using a styled div with a background image.
+ *
+ * @returns An {@link ImageResponse} containing a 1200x630 PNG image with the specified background.
+ */
 export default async function Image() {
     // Use the same image as OpenGraph for Twitter
     return new ImageResponse(

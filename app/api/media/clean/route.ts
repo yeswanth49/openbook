@@ -4,6 +4,13 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export const runtime = 'edge';
 
+/**
+ * Handles a GET request to clean up blobs stored under the "mplx/" folder in Vercel Blob storage.
+ *
+ * Validates the request using an Authorization header. If authorized, deletes all blobs with the "mplx/" prefix and returns a summary message. Responds with appropriate status codes and cache-control headers based on the outcome.
+ *
+ * @returns A {@link NextResponse} indicating the result of the cleanup operation.
+ */
 export async function GET(req: NextRequest) {
     if (req.headers.get('Authorization') !== `Bearer ${serverEnv.CRON_SECRET}`) {
         return new NextResponse('Unauthorized', { status: 401 });
@@ -28,6 +35,14 @@ export async function GET(req: NextRequest) {
     }
 }
 
+/**
+ * Deletes all blobs stored under the specified folder prefix, processing them in batches with pagination.
+ *
+ * The function enforces a maximum duration of 25 seconds to avoid timeouts, stopping early if the limit is reached and returning the progress made. Between batches, it waits 200 milliseconds to prevent overwhelming the system. If an error occurs during a batch, it logs the error and returns the current progress instead of failing completely.
+ *
+ * @param folderPrefix - The prefix of the folder whose blobs should be deleted.
+ * @returns An object containing a summary message and the total number of deleted blobs.
+ */
 async function deleteAllBlobsInFolder(folderPrefix: string): Promise<{ message: string; totalDeleted: number }> {
     const started = Date.now();
     const MAX_DURATION = 25_000; // 25 seconds to leave buffer for response

@@ -2,6 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getStudyFrameworkPrompt } from '@/lib/study-prompts';
 import { StudyFramework } from '@/lib/types';
 
+/**
+ * Handles POST requests for the Memory Palace study framework API endpoint.
+ *
+ * Parses the incoming request to extract chat messages and an optional model, prepends a Memory Palace-specific system prompt, and forwards the modified messages to the internal chat API. Streams the chat API's response back to the client. Returns a 500 error response if processing fails.
+ */
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json();

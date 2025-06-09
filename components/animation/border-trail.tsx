@@ -11,6 +11,17 @@ type BorderTrailProps = {
     style?: React.CSSProperties;
 };
 
+/**
+ * Renders an animated border trail effect that moves continuously along a rounded rectangular path.
+ *
+ * The trail's size, animation transition, delay, and styling can be customized via props. The animation loops infinitely by default and triggers the optional {@link onAnimationComplete} callback when finished.
+ *
+ * @param size - The width and height of the animated trail in pixels. Defaults to 60.
+ * @param delay - Optional delay before the animation starts, in seconds.
+ * @param onAnimationComplete - Optional callback invoked when the animation completes a cycle.
+ * @param style - Additional inline styles for the animated trail element.
+ * @returns A React element displaying the animated border trail.
+ */
 export function BorderTrail({ className, size = 60, transition, delay, onAnimationComplete, style }: BorderTrailProps) {
     const BASE_TRANSITION = {
         repeat: Infinity,

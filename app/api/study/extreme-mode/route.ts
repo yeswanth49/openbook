@@ -2,6 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getStudyFrameworkPrompt } from '@/lib/study-prompts';
 import { StudyFramework } from '@/lib/types';
 
+/**
+ * Handles POST requests for the Extreme Mode study framework API endpoint.
+ *
+ * Prepends the Extreme Mode system prompt to the provided chat messages and forwards the request to the internal chat API. Streams the chat API's response back to the client.
+ *
+ * @returns A streaming response from the internal chat API, or a JSON error response with status 500 if processing fails.
+ */
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json();

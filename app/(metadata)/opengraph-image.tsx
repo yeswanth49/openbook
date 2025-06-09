@@ -10,6 +10,11 @@ export const size = {
 
 export const contentType = 'image/png';
 
+/**
+ * Generates an Open Graph image response with a centered background image for social media previews.
+ *
+ * @returns An {@link ImageResponse} containing a 1200x630 PNG image with the specified background.
+ */
 export default async function Image() {
     // Redirect to the static image file
     return new ImageResponse(

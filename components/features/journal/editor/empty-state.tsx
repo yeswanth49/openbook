@@ -8,6 +8,11 @@ interface EmptyStateProps {
     onCreateBlock: () => void;
 }
 
+/**
+ * Displays an animated empty state for the journal editor with instructions and a button to create a new block.
+ *
+ * @param onCreateBlock - Callback invoked when the "Add a block" button is clicked.
+ */
 export default function EmptyState({ onCreateBlock }: EmptyStateProps) {
     return (
         <motion.div

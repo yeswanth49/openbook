@@ -19,6 +19,18 @@ interface EditorProps {
     onTitleChange?: (title: string) => void;
 }
 
+/**
+ * A rich text journal editor component with block-based editing, markdown shortcuts, slash command menu, and theme toggling.
+ *
+ * Supports dynamic creation, deletion, duplication, and reordering of content blocks. Users can change block types via markdown-like shortcuts or a slash command menu, paste markdown to be parsed as HTML, and toggle between light and dark themes. Integrates with a "Spaces" context to create new collaborative conversations from selected blocks.
+ *
+ * @param initialBlocks - Optional initial array of content blocks to populate the editor.
+ * @param onBlocksChange - Optional callback invoked when the blocks array changes.
+ * @param title - Optional initial title for the editor.
+ * @param onTitleChange - Optional callback invoked when the title changes.
+ *
+ * @returns The rendered editor component.
+ */
 export default function Editor({ initialBlocks, onBlocksChange, title, onTitleChange }: EditorProps) {
     const [blocks, setBlocks] = useState<Block[]>(
         () => initialBlocks ?? [{ id: Date.now().toString(), type: BlockType.Text, content: '', isFocused: true }],

@@ -14,6 +14,15 @@ interface ConversationMetadataProps {
     className?: string;
 }
 
+/**
+ * Displays conversation metadata for a given space, including sentiment, message count, key terms, last activity, and summary.
+ *
+ * Renders either a compact horizontal view or a detailed vertical view based on the {@link compact} prop.
+ *
+ * @param space - The conversation space to display metadata for.
+ * @param compact - If true, renders a compact sidebar-friendly layout; otherwise, shows a detailed view.
+ * @param className - Optional additional CSS classes for custom styling.
+ */
 export function ConversationMetadata({ space, compact = false, className }: ConversationMetadataProps) {
     // Calculate metadata from conversation
     const metadata = calculateConversationMetadata(space);

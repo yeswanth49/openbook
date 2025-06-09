@@ -13,6 +13,15 @@ interface AddToJournalButtonProps {
     className?: string;
 }
 
+/**
+ * Renders a button that adds a conversation (user and assistant messages) to the current day's journal entry.
+ *
+ * If a journal entry for today exists, the conversation is appended to it; otherwise, a new entry is created. After adding, the user is navigated to the relevant journal entry. The button visually indicates loading and success states and is temporarily disabled after a successful addition.
+ *
+ * @param userMessage - The user's message to include in the journal.
+ * @param assistantMessage - The assistant's response to include in the journal.
+ * @param className - Optional additional CSS classes for styling.
+ */
 export default function AddToJournalButton({ userMessage, assistantMessage, className = '' }: AddToJournalButtonProps) {
     const [isAdding, setIsAdding] = useState(false);
     const [isAdded, setIsAdded] = useState(false);

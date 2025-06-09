@@ -38,6 +38,15 @@ interface CommandOption {
     description?: string;
 }
 
+/****
+ * Renders a contextual slash command menu for selecting block types in a journal editor.
+ *
+ * Displays a searchable, categorized list of command options with keyboard and mouse navigation. The menu appears at the specified position, supports filtering by typing, and allows selection via keyboard or mouse. Selecting a command triggers the provided callback, and clicking outside or pressing Escape closes the menu.
+ *
+ * @param position - The top and left coordinates for menu placement.
+ * @param onSelect - Callback invoked with the selected block type when a command is chosen.
+ * @param onClose - Callback invoked to close the menu.
+ */
 export default function SlashCommandMenu({ position, onSelect, onClose }: SlashCommandMenuProps) {
     const [selectedIndex, setSelectedIndex] = useState(0);
     const [searchTerm, setSearchTerm] = useState('');

@@ -66,6 +66,28 @@ interface TerminalInputProps {
     onFrameworkSelect?: (framework: string) => void;
 }
 
+/**
+ * Provides a command-driven input interface for submitting messages, selecting AI models or study frameworks, attaching files, and executing special commands.
+ *
+ * Displays command suggestions, supports keyboard shortcuts for command history and completion, and manages file attachments. Offers interactive panels for model selection, framework selection, help, and conversation clearing. Notifies users of command actions and status changes.
+ *
+ * @param value - The current input value.
+ * @param onChange - Callback to update the input value.
+ * @param onSubmit - Callback to submit the current input and attachments.
+ * @param selectedModel - The currently selected AI model.
+ * @param setSelectedModel - Callback to update the selected AI model.
+ * @param selectedGroup - The currently selected study group or mode.
+ * @param setSelectedGroup - Callback to update the selected group.
+ * @param fileInputRef - Ref to the hidden file input element.
+ * @param attachments - List of attached files.
+ * @param setAttachments - Callback to update the attachments list.
+ * @param onStop - Callback to stop ongoing processing.
+ * @param status - Current processing status.
+ * @param onFrameworkSelect - Optional callback for framework selection.
+ *
+ * @remark
+ * The component does not clear conversation history itself; this must be handled by the parent via the appropriate callback.
+ */
 export function TerminalInput({
     value,
     onChange,

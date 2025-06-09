@@ -2,6 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getStudyFrameworkPrompt } from '@/lib/study-prompts';
 import { StudyFramework } from '@/lib/types';
 
+/**
+ * Handles POST requests for the Spaced Repetition study framework API route.
+ *
+ * Prepends a Spaced Repetition system prompt to the provided chat messages and forwards the request to the internal chat API. Returns the chat API's streaming response or a JSON error if processing fails.
+ *
+ * @returns A streaming {@link NextResponse} with the chat API's response, or a JSON error response with status 500 on failure.
+ */
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json();

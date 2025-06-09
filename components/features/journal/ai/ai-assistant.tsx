@@ -14,6 +14,20 @@ interface AIAssistantProps {
     onClose: () => void;
 }
 
+/**
+ * Renders an AI-powered assistant modal for journal content, enabling users to request explanations for selected blocks or generate content suggestions for a current block.
+ *
+ * The assistant interacts with an AI chat API, handling both streaming and non-streaming responses, and provides UI controls for copying, applying, or creating content based on AI output. It supports robust error handling and displays user-friendly feedback for all operations.
+ *
+ * @param selectedBlocks - The journal blocks selected by the user for explanation or context.
+ * @param currentBlock - The block currently being edited, used for content suggestions.
+ * @param onBlockUpdate - Callback to update the content of an existing block with a suggestion.
+ * @param onCreateBlock - Callback to create a new block with the suggested content.
+ * @param onClose - Callback to close the assistant modal.
+ *
+ * @remark
+ * The assistant processes multiple possible API response formats and gracefully falls back to non-streaming requests if streaming fails. In development mode, a debug feature is available for testing API connectivity and response parsing.
+ */
 export default function AIAssistant({
     selectedBlocks,
     currentBlock,

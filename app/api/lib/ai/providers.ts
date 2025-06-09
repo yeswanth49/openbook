@@ -39,7 +39,12 @@ export const neuman = customProvider({
 });
 
 /**
- * Get provider-specific options based on model
+ * Returns provider-specific configuration options for a given model.
+ *
+ * The returned object contains configuration overrides for each provider, such as reasoning effort levels or thinking budgets, based on the specified model name.
+ *
+ * @param model - The model name for which to retrieve provider options.
+ * @returns An object mapping provider names to their configuration options for the given model.
  */
 export function getProviderOptions(model: string) {
   return {
@@ -88,14 +93,21 @@ export function getProviderOptions(model: string) {
 }
 
 /**
- * Get temperature setting based on model
+ * Returns the temperature setting for the specified model.
+ *
+ * For all models except 'neuman-o4-mini', returns 0. Returns undefined for 'neuman-o4-mini'.
+ *
+ * @param model - The model name.
+ * @returns The temperature value for the model, or undefined if not set.
  */
 export function getTemperature(model: string): number | undefined {
   return model !== 'neuman-o4-mini' ? 0 : undefined;
 }
 
 /**
- * Get max steps for tool usage
+ * Returns the maximum number of steps allowed for tool usage.
+ *
+ * @returns The fixed maximum number of tool usage steps.
  */
 export function getMaxSteps(): number {
   return 5;
@@ -120,7 +132,10 @@ export const AVAILABLE_MODELS = [
 export type AvailableModel = (typeof AVAILABLE_MODELS)[number];
 
 /**
- * Check if a model name is valid
+ * Determines whether the given model name is one of the supported models.
+ *
+ * @param model - The model name to validate.
+ * @returns True if {@link model} is a valid available model; otherwise, false.
  */
 export function isValidModel(model: string): model is AvailableModel {
   return AVAILABLE_MODELS.includes(model as AvailableModel);

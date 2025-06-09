@@ -9,6 +9,11 @@ interface FrameworkSelectorProps {
     onClose: () => void;
 }
 
+/**
+ * Renders a modal UI for selecting a study framework from a predefined list, supporting both mouse and keyboard interaction.
+ *
+ * Displays selectable cards for each available study framework, allowing users to navigate with arrow keys, select with number keys or mouse, confirm with Enter, or cancel with Escape. Invokes {@link onSelect} when a framework is chosen and {@link onClose} when canceled.
+ */
 export function FrameworkSelector({ onSelect, onClose }: FrameworkSelectorProps) {
     const [selectedIndex, setSelectedIndex] = useState(0);
     const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);

@@ -17,6 +17,13 @@ if (typeof window !== 'undefined') {
     });
 }
 
+/**
+ * Wraps application components with analytics, theme, and custom context providers.
+ *
+ * Supplies PostHog analytics, theme management, motion effects, user state, modal limits, and study mode contexts to all descendant components.
+ *
+ * @param children - The React nodes to be rendered within the provider hierarchy.
+ */
 export function Providers({ children }: { children: ReactNode }) {
     return (
         <PostHogProvider client={posthog}>

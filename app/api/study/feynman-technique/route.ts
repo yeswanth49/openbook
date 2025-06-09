@@ -2,6 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getStudyFrameworkPrompt } from '@/lib/study-prompts';
 import { StudyFramework } from '@/lib/types';
 
+/**
+ * Handles POST requests by injecting a Feynman Technique system prompt into chat messages and forwarding them to the internal chat API.
+ *
+ * Modifies the incoming message array to include a system prompt tailored to the Feynman Technique study framework, then relays the request to the internal `/api/chat` endpoint. Returns the chat API's streaming response or an error message if processing fails.
+ *
+ * @returns A streaming plain text response from the chat API, or a JSON error response with status 500 on failure.
+ */
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json();

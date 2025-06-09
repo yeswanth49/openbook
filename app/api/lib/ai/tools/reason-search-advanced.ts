@@ -13,6 +13,17 @@ import type {
   ProcessedResult
 } from '../types';
 
+/**
+ * Executes a multi-step, AI-driven research workflow on a given topic, streaming progress and results.
+ *
+ * Generates a structured research plan, performs prioritized searches across web, academic, and social sources, conducts analyses, identifies research gaps, synthesizes findings, and streams detailed progress updates via the provided data stream.
+ *
+ * @param topic - The research topic to investigate.
+ * @param depth - The desired depth of research, either 'basic' or 'advanced'.
+ * @returns An object containing the generated research plan, all search results, and the final synthesis of findings.
+ *
+ * @remark Progress and results are continuously streamed to the provided data stream throughout the research process.
+ */
 export async function executeReasonSearch(
   topic: string,
   depth: 'basic' | 'advanced',

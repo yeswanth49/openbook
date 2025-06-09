@@ -2,7 +2,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import dns from 'dns/promises';
 import { serverEnv } from '@/lib/env/server';
 
-// Utility function to check if hostname is public and safe
+/**
+ * Determines whether a hostname is public and safe to access for image proxying.
+ *
+ * Blocks local and private network hostnames and IP addresses, including loopback, link-local, and common private IPv4 ranges. Performs DNS resolution to ensure hostnames do not resolve to private IPs. If an allow-list is specified via the `PROXY_IMAGE_ALLOWED_HOSTS` environment variable, only hostnames in this list are permitted.
+ *
+ * @param hostname - The hostname to validate.
+ * @returns `true` if the hostname is public and allowed; otherwise, `false`.
+ */
 async function isPublicHostname(hostname: string): Promise<boolean> {
     // Block localhost and common local hostnames
     const blockedHostnames = ['localhost', '127.0.0.1', '0.0.0.0', '::1'];
@@ -70,8 +77,15 @@ async function isPublicHostname(hostname: string): Promise<boolean> {
 }
 
 /**
- * Server-side proxy endpoint to bypass CORS restrictions when validating images
- * This works because CORS only affects browser-initiated requests, not server-to-server requests
+ * Handles GET requests to securely proxy and validate external images, bypassing browser CORS restrictions.
+ *
+ * Validates the provided image URL, ensuring the hostname is public and not within private or local IP ranges. Supports an optional allow-list for permitted hosts. Fetches the image with a 5-second timeout and enforces a 5 MB streaming size limit. If the `x-validate-only` header is set to `'true'`, returns metadata about the image (validity, status, content type, redirect info) without streaming the image data. Otherwise, streams the image response to the client with appropriate CORS and cache headers.
+ *
+ * @param request - The incoming Next.js request containing the image URL as a query parameter.
+ * @returns A streamed image response, image validation metadata, or a JSON error message with an appropriate HTTP status code.
+ *
+ * @remark
+ * Returns a 400 error if the URL parameter is missing or the host is blocked, a 413 error if the image exceeds 5 MB, and a 500 error for other failures.
  */
 export async function GET(request: NextRequest) {
     // Extract the URL from the query parameters
@@ -200,7 +214,13 @@ export async function GET(request: NextRequest) {
     }
 }
 
-// Support HEAD requests for quick validation
+/**
+ * Handles HEAD requests by validating an image URL without streaming image data.
+ *
+ * Internally converts the HEAD request to a GET request with a validation-only header and delegates processing to the {@link GET} handler.
+ *
+ * @returns A response containing validation metadata about the image resource.
+ */
 export async function HEAD(request: NextRequest) {
     // Set validate-only to true and delegate to GET handler
     const headers = new Headers(request.headers);

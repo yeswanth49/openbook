@@ -12,6 +12,18 @@ interface SortableBlockProps {
     children: React.ReactNode;
 }
 
+/**
+ * A draggable and sortable block component for reordering items via drag-and-drop.
+ *
+ * Renders its children inside an animated container with a draggable grip, enabling users to rearrange blocks within a list. Calls {@link onMove} with the source and target indices when a block is dropped onto another.
+ *
+ * @param block - The data object representing the block.
+ * @param index - The current position of the block in the list.
+ * @param onMove - Callback invoked with the source and target indices when a block is moved.
+ * @param children - The content to render inside the block.
+ *
+ * @returns The rendered sortable block element.
+ */
 export default function SortableBlock({ block, index, onMove, children }: SortableBlockProps) {
     const ref = useRef<HTMLDivElement>(null);
     const [isDragging, setIsDragging] = useState(false);

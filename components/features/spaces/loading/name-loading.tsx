@@ -12,8 +12,12 @@ interface NameLoadingProps {
 }
 
 /**
- * Component to display loading states for conversation names
- * Shows a placeholder with loading animation when names are being generated
+ * Displays a loading spinner and cycles through placeholder messages while a conversation name is being generated.
+ *
+ * @param isLoading - Whether to show the loading state. Defaults to true.
+ * @param className - Additional CSS classes for styling.
+ *
+ * @returns A loading indicator with animated text, or null if not loading.
  */
 export function NameLoading({ isLoading = true, defaultText = 'Untitled Conversation', className }: NameLoadingProps) {
     // Loading text states
@@ -43,8 +47,9 @@ export function NameLoading({ isLoading = true, defaultText = 'Untitled Conversa
 }
 
 /**
- * Component to display a conversation name that may be loading or generated
- * Handles transitions between loading and final states
+ * Displays a conversation name with visual indicators for loading and auto-naming states.
+ *
+ * Shows the conversation name or a default if none is provided. When loading, fades the name and displays a loading indicator below. If the conversation is auto-named and not loading, shows a blue dot with a tooltip.
  */
 export function ConversationNameDisplay({
     name,

@@ -8,6 +8,11 @@ import { useJournal } from '@/hooks/useJournal';
 
 const SIDEBAR_WIDTH = 256;
 
+/**
+ * Displays and allows editing of a single journal entry, including sidebar navigation and an editor for entry content.
+ *
+ * Renders a journal entry page based on the entry ID from the URL. Ensures the sidebar is visible when viewing an entry and persists this state. Handles loading, invalid ID, and missing entry cases with appropriate UI feedback.
+ */
 export default function JournalEntryPage() {
     const params = useParams();
     const idParam = params.id;

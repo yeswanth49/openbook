@@ -33,6 +33,13 @@ interface TableMenuProps {
     isTableSelected: boolean;
 }
 
+/**
+ * Renders a menu for inserting and manipulating tables within an editor.
+ *
+ * Provides a button that opens a dropdown menu for selecting table size and inserting a new table. When a table is selected, additional options for modifying rows, columns, cell merging/splitting, alignment, and table deletion are available.
+ *
+ * @param isTableSelected - Whether a table is currently selected, which determines if table manipulation options are shown.
+ */
 export default function TableMenu({
     onAddTable,
     onAddRowBefore,

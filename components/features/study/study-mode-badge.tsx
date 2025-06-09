@@ -10,6 +10,17 @@ interface StudyModeBadgeProps {
     className?: string;
 }
 
+/**
+ * Renders a styled button badge representing the current study framework mode.
+ *
+ * Displays an icon and the framework's name or abbreviation, with dynamic colors based on the selected framework. Returns `null` if no framework is provided.
+ *
+ * @param framework - The active study framework mode, or `null` to render nothing.
+ * @param onClick - Callback invoked when the badge is clicked.
+ * @param className - Optional additional CSS class names for the button.
+ *
+ * @returns A React button element representing the study mode badge, or `null` if no framework is active.
+ */
 export function StudyModeBadge({ framework, onClick, className = '' }: StudyModeBadgeProps) {
     if (!framework) return null;
 
@@ -30,6 +41,12 @@ export function StudyModeBadge({ framework, onClick, className = '' }: StudyMode
     );
 }
 
+/**
+ * Returns the background color associated with a given study framework.
+ *
+ * @param framework - The study framework for which to retrieve the background color.
+ * @returns A semi-transparent color string representing the framework's background color.
+ */
 function getFrameworkColor(framework: StudyFramework): string {
     switch (framework) {
         case StudyFramework.MemoryPalace:
@@ -45,6 +62,12 @@ function getFrameworkColor(framework: StudyFramework): string {
     }
 }
 
+/**
+ * Returns the text color associated with a given study framework.
+ *
+ * @param framework - The study framework for which to retrieve the text color.
+ * @returns An RGB color string representing the framework's text color.
+ */
 function getFrameworkTextColor(framework: StudyFramework): string {
     switch (framework) {
         case StudyFramework.MemoryPalace:
@@ -60,6 +83,12 @@ function getFrameworkTextColor(framework: StudyFramework): string {
     }
 }
 
+/**
+ * Returns the two-letter abbreviation for a given study framework.
+ *
+ * @param framework - The study framework to abbreviate.
+ * @returns The abbreviation for the specified {@link framework}, or "ST" if unrecognized.
+ */
 function getFrameworkAbbreviation(framework: StudyFramework): string {
     switch (framework) {
         case StudyFramework.MemoryPalace:

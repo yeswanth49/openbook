@@ -4,6 +4,14 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export const runtime = 'edge';
 
+/**
+ * Handles an authenticated GET request to delete all blobs under the 'mplx/' folder in blob storage.
+ *
+ * Responds with a summary message and appropriate HTTP status code based on the outcome of the cleanup operation.
+ * Returns 401 if the request is unauthorized, 200 if cleanup succeeds, or 500 if an error occurs during deletion.
+ *
+ * @returns A {@link NextResponse} containing the cleanup result message and cache-control headers.
+ */
 export async function GET(req: NextRequest) {
     if (req.headers.get('Authorization') !== `Bearer ${serverEnv.CRON_SECRET}`) {
         return new NextResponse('Unauthorized', { status: 401 });
@@ -28,6 +36,14 @@ export async function GET(req: NextRequest) {
     }
 }
 
+/**
+ * Deletes all blobs within the specified folder prefix from blob storage, processing in batches with pagination and a time limit.
+ *
+ * @param folderPrefix - The prefix of the folder whose blobs should be deleted.
+ * @returns An object containing a summary message and the total number of deleted blobs.
+ *
+ * @remark The operation enforces a maximum duration of 25 seconds and may stop early if this limit is reached, returning a partial cleanup summary.
+ */
 async function deleteAllBlobsInFolder(folderPrefix: string): Promise<{ message: string; totalDeleted: number }> {
     const started = Date.now();
     const MAX_DURATION = 25_000; // 25 seconds to leave buffer for response

@@ -26,6 +26,13 @@ const middleware = extractReasoningMiddleware({
     tagName: 'think',
 });
 
+/**
+ * Handles POST requests for the AI chat API, processing chat messages with streaming AI responses and integrated academic and reasoning tools.
+ *
+ * Accepts chat messages, model selection, group, user ID, and timezone in the request body. Retrieves group-specific configuration, including active tools and system instructions. Initiates a streaming AI response that can automatically invoke tools such as academic search, reasoned web search, simulated code interpretation, and datetime retrieval with timezone support.
+ *
+ * The route supports automatic tool selection, experimental repair of malformed tool calls, and detailed event logging throughout the streaming process. The response is streamed to the client, including reasoning information when available.
+ */
 export async function POST(req: Request) {
     const { messages, model, group, user_id, timezone } = await req.json();
     const { tools: activeTools, instructions } = await getGroupConfig(group);

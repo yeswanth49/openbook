@@ -3,6 +3,15 @@ import { NextRequest, NextResponse } from 'next/server';
 import { fileTypeFromBlob } from 'file-type';
 import { isAuthenticated, getUserId } from '@/lib/auth';
 
+/**
+ * Handles authenticated image file uploads via POST requests.
+ *
+ * Validates authentication, file presence, file size (max 4MB), and ensures the uploaded file is a JPEG, PNG, WebP, or GIF image. Stores the file in blob storage under a randomized path including the user ID and date, and returns metadata and a public URL for the uploaded file.
+ *
+ * @returns A JSON response containing the uploaded file's name, detected content type, public URL, and size on success, or an error message with an appropriate HTTP status code on failure.
+ *
+ * @remark Returns HTTP 401 if authentication fails, 400 if no file is provided, 413 if the file exceeds 4MB, 415 if the file type is invalid, and 500 for unexpected errors.
+ */
 export async function POST(request: NextRequest) {
     // Require authentication
     if (!isAuthenticated(request)) {

@@ -10,6 +10,17 @@ interface FileUploadZoneProps {
     maxSizeMB?: number;
 }
 
+/**
+ * Renders a drag-and-drop and click-to-upload file input zone with validation and animated error feedback.
+ *
+ * Allows users to upload a file by dragging it onto the zone or selecting it via a file picker. Validates the file type and size before invoking the provided callback.
+ *
+ * @param onFileUpload - Callback invoked with the uploaded file if it passes validation.
+ * @param acceptedTypes - Optional array of accepted MIME types. Defaults to common image formats.
+ * @param maxSizeMB - Optional maximum file size in megabytes. Defaults to 10MB.
+ *
+ * @returns A React component for file uploads with drag-and-drop support, validation, and animated error display.
+ */
 export default function FileUploadZone({
     onFileUpload,
     acceptedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'],

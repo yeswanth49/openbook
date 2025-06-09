@@ -1,5 +1,12 @@
 import type { MetadataRoute } from 'next';
 
+/**
+ * Returns the web app manifest configuration for the OpenBook Waitlist application.
+ *
+ * The manifest defines metadata such as the app's name, description, start URL, display mode, theme colors, icons for various platforms, and screenshots for visual representation. This configuration enables proper installation and display of the app on supported devices.
+ *
+ * @returns The manifest object conforming to {@link MetadataRoute.Manifest} for the OpenBook Waitlist web application.
+ */
 export default function manifest(): MetadataRoute.Manifest {
     return {
         name: 'OpenBook Waitlist',

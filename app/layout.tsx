@@ -81,6 +81,11 @@ const syne = Syne({
     display: 'swap',
 });
 
+/**
+ * Defines the root HTML layout for the application, applying global font styles and rendering all page content.
+ *
+ * @param children - The content to be rendered within the application's body.
+ */
 export default function RootLayout({
     children,
 }: {

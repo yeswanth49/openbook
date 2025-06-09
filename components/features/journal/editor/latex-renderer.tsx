@@ -10,6 +10,17 @@ interface LaTeXRendererProps {
     errorColor?: string;
 }
 
+/**
+ * Renders a LaTeX formula using KaTeX within a React component.
+ *
+ * Displays the rendered formula in either block or inline mode, and shows an error message in the specified color if rendering fails.
+ *
+ * @param formula - The LaTeX string to render.
+ * @param block - Whether to render the formula in block mode (default: true).
+ * @param errorColor - The color used for error messages (default: '#cc0000').
+ *
+ * @returns A div element containing the rendered formula or an error message.
+ */
 export default function LaTeXRenderer({ formula, block = true, errorColor = '#cc0000' }: LaTeXRendererProps) {
     const containerRef = useRef<HTMLDivElement>(null);
 

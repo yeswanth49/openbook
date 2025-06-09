@@ -10,7 +10,12 @@ interface MessageLoadingProps {
     thinkingDuration?: number;
 }
 
-// Get thinking text based on duration
+/**
+ * Returns a status message indicating progress based on the given duration.
+ *
+ * @param duration - The elapsed time in seconds.
+ * @returns A string describing the current thinking or processing state, tailored to the duration.
+ */
 export function getThinkingText(duration: number): string {
     if (duration < 3) return 'Thinking...';
     if (duration < 7) return 'Processing your request...';

@@ -8,6 +8,14 @@ import { generateObject } from 'ai';
 import { google } from '@ai-sdk/google';
 import { z } from 'zod';
 
+/**
+ * Generates three open-ended, concise, and contextually relevant search questions based on the provided message history.
+ *
+ * Uses an AI model to create questions that encourage discussion, adhere to strict formatting and content guidelines, and are relevant to available system tools.
+ *
+ * @param history - The conversation history to base the questions on.
+ * @returns An object containing an array of three generated questions.
+ */
 export async function suggestQuestions(history: any[]) {
     'use server';
 
@@ -159,6 +167,12 @@ const groupPrompts = {
     extreme: `${groupInstructions.extreme}`,
 } as const;
 
+/**
+ * Retrieves the tool configuration and instructions for a specified group.
+ *
+ * @param groupId - The group identifier. Defaults to 'chat' if not provided.
+ * @returns An object containing the group's tools array and instruction string.
+ */
 export async function getGroupConfig(groupId: SearchGroupId = 'chat') {
     'use server';
     const tools = groupTools[groupId];

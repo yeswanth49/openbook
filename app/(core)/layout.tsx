@@ -7,6 +7,13 @@ import { Providers } from '../(config)/providers';
 import { SpacesProvider } from '@/contexts/SpacesContext';
 import { NotebookProvider } from '@/contexts/NotebookContext';
 
+/**
+ * Provides a layout wrapper that composes context providers, analytics, and utility components around its children.
+ *
+ * Wraps the content with application-wide providers and includes analytics and performance monitoring components.
+ *
+ * @param children - The content to be rendered within the layout.
+ */
 export default function CoreLayout({
     children,
 }: Readonly<{

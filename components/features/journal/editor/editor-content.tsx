@@ -44,6 +44,20 @@ interface EditorContentProps {
     onCreateSpaceConversation?: (blocks: Block[]) => void;
 }
 
+/**
+ * Renders an interactive block-based content editor with support for editing, selection, block manipulation, and AI assistant integration.
+ *
+ * Provides features such as block type transformation, ordering, duplication, deletion, and contextual menus. Supports keyboard shortcuts, block-level focus management, and AI-assisted content generation or modification.
+ *
+ * @param blocks - The array of content blocks to render and manage.
+ *
+ * @returns The rendered editor interface as a React element.
+ *
+ * @remark
+ * - The AI assistant can be invoked via the context menu or with the ⌘L (Cmd/Ctrl+L) keyboard shortcut.
+ * - Block selection and manipulation are supported for multiple blocks.
+ * - Block content is rendered according to its type, with placeholders and contextual controls.
+ */
 export default function EditorContent({
     blocks,
     onKeyDown,

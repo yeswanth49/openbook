@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { LimitReachedModal } from '@/components/LimitReachedModal';
+import { LimitReachedModal } from '@/components/modals/LimitReachedModal';
 
 interface LimitModalContextType {
     showLimitModal: (message: string, limitType: 'notebook' | 'journal' | 'space') => void;

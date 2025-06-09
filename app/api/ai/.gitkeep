@@ -1,0 +1,10 @@
+# Future AI Endpoints
+
+This directory will house all AI-powered features in the future:
+- /api/ai/chat (migration from /api/chat)
+- /api/ai/study (migration from /api/study/*)
+- /api/ai/image (future: image generation)
+- /api/ai/voice (future: voice generation)
+- /api/ai/video (future: video generation)
+
+Currently kept as placeholder during refactoring phase. 

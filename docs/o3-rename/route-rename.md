@@ -2,22 +2,13 @@
 
 ## Why
 
-Current names are misleading (`/api/search` is _chat_, `/api/raycast` is _search_). Consistent naming improves DX.
+Current names are misleading (`/api/search` is _chat_). Consistent naming improves DX.
 
 ## Mapping
 
 | Old            | New            |
 | -------------- | -------------- |
 | `/api/search`  | `/api/ai`      |
-| `/api/raycast` | `/api/search`  |
-| `/api/study/*` | `/api/learn/*` |
-
-Components:
-
-| Old                  | New                    |
-| -------------------- | ---------------------- |
-| `app/ChatClient.tsx` | `app/NeumanClient.tsx` |
-| `app/actions.ts`     | `app/ai-actions.ts`    |
 
 ## Steps
 
@@ -36,6 +27,5 @@ Components:
 ## Checklist
 
 - GET `/api/search` → 308 to `/api/ai`.
-- Raycast extension uses `/api/search` (new behaviour).
 
 Commit: `refactor: route + component rename`

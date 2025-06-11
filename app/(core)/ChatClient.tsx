@@ -29,7 +29,7 @@ import { Button } from '@/components/ui/button';
 import { InstallPrompt } from '@/components/modals/InstallPrompt';
 import { useLocalStorage } from '@/hooks/use-local-storage';
 import { cn, getUserId, SearchGroupId } from '@/lib/utils';
-import { SIDEBAR_STATE_KEY } from '@/lib/storageKeys';
+import { SIDEBAR_STATE_KEY, SELECTED_MODEL_KEY } from '@/lib/storageKeys';
 import { suggestQuestions } from '../(config)/actions';
 import Messages from '@/components/features/spaces/chat/messages';
 import { Input } from '@/components/ui/input';
@@ -59,7 +59,7 @@ const HomeContent = () => {
     // Study mode context
     const { getStudyModeForSpace, setStudyMode } = useStudyMode();
     // Set Google Gemini 2.5 Flash as the default model
-    const [selectedModel, setSelectedModel] = useLocalStorage('neuman-selected-model', 'neuman-google');
+    const [selectedModel, setSelectedModel] = useLocalStorage(SELECTED_MODEL_KEY, 'neuman-google');
 
     const initialState = useMemo(
         () => ({

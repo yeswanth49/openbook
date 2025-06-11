@@ -65,6 +65,17 @@ export const STORAGE_KEY_CATEGORIES = {
 } as const;
 
 /**
+ * Whitelisted prefixes for OpenBook storage keys
+ * This prevents accidental removal of keys from other applications
+ * that might share similar prefixes
+ */
+const OPENBOOK_PREFIX_WHITELIST = [
+  'openbook_',
+  'openbook-dev_',
+  'openbook-staging_',
+] as const;
+
+/**
  * Clears all OpenBook localStorage data
  * 
  * @param clearPreferences - Whether to also clear user preferences (default: true)
@@ -74,13 +85,17 @@ export function clearAllStorageData(clearPreferences: boolean = true): void {
     ? OPENBOOK_STORAGE_KEYS 
     : STORAGE_KEY_CATEGORIES.DATA.keys;
     
+  // First, remove all explicitly defined keys
   keysToRemove.forEach((key) => {
     localStorage.removeItem(key);
   });
   
-  // Fallback: also clear any remaining keys that start with openbook_
+  // Fallback: safely clear any remaining keys that match whitelisted OpenBook prefixes
   Object.keys(localStorage).forEach((key) => {
-    if (key.startsWith('openbook_')) {
+    const isOpenBookKey = OPENBOOK_PREFIX_WHITELIST.some(prefix => key.startsWith(prefix));
+    if (isOpenBookKey && !OPENBOOK_STORAGE_KEYS.includes(key as any)) {
+      // Only remove keys that match our whitelist but aren't in our explicit list
+      // This helps catch any forgotten keys while being safe
       localStorage.removeItem(key);
     }
   });

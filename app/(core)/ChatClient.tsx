@@ -51,6 +51,41 @@ interface Attachment {
 const SIDEBAR_WIDTH = 256; // 64 * 4 = 256px
 const SIDEBAR_WIDTH_SM = 240; // Smaller width for smaller screens
 
+// Define WidgetSection outside of HomeContent to avoid recreating it on every render
+const WidgetSection: React.FC<{
+    status: string;
+    appendWithPersist: (messageProps: { role: 'user' | 'assistant'; content: string }, options?: any) => Promise<any>;
+    lastSubmittedQueryRef: React.MutableRefObject<string>;
+    setHasSubmitted: React.Dispatch<React.SetStateAction<boolean>>;
+}> = memo(({ status, appendWithPersist, lastSubmittedQueryRef, setHasSubmitted }) => {
+    const handleSurprisePrompt = useCallback(
+        (prompt: string) => {
+            if (status !== 'ready') return;
+            void appendWithPersist({
+                content: prompt,
+                role: 'user',
+            });
+            lastSubmittedQueryRef.current = prompt;
+            setHasSubmitted(true);
+        },
+        [status, appendWithPersist, lastSubmittedQueryRef, setHasSubmitted],
+    );
+
+    return (
+        <div className="w-full mt-0 sm:mt-2 md:mt-4">
+            <div className="flex flex-wrap gap-2 sm:gap-3 justify-center">
+                {/* Daily streak indicator */}
+                <Streak />
+
+                {/* Surprise prompt button */}
+                <SurprisePromptButton onPrompt={handleSurprisePrompt} />
+            </div>
+        </div>
+    );
+});
+
+WidgetSection.displayName = 'WidgetSection';
+
 const HomeContent = () => {
     const [query] = useQueryState('query', parseAsString.withDefault(''));
     const [q] = useQueryState('q', parseAsString.withDefault(''));
@@ -423,34 +458,7 @@ const HomeContent = () => {
         return status !== 'ready';
     }, [status]);
 
-    const WidgetSection = memo(() => {
-        const handleSurprisePrompt = useCallback(
-            (prompt: string) => {
-                if (status !== 'ready') return;
-                void appendWithPersist({
-                    content: prompt,
-                    role: 'user',
-                });
-                lastSubmittedQueryRef.current = prompt;
-                setHasSubmitted(true);
-            },
-            [status, appendWithPersist, setHasSubmitted],
-        );
 
-        return (
-            <div className="w-full mt-0 sm:mt-2 md:mt-4">
-                <div className="flex flex-wrap gap-2 sm:gap-3 justify-center">
-                    {/* Daily streak indicator */}
-                    <Streak />
-
-                    {/* Surprise prompt button */}
-                    <SurprisePromptButton onPrompt={handleSurprisePrompt} />
-                </div>
-            </div>
-        );
-    });
-
-    WidgetSection.displayName = 'WidgetSection';
 
     return (
         <div className="flex flex-col !font-sans items-center min-h-screen bg-background text-foreground transition-all duration-500">
@@ -544,7 +552,12 @@ const HomeContent = () => {
                         {/* Add the widget section below form when no messages */}
                         {messages.length === 0 && (
                             <div className="mt-0 sm:mt-4">
-                                <WidgetSection />
+                                <WidgetSection
+                                    status={status}
+                                    appendWithPersist={appendWithPersist}
+                                    lastSubmittedQueryRef={lastSubmittedQueryRef}
+                                    setHasSubmitted={setHasSubmitted}
+                                />
                             </div>
                         )}
 

@@ -28,5 +28,8 @@ const PROMPTS: string[] = [
 ];
 
 export function getRandomPrompt(): string {
+    if (PROMPTS.length === 0) {
+        return "Tell me something interesting you've learned recently.";
+    }
     return PROMPTS[Math.floor(Math.random() * PROMPTS.length)];
 } 

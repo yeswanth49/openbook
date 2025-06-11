@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { STREAK_COUNT_KEY, STREAK_LAST_VISIT_KEY } from '@/lib/streakKeys';
 
 /**
  * Tracks the user's consecutive-day login streak using localStorage.
@@ -11,8 +12,6 @@ import { useEffect, useState } from 'react';
  * The hook returns the current streak value (number).
  */
 export function useStreak(): number {
-    const STREAK_COUNT_KEY = 'openbook.streak.count';
-    const STREAK_LAST_VISIT_KEY = 'openbook.streak.lastVisit';
 
     // Helper to normalise a date to midnight for day-level comparison
     const normalise = (d: Date) => {
@@ -27,7 +26,17 @@ export function useStreak(): number {
         const today = new Date();
         const todayMidnight = normalise(today);
 
-        const storedCount = parseInt(localStorage.getItem(STREAK_COUNT_KEY) || '0', 10);
+        const storedCountRaw = localStorage.getItem(STREAK_COUNT_KEY) || '0';
+        const parsedCount = parseInt(storedCountRaw, 10);
+        const storedCount = isNaN(parsedCount) ? 0 : parsedCount;
+        
+        // If stored count is invalid/corrupted, reset it
+        if (storedCount <= 0 || isNaN(parsedCount)) {
+            localStorage.setItem(STREAK_COUNT_KEY, '1');
+            localStorage.setItem(STREAK_LAST_VISIT_KEY, today.toISOString());
+            return 1;
+        }
+        
         const storedDateString = localStorage.getItem(STREAK_LAST_VISIT_KEY);
 
         if (!storedDateString) {

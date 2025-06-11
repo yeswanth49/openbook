@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useCallback } from 'react';
 import { Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { getRandomPrompt } from '@/lib/surprisePrompts';
@@ -10,15 +10,16 @@ interface SurprisePromptButtonProps {
 }
 
 export const SurprisePromptButton: React.FC<SurprisePromptButtonProps> = ({ onPrompt }) => {
-    const handleClick = () => {
+    const handleClick = useCallback(() => {
         const prompt = getRandomPrompt();
         if (onPrompt) {
             onPrompt(prompt);
         }
-    };
+    }, [onPrompt]);
 
     return (
         <Button
+            type="button"
             variant="outline"
             className="group flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-800 hover:shadow-xs transition-all h-auto"
             onClick={handleClick}

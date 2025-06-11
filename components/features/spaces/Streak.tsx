@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Flame } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useStreak } from '@/hooks/useStreak';
+import { STREAK_LAST_CELEBRATED_MILESTONE_KEY } from '@/lib/streakKeys';
 
 export const Streak: React.FC = () => {
     const streak = useStreak();
@@ -26,7 +27,8 @@ export const Streak: React.FC = () => {
     }, [streak]);
 
     /* ------------------------------ Confetti Burst ------------------------------ */
-    const LAST_CELEBRATED_MILESTONE_KEY = 'openbook.streak.lastCelebratedMilestone';
+    const animationFrameIdRef = useRef<number | null>(null);
+    const isCancelledRef = useRef<boolean>(false);
 
     useEffect(() => {
         const milestones = [7, 30, 100];
@@ -35,12 +37,15 @@ export const Streak: React.FC = () => {
         if (typeof window === 'undefined') return;
         
         const lastCelebratedMilestone = parseInt(
-            localStorage.getItem(LAST_CELEBRATED_MILESTONE_KEY) || '0', 
+            localStorage.getItem(STREAK_LAST_CELEBRATED_MILESTONE_KEY) || '0', 
             10
         );
         
         if (currentMilestone && lastCelebratedMilestone !== currentMilestone) {
-            localStorage.setItem(LAST_CELEBRATED_MILESTONE_KEY, currentMilestone.toString());
+            localStorage.setItem(STREAK_LAST_CELEBRATED_MILESTONE_KEY, currentMilestone.toString());
+            
+            // Reset cancellation flag for new animation
+            isCancelledRef.current = false;
 
             const triggerSideCannonConfetti = async () => {
                 const confetti = (await import('canvas-confetti')).default;
@@ -49,6 +54,9 @@ export const Streak: React.FC = () => {
                 const end = Date.now() + 5 * 1000;
                 
                 function frame() {
+                    // Check if animation was cancelled
+                    if (isCancelledRef.current) return;
+                    
                     // Left side cannon
                     confetti({
                         particleCount: 2,
@@ -66,15 +74,24 @@ export const Streak: React.FC = () => {
                         colors: colors,
                     });
 
-                    if (Date.now() < end) {
-                        requestAnimationFrame(frame);
+                    if (Date.now() < end && !isCancelledRef.current) {
+                        animationFrameIdRef.current = requestAnimationFrame(frame);
                     }
                 }
-                requestAnimationFrame(frame);
+                animationFrameIdRef.current = requestAnimationFrame(frame);
             };
             
             triggerSideCannonConfetti();
         }
+
+        // Cleanup function to cancel animation and prevent memory leaks
+        return () => {
+            isCancelledRef.current = true;
+            if (animationFrameIdRef.current) {
+                cancelAnimationFrame(animationFrameIdRef.current);
+                animationFrameIdRef.current = null;
+            }
+        };
     }, [streak]);
 
     return (

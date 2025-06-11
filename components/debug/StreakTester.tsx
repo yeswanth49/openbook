@@ -2,27 +2,28 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
+import { STREAK_COUNT_KEY, STREAK_LAST_VISIT_KEY } from '@/lib/streakKeys';
 
 export const StreakTester: React.FC = () => {
     const setStreak = (days: number) => {
         // Set the streak count
-        localStorage.setItem('openbook.streak.count', days.toString());
+        localStorage.setItem(STREAK_COUNT_KEY, days.toString());
         
         // Set the last visit to today to maintain the streak
-        localStorage.setItem('openbook.streak.lastVisit', new Date().toISOString());
+        localStorage.setItem(STREAK_LAST_VISIT_KEY, new Date().toISOString());
         
         // Refresh the page to trigger the useStreak hook to recalculate
         window.location.reload();
     };
 
     const resetStreak = () => {
-        localStorage.removeItem('openbook.streak.count');
-        localStorage.removeItem('openbook.streak.lastVisit');
+        localStorage.removeItem(STREAK_COUNT_KEY);
+        localStorage.removeItem(STREAK_LAST_VISIT_KEY);
         window.location.reload();
     };
 
     const getCurrentStreak = () => {
-        return localStorage.getItem('openbook.streak.count') || '1';
+        return localStorage.getItem(STREAK_COUNT_KEY) || '1';
     };
 
     return (

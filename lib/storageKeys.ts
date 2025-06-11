@@ -48,6 +48,11 @@ export const OPENBOOK_STORAGE_KEYS: readonly string[] = [
   SELECTED_MODEL_KEY,
   INSTALL_PROMPT_DISMISSED_KEY,
   USER_ID_KEY,
+  
+  // Streak data
+  'openbook.streak.count',
+  'openbook.streak.lastVisit',
+  'openbook.streak.lastCelebratedMilestone',
 ] as const;
 
 /**

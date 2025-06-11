@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect } from 'react';
 import { Flame } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useStreak } from '@/hooks/useStreak';
@@ -26,21 +26,54 @@ export const Streak: React.FC = () => {
     }, [streak]);
 
     /* ------------------------------ Confetti Burst ------------------------------ */
-    const hasCelebratedRef = useRef(false);
+    const LAST_CELEBRATED_MILESTONE_KEY = 'openbook.streak.lastCelebratedMilestone';
 
     useEffect(() => {
         const milestones = [7, 30, 100];
-        if (!hasCelebratedRef.current && milestones.includes(streak)) {
-            hasCelebratedRef.current = true;
+        const currentMilestone = milestones.find(milestone => milestone === streak);
+        
+        if (typeof window === 'undefined') return;
+        
+        const lastCelebratedMilestone = parseInt(
+            localStorage.getItem(LAST_CELEBRATED_MILESTONE_KEY) || '0', 
+            10
+        );
+        
+        if (currentMilestone && lastCelebratedMilestone !== currentMilestone) {
+            localStorage.setItem(LAST_CELEBRATED_MILESTONE_KEY, currentMilestone.toString());
 
-            (async () => {
+            const triggerSideCannonConfetti = async () => {
                 const confetti = (await import('canvas-confetti')).default;
-                confetti({
-                    particleCount: 120,
-                    spread: 70,
-                    origin: { y: 0.6 },
-                });
-            })();
+                // Colors from streak (orange/flame) and surprise me (purple) badges
+                const colors = ["#f97316", "#a855f7"]; // orange-500 and purple-500
+                const end = Date.now() + 5 * 1000;
+                
+                function frame() {
+                    // Left side cannon
+                    confetti({
+                        particleCount: 2,
+                        angle: 60,
+                        spread: 55,
+                        origin: { x: 0 },
+                        colors: colors,
+                    });
+                    // Right side cannon
+                    confetti({
+                        particleCount: 2,
+                        angle: 120,
+                        spread: 55,
+                        origin: { x: 1 },
+                        colors: colors,
+                    });
+
+                    if (Date.now() < end) {
+                        requestAnimationFrame(frame);
+                    }
+                }
+                requestAnimationFrame(frame);
+            };
+            
+            triggerSideCannonConfetti();
         }
     }, [streak]);
 

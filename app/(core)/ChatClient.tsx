@@ -427,7 +427,7 @@ const HomeContent = () => {
         const handleSurprisePrompt = useCallback(
             (prompt: string) => {
                 if (status !== 'ready') return;
-                appendWithPersist({
+                void appendWithPersist({
                     content: prompt,
                     role: 'user',
                 });

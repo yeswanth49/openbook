@@ -64,11 +64,8 @@ export function useStreak(): number {
     // Update streak automatically at midnight if the tab stays open
     useEffect(() => {
         const interval = setInterval(() => {
-            const now = new Date();
-            // If time is within first minute of a new day, recalc
-            if (now.getHours() === 0 && now.getMinutes() === 0) {
-                setStreak(calculateStreak());
-            }
+            // Recalculate streak every minute to ensure we don't miss updates
+            setStreak(calculateStreak());
         }, 60 * 1000); // check each minute
         return () => clearInterval(interval);
     }, []);

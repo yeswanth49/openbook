@@ -14,6 +14,7 @@ import { TypingMessage } from '@/components/features/spaces/chat/message-typing'
 import { CancelButton, FloatingCancelButton } from '@/components/features/spaces/cancel-button';
 import { AIProgressIndicator, WordCountIndicator } from '@/components/features/spaces/loading/progress-indicators';
 import AddToJournalButton from '@/components/features/spaces/add-to-journal-button';
+import { LoadingDots } from '@/components/ui/loading-dots';
 
 // Define MessagePart type
 type MessagePart = TextUIPart | ReasoningUIPart | ToolInvocationUIPart | SourceUIPart;
@@ -281,7 +282,13 @@ const Messages: React.FC<MessagesProps> = ({
                                     unoptimized
                                     quality={100}
                                 />
-                                <h2 className="text-md font-medium text-neutral-800 dark:text-neutral-200">Neuman</h2>
+                                <h2 className="text-md font-medium text-neutral-800 dark:text-neutral-200 flex items-center gap-2">
+                                    Neuman
+                                    {/* Show loading dots while AI is responding */}
+                                    {status !== 'ready' && message.role === 'assistant' && messageIndex === messages.length - 1 && (
+                                        <LoadingDots />
+                                    )}
+                                </h2>
                             </div>
                             {status === 'ready' && (
                                 <div className="flex items-center gap-1">

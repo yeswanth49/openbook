@@ -2,9 +2,19 @@ import React from 'react';
 import { MarkdownRenderer } from '@/components/features/spaces/chat/markdown';
 import type { ToolInvocation as UIToolInvocation } from '@ai-sdk/ui-utils';
 
+// Minimal representation of a chat message used in this component
+interface ChatMessage {
+    role: 'user' | 'assistant' | 'system';
+    content?: string;
+    parts?: any[];
+    experimental_attachments?: any[];
+    // Allow additional properties without losing type-safety on known ones
+    [key: string]: unknown;
+}
+
 interface ToolInvocationListViewProps {
     toolInvocations: UIToolInvocation[];
-    message: any;
+    message: ChatMessage;
 }
 
 const ToolInvocationListView: React.FC<ToolInvocationListViewProps> = ({ toolInvocations, message }) => {

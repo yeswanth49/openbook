@@ -234,25 +234,30 @@ export default function Editor({ initialBlocks, onBlocksChange, title, onTitleCh
 
     const handleDeleteBlock = (id: string) => {
         const updated = blocks.filter((block) => block.id !== id);
+
         if (updated.length === 0) {
-            // If we deleted the last block, add a new empty one
-            updated.push({
+            // If we deleted the last block, add a new empty one and focus it
+            const newBlock = {
                 id: Date.now().toString(),
                 type: BlockType.Text,
                 content: '',
                 isFocused: true,
-            });
-        } else {
-            // Focus the previous block or the next one if we deleted the first
-            const index = blocks.findIndex((block) => block.id === id);
-            const newFocusIndex = Math.max(0, index > 0 ? index - 1 : 0);
-            const focusedBlocks = blocks.map((blk, idx) => ({
-                ...blk,
-                isFocused: idx === newFocusIndex,
-            }));
-            updateBlocks(focusedBlocks);
-            setCurrentBlockId(focusedBlocks[newFocusIndex].id);
+            };
+            updateBlocks([newBlock]);
+            setCurrentBlockId(newBlock.id);
+            return;
         }
+
+        // Focus the previous block or the next one if we deleted the first
+        const index = blocks.findIndex((block) => block.id === id);
+        const newFocusIndex = Math.max(0, index > 0 ? index - 1 : 0);
+        const focusedBlocks = updated.map((blk, idx) => ({
+            ...blk,
+            isFocused: idx === newFocusIndex,
+        }));
+
+        updateBlocks(focusedBlocks);
+        setCurrentBlockId(focusedBlocks[newFocusIndex].id);
     };
 
     const handleDuplicateBlock = (id: string) => {
@@ -280,6 +285,7 @@ export default function Editor({ initialBlocks, onBlocksChange, title, onTitleCh
         });
 
         updateBlocks(updated);
+        setCurrentBlockId(duplicatedBlock.id);
     };
 
     const handleCommandSelect = (type: BlockType) => {
@@ -292,14 +298,16 @@ export default function Editor({ initialBlocks, onBlocksChange, title, onTitleCh
         // Create a new space and navigate to it
         const spaceName = `Conversation ${new Date().toLocaleTimeString()}`;
         const newSpaceId = createSpace(spaceName);
+
         // Compile context and send as initial user message
         const context = selectedBlocks.map((b) => b.content).join('\n\n');
         addMessage({
-            id: crypto.randomUUID(),
+            id: typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function' ? crypto.randomUUID() : Date.now().toString(),
             role: 'user',
             content: `Here is the context for your conversation:\n${context}`,
             timestamp: Date.now(),
         });
+
         // Redirect to the new space conversation
         router.push(`/space/${newSpaceId}`);
     };

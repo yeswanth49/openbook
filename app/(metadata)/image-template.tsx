@@ -19,8 +19,7 @@ export function renderMainOgImage() {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                background: 'linear-gradient(135deg, #191919 0%, #2e2e2e 100%)',
-                backgroundImage: `url(${new URL('/opengraph/main-interface.png', import.meta.url).toString()})`,
+                backgroundImage: `linear-gradient(135deg, #191919 0%, #2e2e2e 100%), url(${new URL('/opengraph/main-interface.png', import.meta.url).toString()})`,
                 backgroundSize: 'cover',
             }}
         ></div>

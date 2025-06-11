@@ -13,6 +13,16 @@ interface AddToJournalButtonProps {
     className?: string;
 }
 
+// Simple unique id generator to avoid collisions
+const generateUniqueId = () => {
+    // Prefer crypto.randomUUID if available (modern browsers)
+    if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+        return crypto.randomUUID();
+    }
+    // Fallback to timestamp + random string
+    return `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+};
+
 export default function AddToJournalButton({ userMessage, assistantMessage, className = '' }: AddToJournalButtonProps) {
     const [isAdding, setIsAdding] = useState(false);
     const [isAdded, setIsAdded] = useState(false);
@@ -26,19 +36,19 @@ export default function AddToJournalButton({ userMessage, assistantMessage, clas
             // Create blocks for the conversation strip
             const conversationBlocks: Block[] = [
                 {
-                    id: Date.now().toString(),
+                    id: generateUniqueId(),
                     type: BlockType.Quote,
                     content: `**Question:** ${userMessage}`,
                     isFocused: false,
                 },
                 {
-                    id: (Date.now() + 1).toString(),
+                    id: generateUniqueId(),
                     type: BlockType.Text,
                     content: assistantMessage,
                     isFocused: false,
                 },
                 {
-                    id: (Date.now() + 2).toString(),
+                    id: generateUniqueId(),
                     type: BlockType.Divider,
                     content: '',
                     isFocused: false,
@@ -52,20 +62,30 @@ export default function AddToJournalButton({ userMessage, assistantMessage, clas
             if (todayEntry) {
                 // Add to existing entry
                 const updatedBlocks = [...todayEntry.blocks, ...conversationBlocks];
-                updateEntry(todayEntry.id, { blocks: updatedBlocks });
 
-                // Navigate to the entry
-                router.push(`/journal/${todayEntry.id}`);
+                try {
+                    updateEntry(todayEntry.id, { blocks: updatedBlocks });
+                    router.push(`/journal/${todayEntry.id}`);
+                } catch (err) {
+                    console.error('Failed to add blocks to today\'s entry:', err);
+                    throw err; // Re-throw to be handled by outer catch
+                }
             } else {
                 // Create new entry for today
                 const title = `Journal - ${new Date().toLocaleDateString()}`;
                 const newEntry = createEntry(title);
 
-                // Add the conversation blocks to the new entry
-                updateEntry(newEntry.id, { blocks: conversationBlocks });
+                if (!newEntry) {
+                    throw new Error('Unable to create new journal entry (likely due to plan limits).');
+                }
 
-                // Navigate to the new entry
-                router.push(`/journal/${newEntry.id}`);
+                try {
+                    updateEntry(newEntry.id, { blocks: conversationBlocks });
+                    router.push(`/journal/${newEntry.id}`);
+                } catch (err) {
+                    console.error('Failed to update new entry:', err);
+                    throw err;
+                }
             }
 
             setIsAdded(true);

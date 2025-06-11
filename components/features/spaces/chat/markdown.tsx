@@ -309,7 +309,13 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) => {
     CodeBlock.displayName = 'CodeBlock';
 
     const LinkPreview = ({ href, title }: { href: string; title?: string }) => {
-        const domain = new URL(href).hostname;
+        let domain = '';
+        try {
+            domain = new URL(href).hostname;
+        } catch (error) {
+            // If URL is invalid or relative, skip rendering preview
+            return null;
+        }
 
         return (
             <div className="flex flex-col bg-white dark:bg-neutral-800 text-xs m-0">

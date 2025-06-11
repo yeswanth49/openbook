@@ -30,34 +30,21 @@ export function StudyModeBadge({ framework, onClick, className = '' }: StudyMode
     );
 }
 
+// Centralized color mapping to avoid duplication between background and text colors
+const frameworkColors: Record<StudyFramework | 'default', { bg: string; text: string }> = {
+    [StudyFramework.MemoryPalace]: { bg: 'rgba(59, 130, 246, 0.1)', text: 'rgb(59, 130, 246)' }, // blue
+    [StudyFramework.FeynmanTechnique]: { bg: 'rgba(16, 185, 129, 0.1)', text: 'rgb(16, 185, 129)' }, // green
+    [StudyFramework.SpacedRepetition]: { bg: 'rgba(245, 158, 11, 0.1)', text: 'rgb(245, 158, 11)' }, // amber
+    [StudyFramework.ExtremeMode]: { bg: 'rgba(239, 68, 68, 0.1)', text: 'rgb(239, 68, 68)' }, // red
+    default: { bg: 'rgba(107, 114, 128, 0.1)', text: 'rgb(107, 114, 128)' }, // gray
+};
+
 function getFrameworkColor(framework: StudyFramework): string {
-    switch (framework) {
-        case StudyFramework.MemoryPalace:
-            return 'rgba(59, 130, 246, 0.1)'; // blue
-        case StudyFramework.FeynmanTechnique:
-            return 'rgba(16, 185, 129, 0.1)'; // green
-        case StudyFramework.SpacedRepetition:
-            return 'rgba(245, 158, 11, 0.1)'; // amber
-        case StudyFramework.ExtremeMode:
-            return 'rgba(239, 68, 68, 0.1)'; // red
-        default:
-            return 'rgba(107, 114, 128, 0.1)'; // gray
-    }
+    return frameworkColors[framework]?.bg || frameworkColors.default.bg;
 }
 
 function getFrameworkTextColor(framework: StudyFramework): string {
-    switch (framework) {
-        case StudyFramework.MemoryPalace:
-            return 'rgb(59, 130, 246)'; // blue
-        case StudyFramework.FeynmanTechnique:
-            return 'rgb(16, 185, 129)'; // green
-        case StudyFramework.SpacedRepetition:
-            return 'rgb(245, 158, 11)'; // amber
-        case StudyFramework.ExtremeMode:
-            return 'rgb(239, 68, 68)'; // red
-        default:
-            return 'rgb(107, 114, 128)'; // gray
-    }
+    return frameworkColors[framework]?.text || frameworkColors.default.text;
 }
 
 function getFrameworkAbbreviation(framework: StudyFramework): string {

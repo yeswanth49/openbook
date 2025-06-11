@@ -18,10 +18,28 @@ export const CancelButton: React.FC<CancelButtonProps> = ({ onCancel, isLoading,
     if (!isLoading) return null;
 
     const handleCancel = () => {
-        onCancel();
-        toast.info('Request canceled', {
-            description: 'The AI response generation has been stopped.',
-        });
+        try {
+            const maybePromise: unknown = onCancel();
+            // If onCancel returns a promise, ensure we handle it correctly
+            if (maybePromise && typeof (maybePromise as any).then === 'function') {
+                (maybePromise as Promise<unknown>)
+                    .then(() =>
+                        toast.info('Request canceled', {
+                            description: 'The AI response generation has been stopped.',
+                        }),
+                    )
+                    .catch((err) => {
+                        console.error('Failed to cancel request:', err);
+                    });
+            } else {
+                toast.info('Request canceled', {
+                    description: 'The AI response generation has been stopped.',
+                });
+            }
+        } catch (err) {
+            // Log the error to avoid crashing the component
+            console.error('Failed to cancel request:', err);
+        }
     };
 
     // Determine the button text based on status

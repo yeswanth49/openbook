@@ -15,17 +15,34 @@ interface ConversationMetadataProps {
 }
 
 export function ConversationMetadata({ space, compact = false, className }: ConversationMetadataProps) {
-    // Calculate metadata from conversation
-    const metadata = calculateConversationMetadata(space);
+    // Safely calculate metadata and handle any errors
+    let metadata: ReturnType<typeof calculateConversationMetadata>;
+    try {
+        metadata = calculateConversationMetadata(space);
+    } catch (error) {
+        console.error('Failed to calculate conversation metadata:', error);
+        // Provide sensible defaults to keep component from crashing
+        metadata = {
+            topics: [],
+            summary: '',
+            sentiment: 'neutral',
+            lastActivity: Date.now(),
+            wordCount: 0,
+            messageCount: space.messages?.length ?? 0,
+            keyTerms: [],
+        };
+    }
 
     // Sentiment icon
     const SentimentIcon =
         metadata.sentiment === 'positive' ? Smile : metadata.sentiment === 'negative' ? Frown : undefined;
 
-    // Format the last activity timestamp
-    const lastActivityTime = formatDistanceToNow(new Date(metadata.lastActivity), {
-        addSuffix: true,
-    });
+    // Validate last activity date to avoid runtime errors
+    let lastActivityTime = 'just now';
+    const lastActivityDate = new Date(metadata.lastActivity);
+    if (!isNaN(lastActivityDate.getTime())) {
+        lastActivityTime = formatDistanceToNow(lastActivityDate, { addSuffix: true });
+    }
 
     if (compact) {
         // Compact view for sidebar - optimized for hover animations
@@ -47,7 +64,7 @@ export function ConversationMetadata({ space, compact = false, className }: Conv
     return (
         <div className={cn('flex flex-col space-y-2', className)}>
             <div className="flex flex-wrap gap-1.5">
-                {metadata.keyTerms.map((term) => (
+                {(metadata.keyTerms as string[]).map((term: string) => (
                     <Badge key={term} variant="outline" className="text-xs">
                         {term}
                     </Badge>

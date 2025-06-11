@@ -34,20 +34,21 @@ export default function FileUploadZone({
     }, []);
 
     const validateAndUploadFile = useCallback(
-        (file: File) => {
+        (file: File): boolean => {
             // Check file type
             if (!acceptedTypes.includes(file.type)) {
                 setError(`File type not supported. Please upload ${acceptedTypes.join(', ')}`);
-                return;
+                return false;
             }
 
             // Check file size
             if (file.size > maxSizeMB * 1024 * 1024) {
                 setError(`File too large. Maximum size is ${maxSizeMB}MB`);
-                return;
+                return false;
             }
 
             onFileUpload(file);
+            return true;
         },
         [acceptedTypes, maxSizeMB, onFileUpload],
     );
@@ -63,10 +64,8 @@ export default function FileUploadZone({
 
             let ignoredCount = 0;
             files.forEach((file) => {
-                const prevErr = error;
-                validateAndUploadFile(file);
-                // If validateAndUploadFile sets an error we consider the file ignored
-                if (prevErr !== error) {
+                const isValid = validateAndUploadFile(file);
+                if (!isValid) {
                     ignoredCount += 1;
                 }
             });
@@ -84,7 +83,7 @@ export default function FileUploadZone({
             const files = e.target.files;
             if (!files || files.length === 0) return;
 
-            Array.from(files).forEach(validateAndUploadFile);
+            Array.from(files).forEach((file) => validateAndUploadFile(file));
 
             // Reset the input
             e.target.value = '';

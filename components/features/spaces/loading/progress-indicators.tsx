@@ -35,11 +35,15 @@ export const AIProgressIndicator: React.FC<AIProgressProps> = ({
 
             // Calculate estimated time remaining
             if (tokenCount > 0 && estimatedTokens > tokenCount) {
-                // Estimate based on tokens per second so far
-                const tokensPerSecond = tokenCount / timeElapsed;
-                const tokensRemaining = estimatedTokens - tokenCount;
-                const secondsRemaining = Math.ceil(tokensRemaining / tokensPerSecond);
-                setEstimatedTimeRemaining(secondsRemaining);
+                // Avoid division by zero; if timeElapsed is 0 we cannot compute rate yet
+                const tokensPerSecond = timeElapsed > 0 ? tokenCount / timeElapsed : 0;
+                if (tokensPerSecond === 0) {
+                    setEstimatedTimeRemaining(null);
+                } else {
+                    const tokensRemaining = estimatedTokens - tokenCount;
+                    const secondsRemaining = Math.ceil(tokensRemaining / tokensPerSecond);
+                    setEstimatedTimeRemaining(secondsRemaining);
+                }
             } else {
                 setEstimatedTimeRemaining(null);
             }
@@ -133,7 +137,8 @@ export const WordCountIndicator: React.FC<{
     if (!isVisible || !text) return null;
 
     // Count words in text
-    const wordCount = text.trim().split(/\s+/).length;
+    const trimmedText = text.trim();
+    const wordCount = trimmedText === '' ? 0 : trimmedText.split(/\s+/).length;
 
     return (
         <motion.div

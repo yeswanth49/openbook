@@ -68,8 +68,9 @@ async function deleteAllBlobsInFolder(folderPrefix: string): Promise<{ message: 
             }
         } catch (error) {
             console.error(`Error in batch ${batchCount + 1}:`, error);
-            // Continue with next batch instead of failing completely
-            continue;
+            // Exit the loop if repeated errors occur to avoid endless retries
+            cursor = undefined;
+            break;
         }
     } while (cursor);
 

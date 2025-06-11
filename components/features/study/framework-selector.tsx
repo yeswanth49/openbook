@@ -29,13 +29,14 @@ export function FrameworkSelector({ onSelect, onClose }: FrameworkSelectorProps)
                 case '1':
                 case '2':
                 case '3':
-                case '4':
+                case '4': {
                     e.preventDefault();
-                    const index = parseInt(e.key) - 1;
+                    const index = parseInt(e.key, 10) - 1;
                     if (index >= 0 && index < frameworks.length) {
                         onSelect(frameworks[index]);
                     }
                     break;
+                }
                 case 'ArrowUp':
                     e.preventDefault();
                     setSelectedIndex((prev) => (prev > 0 ? prev - 1 : frameworks.length - 1));

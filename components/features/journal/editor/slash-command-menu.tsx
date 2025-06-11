@@ -198,6 +198,9 @@ export default function SlashCommandMenu({ position, onSelect, onClose }: SlashC
     }, [selectedIndex]);
 
     useEffect(() => {
+        const currentMenu = menuRef.current;
+        if (!currentMenu) return;
+
         const handleKeyDown = (e: KeyboardEvent) => {
             if (e.key === 'ArrowDown') {
                 e.preventDefault();
@@ -221,8 +224,12 @@ export default function SlashCommandMenu({ position, onSelect, onClose }: SlashC
             }
         };
 
-        document.addEventListener('keydown', handleKeyDown);
-        return () => document.removeEventListener('keydown', handleKeyDown);
+        currentMenu.addEventListener('keydown', handleKeyDown);
+
+        // Focus the menu so it receives keyboard events
+        currentMenu.focus();
+
+        return () => currentMenu.removeEventListener('keydown', handleKeyDown);
     }, [onSelect, onClose, selectedIndex, filteredCommands]);
 
     useEffect(() => {
@@ -259,6 +266,7 @@ export default function SlashCommandMenu({ position, onSelect, onClose }: SlashC
                     return (
                         <div
                             key={command.type}
+                            role="menuitem"
                             ref={isSelected ? selectedRef : null}
                             className={`flex items-center px-2 py-1.5 cursor-pointer rounded-md menu-item ${
                                 isSelected ? 'bg-neutral-100 dark:bg-neutral-800' : ''
@@ -302,6 +310,8 @@ export default function SlashCommandMenu({ position, onSelect, onClose }: SlashC
     return (
         <motion.div
             ref={menuRef}
+            role="menu"
+            tabIndex={-1}
             className="absolute z-50 bg-white dark:bg-neutral-900 rounded-lg shadow-lg w-72 overflow-hidden border border-neutral-200 dark:border-neutral-800"
             style={{ top: position.top + 5, left: position.left }}
             initial={{ opacity: 0, y: -4, scale: 0.97 }}

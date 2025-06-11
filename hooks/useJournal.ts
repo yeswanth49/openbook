@@ -3,7 +3,9 @@ import { JournalEntry, Block } from '../lib/types';
 import { useUser } from '@/contexts/UserContext';
 import { useLimitModal } from '@/contexts/LimitModalContext';
 
-const STORAGE_KEY = 'journalEntries';
+import { JOURNAL_ENTRIES_KEY } from '@/lib/storageKeys';
+
+const STORAGE_KEY = JOURNAL_ENTRIES_KEY;
 const JOURNAL_LIMIT = 3;
 
 export function useJournal() {

@@ -3,6 +3,7 @@ import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { Globe, Book, YoutubeIcon, TelescopeIcon } from 'lucide-react';
 import { ChatsCircle, Code, Memory, XLogo } from '@phosphor-icons/react'; // Error consistently points near here
+import { USER_ID_KEY } from './storageKeys';
 
 export function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
@@ -15,10 +16,10 @@ export function generateId(prefix: string): string {
 export function getUserId(): string {
     if (typeof window === 'undefined') return ''; // Good guard for localStorage
 
-    let userId = localStorage.getItem('mem0_user_id');
+    let userId = localStorage.getItem(USER_ID_KEY);
     if (!userId) {
         userId = generateId('user');
-        localStorage.setItem('mem0_user_id', userId);
+        localStorage.setItem(USER_ID_KEY, userId);
     }
     return userId;
 }

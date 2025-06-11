@@ -18,7 +18,9 @@ export interface NotebookContextType {
 }
 
 const NotebookContext = createContext<NotebookContextType | undefined>(undefined);
-const STORAGE_KEY = 'openbook_notebooks_data';
+import { NOTEBOOKS_DATA_KEY } from '@/lib/storageKeys';
+
+const STORAGE_KEY = NOTEBOOKS_DATA_KEY;
 const NOTEBOOK_LIMIT = 3;
 
 export const NotebookProvider = ({ children }: { children: ReactNode }) => {

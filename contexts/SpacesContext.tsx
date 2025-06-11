@@ -59,7 +59,9 @@ export interface SpacesContextType {
 }
 
 const SpacesContext = React.createContext<SpacesContextType | undefined>(undefined);
-const STORAGE_KEY = 'openbook_spaces_data';
+import { SPACES_DATA_KEY } from '@/lib/storageKeys';
+
+const STORAGE_KEY = SPACES_DATA_KEY;
 
 export const SpacesProvider = ({ children }: { children: ReactNode }) => {
     const [spaces, setSpaces] = React.useState<Space[]>([]);

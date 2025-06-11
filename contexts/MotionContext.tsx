@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { animationConfig } from '@/lib/motion-config';
+import { ANIMATIONS_PREFERENCE_KEY } from '@/lib/storageKeys';
 
 // Define the context type
 interface MotionContextType {
@@ -50,7 +51,7 @@ export function MotionProvider({ children }: { children: React.ReactNode }) {
         mediaQuery.addEventListener('change', updateMotionPreference);
 
         // Check local storage for user preference
-        const storedPreference = localStorage.getItem('enableAnimations');
+        const storedPreference = localStorage.getItem(ANIMATIONS_PREFERENCE_KEY);
         if (storedPreference !== null) {
             setEnableAnimations(storedPreference === 'true');
         }
@@ -63,7 +64,7 @@ export function MotionProvider({ children }: { children: React.ReactNode }) {
     // Save user preference to local storage
     useEffect(() => {
         if (typeof window === 'undefined') return;
-        localStorage.setItem('enableAnimations', String(enableAnimations));
+        localStorage.setItem(ANIMATIONS_PREFERENCE_KEY, String(enableAnimations));
     }, [enableAnimations]);
 
     // Context value

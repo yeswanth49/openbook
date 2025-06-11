@@ -15,7 +15,9 @@ export interface StudyModeContextType {
 }
 
 const StudyModeContext = React.createContext<StudyModeContextType | undefined>(undefined);
-const STORAGE_KEY = 'openbook_study_modes';
+import { STUDY_MODES_KEY } from '@/lib/storageKeys';
+
+const STORAGE_KEY = STUDY_MODES_KEY;
 
 export const StudyModeProvider = ({ children }: { children: ReactNode }) => {
     const [studyModes, setStudyModes] = React.useState<Record<string, StudyModeSettings>>({});

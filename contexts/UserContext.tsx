@@ -8,7 +8,9 @@ export interface UserContextType {
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
-const STORAGE_KEY = 'openbook_user_data';
+import { USER_DATA_KEY } from '@/lib/storageKeys';
+
+const STORAGE_KEY = USER_DATA_KEY;
 
 export const UserProvider = ({ children }: { children: ReactNode }) => {
     const [premium, setPremium] = useState<boolean>(false);

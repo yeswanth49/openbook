@@ -33,6 +33,7 @@ import { useNotebooks } from '@/contexts/NotebookContext';
 import { useRouter } from 'next/navigation';
 import { useJournal } from '@/hooks/useJournal';
 import { cn } from '@/lib/utils';
+import { clearAllStorageData, STORAGE_KEY_CATEGORIES } from '@/lib/storageKeys';
 import { ConversationMetadata } from '@/components/features/spaces/conversation-metadata';
 import { ConversationNameDisplay, NameLoading } from '@/components/features/spaces/loading/name-loading';
 import { format } from 'date-fns';
@@ -649,32 +650,8 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                                 <button
                                     className="px-3 py-1.5 text-xs font-medium rounded-md bg-red-500/80 text-white hover:bg-red-600 transition-colors"
                                     onClick={() => {
-                                        // Clear all application data
-                                        const keysToRemove = [
-                                            // Main data stores
-                                            'openbook_spaces_data',
-                                            'openbook_notebooks_data', 
-                                            'openbook_study_modes',
-                                            'openbook_user_data',
-                                            'journalEntries',
-                                            // UI preferences
-                                            'sidebar-isOpen',
-                                            'enableAnimations',
-                                            'neuman-selected-model',
-                                            'installPromptDismissed',
-                                            'mem0_user_id'
-                                        ];
-                                        
-                                        keysToRemove.forEach((key) => {
-                                            localStorage.removeItem(key);
-                                        });
-                                        
-                                        // Also clear any remaining keys that start with openbook_
-                                        Object.keys(localStorage).forEach((key) => {
-                                            if (key.startsWith('openbook_')) {
-                                                localStorage.removeItem(key);
-                                            }
-                                        });
+                                        // Clear all application data using centralized function
+                                        clearAllStorageData(true);
                                         
                                         // Use router navigation instead of reload
                                         router.push('/');

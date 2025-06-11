@@ -29,6 +29,7 @@ import { Button } from '@/components/ui/button';
 import { InstallPrompt } from '@/components/modals/InstallPrompt';
 import { useLocalStorage } from '@/hooks/use-local-storage';
 import { cn, getUserId, SearchGroupId } from '@/lib/utils';
+import { SIDEBAR_STATE_KEY } from '@/lib/storageKeys';
 import { suggestQuestions } from '../(config)/actions';
 import Messages from '@/components/features/spaces/chat/messages';
 import { Input } from '@/components/ui/input';
@@ -89,7 +90,7 @@ const HomeContent = () => {
     useEffect(() => {
         if (typeof window !== 'undefined') {
             // Get saved state from localStorage
-            const savedState = localStorage.getItem('sidebar-isOpen');
+            const savedState = localStorage.getItem(SIDEBAR_STATE_KEY);
             if (savedState !== null) {
                 const isOpen = savedState === 'true';
                 setSidebarOpen(isOpen);
@@ -100,7 +101,7 @@ const HomeContent = () => {
     // Update localStorage when sidebar state changes
     useEffect(() => {
         if (typeof window !== 'undefined') {
-            localStorage.setItem('sidebar-isOpen', String(sidebarOpen));
+            localStorage.setItem(SIDEBAR_STATE_KEY, String(sidebarOpen));
         }
     }, [sidebarOpen]);
 

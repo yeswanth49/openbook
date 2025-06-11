@@ -17,13 +17,13 @@ export const SPACES_DATA_KEY = 'openbook_spaces_data';
 export const NOTEBOOKS_DATA_KEY = 'openbook_notebooks_data';
 export const STUDY_MODES_KEY = 'openbook_study_modes';
 export const USER_DATA_KEY = 'openbook_user_data';
-export const JOURNAL_ENTRIES_KEY = 'journalEntries'; // TODO: Consider migrating to openbook_journal_entries for consistency
+export const JOURNAL_ENTRIES_KEY = 'openbook_journal_entries';
 
 // UI preferences and settings
-export const SIDEBAR_STATE_KEY = 'sidebar-isOpen';
+export const SIDEBAR_STATE_KEY = 'openbook_sidebar_state';
 export const ANIMATIONS_PREFERENCE_KEY = 'enableAnimations';
 export const SELECTED_MODEL_KEY = 'openbook_selected_model';
-export const INSTALL_PROMPT_DISMISSED_KEY = 'installPromptDismissed';
+export const INSTALL_PROMPT_DISMISSED_KEY = 'openbook_install_prompt_dismissed';
 export const USER_ID_KEY = 'openbook_user_id';
 
 /**
@@ -100,4 +100,34 @@ export function clearAllStorageData(clearPreferences: boolean = true): void {
       }
     });
   }
+}
+
+/**
+ * ---------------------------------------------------------------------------
+ * Key migrations
+ * ---------------------------------------------------------------------------
+ * When a localStorage key is renamed, add a mapping here so existing user
+ * data is preserved. Migrations are run exactly once, the first time this
+ * module is imported in a browser environment.
+ */
+
+const KEY_MIGRATIONS: Array<{ from: string; to: string }> = [
+  { from: 'journalEntries', to: JOURNAL_ENTRIES_KEY },
+  { from: 'sidebar-isOpen', to: SIDEBAR_STATE_KEY },
+  { from: 'installPromptDismissed', to: INSTALL_PROMPT_DISMISSED_KEY },
+];
+
+if (typeof window !== 'undefined') {
+  KEY_MIGRATIONS.forEach(({ from, to }) => {
+    try {
+      const oldVal = localStorage.getItem(from);
+      if (oldVal !== null && localStorage.getItem(to) === null) {
+        localStorage.setItem(to, oldVal);
+        localStorage.removeItem(from);
+      }
+    } catch (err) {
+      // Access to localStorage can fail (e.g., privacy mode). Silently ignore.
+      console.error('[OpenBook] Storage key migration failed:', err);
+    }
+  });
 } 

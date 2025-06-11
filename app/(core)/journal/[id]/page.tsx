@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation';
 import Sidebar from '@/components/layout/sidebar';
 import Editor from '@/components/features/journal/editor/editor';
 import { useJournal } from '@/hooks/useJournal';
+import { SIDEBAR_STATE_KEY } from '@/lib/storageKeys';
 
 const SIDEBAR_WIDTH = 256;
 
@@ -19,7 +20,7 @@ export default function JournalEntryPage() {
         // Force sidebar to be open on journal pages for better UX
         setSidebarOpen(true);
         if (typeof window !== 'undefined') {
-            localStorage.setItem('sidebar-isOpen', 'true');
+            localStorage.setItem(SIDEBAR_STATE_KEY, 'true');
         }
     }, [idParam]); // Re-run when journal ID changes
 

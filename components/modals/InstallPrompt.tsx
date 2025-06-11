@@ -4,11 +4,12 @@ import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Share } from 'lucide-react';
 import { useLocalStorage } from '@/hooks/use-local-storage';
+import { INSTALL_PROMPT_DISMISSED_KEY } from '@/lib/storageKeys';
 import Image from 'next/image';
 
 export function InstallPrompt() {
     const [showPrompt, setShowPrompt] = useState(false);
-    const [isDismissed, setIsDismissed] = useLocalStorage('installPromptDismissed', false);
+    const [isDismissed, setIsDismissed] = useLocalStorage(INSTALL_PROMPT_DISMISSED_KEY, false);
 
     useEffect(() => {
         if (isDismissed) return;

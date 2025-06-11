@@ -3,3 +3,14 @@ node_modules
 .vercel
 .env.local
 .next
+
+# backups
+*.bak
+backup/
+trash/
+
+# TS build cache
+*.tsbuildinfo
+
+# macOS system files
+.DS_Store

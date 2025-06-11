@@ -1,9 +1,0 @@
-# Build output
-.next
-out
-
-# Node modules
-node_modules
-
-# Terminal chat separate project
-terminal-chat/**/* 

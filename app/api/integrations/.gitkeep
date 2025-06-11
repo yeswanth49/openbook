@@ -1,0 +1,8 @@
+# Future Integration Endpoints
+
+This directory will house external service integrations:
+- /api/integrations/whiteboard (future: Memoboard integration)
+- /api/integrations/graph (future: Graph/network integrations)
+- /api/integrations/realtime (future: Live API integrations)
+
+Currently kept as placeholder during refactoring phase. 

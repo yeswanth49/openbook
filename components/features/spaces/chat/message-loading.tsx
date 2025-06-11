@@ -10,7 +10,7 @@ import { LoadingDots } from '@/components/ui/loading-dots';
 // announce loading state changes to assistive technologies.
 
 // A lightweight loader row shown inside the message list while the AI is thinking or streaming
-export const MessageLoading: React.FC<{ showThinking?: boolean; loadingText?: string; thinkingDuration?: number }> = ({ loadingText = "Loading…" }) => {
+export const MessageLoading: React.FC<{ loadingText?: string }> = ({ loadingText = "Loading…" }) => {
     return (
         <div className="flex items-center gap-2 mt-5 mb-2" role="status" aria-live="polite">
             <Image src="/m.png" alt="Neuman" className="size-8" width={100} height={100} unoptimized quality={100} />

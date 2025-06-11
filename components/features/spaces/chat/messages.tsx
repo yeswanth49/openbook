@@ -620,7 +620,7 @@ const Messages: React.FC<MessagesProps> = ({
                         exit={{ opacity: 0, y: -10 }}
                         transition={{ duration: 0.3 }}
                     >
-                        <MessageLoading showThinking={true} loadingText={getLoadingText()} />
+                        <MessageLoading loadingText={getLoadingText()} />
                     </motion.div>
                 )}
             </AnimatePresence>
@@ -638,7 +638,7 @@ const Messages: React.FC<MessagesProps> = ({
                             exit={{ opacity: 0 }}
                             transition={{ duration: 0.3 }}
                         >
-                            <MessageLoading showThinking={false} />
+                            <MessageLoading />
                             {streamProgress > 0 && streamProgress < 100 && (
                                 <StreamingProgress progress={streamProgress} />
                             )}

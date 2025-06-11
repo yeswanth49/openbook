@@ -31,6 +31,9 @@ export class TavilyService {
   private client: any;
 
   constructor() {
+    if (!serverEnv.TAVILY_API_KEY) {
+      throw new Error('TAVILY_API_KEY is missing. Please set the TAVILY_API_KEY environment variable.');
+    }
     this.client = tavily({ apiKey: serverEnv.TAVILY_API_KEY });
   }
 
@@ -51,13 +54,20 @@ export class TavilyService {
 
     const startTime = Date.now();
 
-    const result = await this.client.search(query, {
-      searchDepth,
-      includeAnswer,
-      maxResults,
-      ...(includeDomains ? { includeDomains } : {}),
-      ...(excludeDomains ? { excludeDomains } : {}),
-    });
+    let result;
+    try {
+      result = await this.client.search(query, {
+        searchDepth,
+        includeAnswer,
+        maxResults,
+        ...(includeDomains ? { includeDomains } : {}),
+        ...(excludeDomains ? { excludeDomains } : {}),
+      });
+    } catch (error) {
+      throw new Error(
+        `Tavily API search failed: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
 
     const responseTime = Date.now() - startTime;
 

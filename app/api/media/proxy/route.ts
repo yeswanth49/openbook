@@ -138,7 +138,9 @@ export async function GET(request: NextRequest) {
         // Stream with size limit instead of buffering
         const { readable, writable } = new TransformStream();
         let transferred = 0;
-        const limit = 5 * 1024 * 1024; // 5 MB (env-tunable)
+        // Determine size limit (in bytes) via environment variable, fallback to 5 MB
+        const parsedLimit = parseInt(serverEnv.PROXY_IMAGE_SIZE_LIMIT ?? '', 10);
+        const limit = Number.isFinite(parsedLimit) && parsedLimit > 0 ? parsedLimit : 5 * 1024 * 1024;
 
         const reader = response.body?.getReader();
         if (!reader) {

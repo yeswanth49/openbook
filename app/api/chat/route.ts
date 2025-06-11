@@ -31,10 +31,11 @@ const middleware = extractReasoningMiddleware({
 export async function POST(req: Request) {
     const { messages, model, group, user_id, timezone } = await req.json();
 
-    let activeTools: any;
+    // Ensure activeTools is always an array to avoid spread operator errors later
+    let activeTools: readonly any[] = [];
     let instructions: string | undefined;
     try {
-        ({ tools: activeTools, instructions } = await getGroupConfig(group));
+        ({ tools: activeTools = [], instructions } = await getGroupConfig(group));
     } catch (error: unknown) {
         debugLog('Error fetching group config:', error);
         return new Response(JSON.stringify({ error: 'Failed to load group configuration' }), {

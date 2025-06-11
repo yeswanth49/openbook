@@ -92,16 +92,21 @@ export async function GET(request: NextRequest) {
         const controller = new AbortController();
         const timeout = setTimeout(() => controller.abort(), 5000);
 
-        const response = await fetch(url, {
-            signal: controller.signal,
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (compatible; ImageValidator/1.0)',
-                Accept: 'image/*',
-            },
-            redirect: 'follow',
-        });
-
-        clearTimeout(timeout);
+        const response = await (async () => {
+            try {
+                return await fetch(url, {
+                    signal: controller.signal,
+                    headers: {
+                        'User-Agent': 'Mozilla/5.0 (compatible; ImageValidator/1.0)',
+                        Accept: 'image/*',
+                    },
+                    redirect: 'follow',
+                });
+            } finally {
+                // Ensure the timeout is cleared no matter what happens during fetch
+                clearTimeout(timeout);
+            }
+        })();
 
         // Capture the final URL after any redirects
         const finalUrl = response.redirected ? response.url : url;

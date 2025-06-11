@@ -9,6 +9,9 @@ export class ExaService {
   private client: Exa;
 
   constructor() {
+    if (!serverEnv.EXA_API_KEY) {
+      throw new Error('EXA_API_KEY is missing. Please set the EXA_API_KEY environment variable.');
+    }
     this.client = new Exa(serverEnv.EXA_API_KEY);
   }
 

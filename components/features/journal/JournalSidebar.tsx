@@ -36,7 +36,9 @@ export const JournalSidebar: React.FC<JournalSidebarProps> = ({ selectedEntryId,
         const defaultTitle = `Journal - ${format(new Date(), 'MM/dd/yyyy')}`;
         const title = window.prompt('New entry title', defaultTitle)?.trim() || defaultTitle;
         const newEntry = createEntry(title);
-        onSelect(newEntry.id);
+        if (newEntry) {
+            onSelect(newEntry.id);
+        }
     };
 
     // Get sort icon based on sortBy value
@@ -142,8 +144,15 @@ export const JournalSidebar: React.FC<JournalSidebarProps> = ({ selectedEntryId,
                         <li
                             key={entry.id}
                             onClick={() => onSelect(entry.id)}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter' || e.key === ' ') {
+                                    e.preventDefault();
+                                    onSelect(entry.id);
+                                }
+                            }}
+                            tabIndex={0}
                             className={cn(
-                                'group relative cursor-pointer',
+                                'group relative cursor-pointer focus:outline-none focus:ring-2 focus:ring-emerald-500',
                                 entry.id === selectedEntryId ? 'bg-emerald-50 dark:bg-emerald-900/20' : '',
                             )}
                         >

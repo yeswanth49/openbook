@@ -23,8 +23,14 @@ export default function FileUploadZone({
         setIsHovering(true);
     }, []);
 
-    const handleDragLeave = useCallback(() => {
-        setIsHovering(false);
+    const handleDragLeave = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+        e.preventDefault();
+        const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+        const { clientX, clientY } = e;
+        // Only reset hover state if pointer moved outside the drop zone bounds
+        if (clientX < rect.left || clientX > rect.right || clientY < rect.top || clientY > rect.bottom) {
+            setIsHovering(false);
+        }
     }, []);
 
     const validateAndUploadFile = useCallback(
@@ -52,11 +58,22 @@ export default function FileUploadZone({
             setIsHovering(false);
             setError(null);
 
-            const files = e.dataTransfer.files;
+            const files = Array.from(e.dataTransfer.files);
             if (files.length === 0) return;
 
-            const file = files[0];
-            validateAndUploadFile(file);
+            let ignoredCount = 0;
+            files.forEach((file) => {
+                const prevErr = error;
+                validateAndUploadFile(file);
+                // If validateAndUploadFile sets an error we consider the file ignored
+                if (prevErr !== error) {
+                    ignoredCount += 1;
+                }
+            });
+
+            if (ignoredCount > 0) {
+                setError(`${ignoredCount} file${ignoredCount > 1 ? 's were' : ' was'} ignored due to validation errors.`);
+            }
         },
         [validateAndUploadFile],
     );
@@ -67,8 +84,7 @@ export default function FileUploadZone({
             const files = e.target.files;
             if (!files || files.length === 0) return;
 
-            const file = files[0];
-            validateAndUploadFile(file);
+            Array.from(files).forEach(validateAndUploadFile);
 
             // Reset the input
             e.target.value = '';

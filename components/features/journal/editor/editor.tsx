@@ -11,6 +11,7 @@ import { type Block, BlockType } from '@/lib/types';
 import { marked } from 'marked';
 import { useSpaces } from '@/contexts/SpacesContext';
 import { useRouter } from 'next/navigation';
+import DOMPurify from 'dompurify';
 
 interface EditorProps {
     initialBlocks?: Block[];
@@ -95,9 +96,17 @@ export default function Editor({ initialBlocks, onBlocksChange, title, onTitleCh
         // Get plain markdown text
         const markdown = e.clipboardData.getData('text/plain');
         // Parse to HTML
-        const html = await marked.parse(markdown);
-        // Insert HTML at cursor
-        document.execCommand('insertHTML', false, html);
+        const rawHtml = await marked.parse(markdown);
+        // Sanitize HTML to prevent XSS
+        const html = DOMPurify.sanitize(rawHtml);
+
+        // Insert HTML at the current cursor position using Range APIs
+        const selection = window.getSelection();
+        if (!selection || selection.rangeCount === 0) return;
+        const range = selection.getRangeAt(0);
+        range.deleteContents();
+        const fragment = range.createContextualFragment(html);
+        range.insertNode(fragment);
     };
 
     const handleKeyDown = (e: React.KeyboardEvent, blockId: string) => {
@@ -131,12 +140,14 @@ export default function Editor({ initialBlocks, onBlocksChange, title, onTitleCh
             setCurrentBlockId(newBlock.id);
         } else if (e.key === 'Backspace' && block.content === '' && blocks.length > 1) {
             e.preventDefault();
-            const updated = [...blocks];
-            updated.splice(blockIndex, 1);
+            const withoutCurrent = blocks.filter((_, idx) => idx !== blockIndex);
             const newFocus = Math.max(0, blockIndex - 1);
-            updated[newFocus] = { ...updated[newFocus], isFocused: true };
-            updateBlocks(updated);
-            setCurrentBlockId(updated[newFocus].id);
+            const focusedBlocks = withoutCurrent.map((blk, idx) => ({
+                ...blk,
+                isFocused: idx === newFocus,
+            }));
+            updateBlocks(focusedBlocks);
+            setCurrentBlockId(focusedBlocks[newFocus].id);
         } else if (e.key === 'ArrowUp' && !e.shiftKey) {
             // Only handle arrow up if at the start of the text
             const selection = window.getSelection();
@@ -146,9 +157,10 @@ export default function Editor({ initialBlocks, onBlocksChange, title, onTitleCh
 
             if (offset === 0 && blockIndex > 0) {
                 e.preventDefault();
-                const updated = [...blocks];
-                updated.forEach((blk) => (blk.isFocused = false));
-                updated[blockIndex - 1].isFocused = true;
+                const updated = blocks.map((blk, idx) => ({
+                    ...blk,
+                    isFocused: idx === blockIndex - 1,
+                }));
                 updateBlocks(updated);
                 setCurrentBlockId(updated[blockIndex - 1].id);
             }
@@ -162,9 +174,10 @@ export default function Editor({ initialBlocks, onBlocksChange, title, onTitleCh
 
             if (offset === length && blockIndex < blocks.length - 1) {
                 e.preventDefault();
-                const updated = [...blocks];
-                updated.forEach((blk) => (blk.isFocused = false));
-                updated[blockIndex + 1].isFocused = true;
+                const updated = blocks.map((blk, idx) => ({
+                    ...blk,
+                    isFocused: idx === blockIndex + 1,
+                }));
                 updateBlocks(updated);
                 setCurrentBlockId(updated[blockIndex + 1].id);
             }
@@ -233,9 +246,13 @@ export default function Editor({ initialBlocks, onBlocksChange, title, onTitleCh
             // Focus the previous block or the next one if we deleted the first
             const index = blocks.findIndex((block) => block.id === id);
             const newFocusIndex = Math.max(0, index > 0 ? index - 1 : 0);
-            updated[newFocusIndex] = { ...updated[newFocusIndex], isFocused: true };
+            const focusedBlocks = blocks.map((blk, idx) => ({
+                ...blk,
+                isFocused: idx === newFocusIndex,
+            }));
+            updateBlocks(focusedBlocks);
+            setCurrentBlockId(focusedBlocks[newFocusIndex].id);
         }
-        updateBlocks(updated);
     };
 
     const handleDuplicateBlock = (id: string) => {
@@ -249,11 +266,18 @@ export default function Editor({ initialBlocks, onBlocksChange, title, onTitleCh
             isFocused: true,
         };
 
-        const updated = [...blocks];
-        // Remove focus from all blocks
-        updated.forEach((block) => (block.isFocused = false));
-        // Insert the duplicated block after the original
-        updated.splice(index + 1, 0, duplicatedBlock);
+        const updated = blocks.flatMap((blk, idx) => {
+            if (idx === index) {
+                return [
+                    {
+                        ...blk,
+                        isFocused: false,
+                    },
+                    duplicatedBlock,
+                ];
+            }
+            return [{ ...blk, isFocused: false }];
+        });
 
         updateBlocks(updated);
     };
@@ -270,7 +294,12 @@ export default function Editor({ initialBlocks, onBlocksChange, title, onTitleCh
         const newSpaceId = createSpace(spaceName);
         // Compile context and send as initial user message
         const context = selectedBlocks.map((b) => b.content).join('\n\n');
-        addMessage({ role: 'user', content: `Here is the context for your conversation:\n${context}` });
+        addMessage({
+            id: crypto.randomUUID(),
+            role: 'user',
+            content: `Here is the context for your conversation:\n${context}`,
+            timestamp: Date.now(),
+        });
         // Redirect to the new space conversation
         router.push(`/space/${newSpaceId}`);
     };

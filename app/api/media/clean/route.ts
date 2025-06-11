@@ -5,7 +5,8 @@ import { NextRequest, NextResponse } from 'next/server';
 export const runtime = 'edge';
 
 export async function GET(req: NextRequest) {
-    if (req.headers.get('Authorization') !== `Bearer ${serverEnv.CRON_SECRET}`) {
+    // Validate that CRON_SECRET is defined before comparison
+    if (!serverEnv.CRON_SECRET || req.headers.get('Authorization') !== `Bearer ${serverEnv.CRON_SECRET}`) {
         return new NextResponse('Unauthorized', { status: 401 });
     }
 
@@ -68,7 +69,7 @@ async function deleteAllBlobsInFolder(folderPrefix: string): Promise<{ message: 
         } catch (error) {
             console.error(`Error in batch ${batchCount + 1}:`, error);
             // Continue with next batch instead of failing completely
-            break;
+            continue;
         }
     } while (cursor);
 

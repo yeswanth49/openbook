@@ -13,7 +13,7 @@ import { LoadingDots } from '@/components/ui/loading-dots';
 export const MessageLoading: React.FC<{ loadingText?: string }> = ({ loadingText = "Loading…" }) => {
     return (
         <div className="flex items-center gap-2 mt-5 mb-2" role="status" aria-live="polite">
-            <Image src="/m.png" alt="Neuman" className="size-8" width={100} height={100} unoptimized quality={100} />
+            <Image src="/m.png" alt="" role="presentation" className="size-8" width={100} height={100} unoptimized quality={100} />
             <h2 className="text-md font-medium text-neutral-800 dark:text-neutral-200 flex items-center gap-2">
                 Neuman
                 <LoadingDots />
@@ -40,7 +40,15 @@ export const TypingIndicator: React.FC<{ text?: string }> = ({ text = "Streaming
 // Keep the previous API for streaming progress but render an accessible status text
 // so that screen readers are informed about ongoing activity.
 export const StreamingProgress: React.FC<{ progress?: number }> = ({ progress }) => (
-    <span role="status" aria-live="polite" className="sr-only">
+    <progress
+        className="sr-only"
+        value={typeof progress === "number" ? progress : undefined}
+        max={100}
+        aria-valuenow={typeof progress === "number" ? progress : undefined}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-label="Loading"
+    >
         {typeof progress === "number" ? `Loading ${progress}%` : "Loading"}
-    </span>
+    </progress>
 );

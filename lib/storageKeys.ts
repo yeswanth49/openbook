@@ -50,9 +50,9 @@ export const OPENBOOK_STORAGE_KEYS: readonly string[] = [
   USER_ID_KEY,
   
   // Streak data
-  'openbook.streak.count',
-  'openbook.streak.lastVisit',
-  'openbook.streak.lastCelebratedMilestone',
+  'openbook_streak_count',
+  'openbook_streak_lastVisit',
+  'openbook_streak_lastCelebratedMilestone',
 ] as const;
 
 /**
@@ -120,6 +120,10 @@ const KEY_MIGRATIONS: Array<{ from: string; to: string }> = [
   { from: 'journalEntries', to: JOURNAL_ENTRIES_KEY },
   { from: 'sidebar-isOpen', to: SIDEBAR_STATE_KEY },
   { from: 'installPromptDismissed', to: INSTALL_PROMPT_DISMISSED_KEY },
+  // Migrate streak keys from dot notation to underscore notation
+  { from: 'openbook.streak.count', to: 'openbook_streak_count' },
+  { from: 'openbook.streak.lastVisit', to: 'openbook_streak_lastVisit' },
+  { from: 'openbook.streak.lastCelebratedMilestone', to: 'openbook_streak_lastCelebratedMilestone' },
 ];
 
 if (typeof window !== 'undefined') {

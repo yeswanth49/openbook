@@ -75,7 +75,7 @@
         "@types/canvas-confetti": "^1.9.0",
         "@types/dompurify": "^3.0.4",
         "@types/google.maps": "^3.55.12",
-        "@types/node": "^20",
+        "@types/node": "^24",
         "@types/react": "^18",
         "@types/react-dom": "^18",
         "@types/react-syntax-highlighter": "^15.5.13",

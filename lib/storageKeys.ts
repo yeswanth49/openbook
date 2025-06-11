@@ -12,6 +12,12 @@
  * - Validate no duplicate keys exist in the arrays
  */
 
+import { 
+  STREAK_COUNT_KEY, 
+  STREAK_LAST_VISIT_KEY, 
+  STREAK_LAST_CELEBRATED_MILESTONE_KEY 
+} from './streakKeys';
+
 // Main data stores
 export const SPACES_DATA_KEY = 'openbook_spaces_data';
 export const NOTEBOOKS_DATA_KEY = 'openbook_notebooks_data';
@@ -50,9 +56,9 @@ export const OPENBOOK_STORAGE_KEYS: readonly string[] = [
   USER_ID_KEY,
   
   // Streak data
-  'openbook_streak_count',
-  'openbook_streak_lastVisit',
-  'openbook_streak_lastCelebratedMilestone',
+  STREAK_COUNT_KEY,
+  STREAK_LAST_VISIT_KEY,
+  STREAK_LAST_CELEBRATED_MILESTONE_KEY,
 ] as const;
 
 /**
@@ -121,9 +127,9 @@ const KEY_MIGRATIONS: Array<{ from: string; to: string }> = [
   { from: 'sidebar-isOpen', to: SIDEBAR_STATE_KEY },
   { from: 'installPromptDismissed', to: INSTALL_PROMPT_DISMISSED_KEY },
   // Migrate streak keys from dot notation to underscore notation
-  { from: 'openbook.streak.count', to: 'openbook_streak_count' },
-  { from: 'openbook.streak.lastVisit', to: 'openbook_streak_lastVisit' },
-  { from: 'openbook.streak.lastCelebratedMilestone', to: 'openbook_streak_lastCelebratedMilestone' },
+  { from: 'openbook.streak.count', to: STREAK_COUNT_KEY },
+  { from: 'openbook.streak.lastVisit', to: STREAK_LAST_VISIT_KEY },
+  { from: 'openbook.streak.lastCelebratedMilestone', to: STREAK_LAST_CELEBRATED_MILESTONE_KEY },
 ];
 
 if (typeof window !== 'undefined') {

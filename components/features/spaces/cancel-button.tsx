@@ -34,4 +34,4 @@ export const CancelButton: React.FC<CancelButtonProps> = ({ onCancel, isLoading,
 };
 
 // A floating cancel button for mobile usage
-export const FloatingCancelButton: React.FC<CancelButtonProps> = () => null;
+export const FloatingCancelButton: React.FC<CancelButtonProps> = (_) => null;

@@ -9,19 +9,29 @@ import React from 'react';
 // control (e.g., sequential message streaming) continues to work as expected.
 // Once the new animation system is ready, these placeholders will be removed.
 export const TypewriterEffect: React.FC<{ content: string; speed?: number; delay?: number; onComplete?: () => void }> = ({ onComplete }) => {
+    const hasCompletedRef = React.useRef(false);
+
     React.useEffect(() => {
+        if (hasCompletedRef.current) return;
         // Immediately signal completion since no animation is performed.
         onComplete?.();
-    }, [onComplete]);
+        hasCompletedRef.current = true;
+        // eslint-disable-next-line react-hooks/exhaustive-deps -- we intentionally want this to run only once on mount
+    }, []);
 
     return null;
 };
 
 export const TypingMessage: React.FC<{ content: string; onComplete?: () => void; speed?: number }> = ({ onComplete }) => {
+    const hasCompletedRef = React.useRef(false);
+
     React.useEffect(() => {
+        if (hasCompletedRef.current) return;
         // Immediately signal completion since no typing simulation is performed.
         onComplete?.();
-    }, [onComplete]);
+        hasCompletedRef.current = true;
+        // eslint-disable-next-line react-hooks/exhaustive-deps -- we intentionally want this to run only once on mount
+    }, []);
 
     return null;
 };

@@ -18,7 +18,6 @@ interface AIProgressProps {
     isVisible?: boolean;
 }
 
- 
-export const AIProgressIndicator: React.FC<AIProgressProps> = () => null;
+export const AIProgressIndicator: React.FC<AIProgressProps> = (_) => null;
 
-export const WordCountIndicator: React.FC<{ text?: string; isVisible?: boolean }> = () => null;
+export const WordCountIndicator: React.FC<{ text?: string; isVisible?: boolean }> = (_) => null;

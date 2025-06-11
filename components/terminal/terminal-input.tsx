@@ -241,7 +241,7 @@ export function TerminalInput({
     const currentModel = models.find(model => model.value === selectedModel) || models[0];
     
     return (
-      <div className="absolute bottom-full left-0 w-full bg-white/80 dark:bg-neutral-900/80 backdrop-blur-sm rounded-md overflow-hidden mb-1 text-neutral-900 dark:text-white">
+<div className="absolute bottom-full left-0 w-full bg-white/95 dark:bg-neutral-900/95 backdrop-blur-md rounded-md overflow-hidden mb-1 border border-white/20 dark:border-neutral-700/30 shadow-lg text-neutral-900 dark:text-white">
         <div className="p-3">
           <div className="mb-2">
             <div className="text-base font-medium mb-1">Select model</div>
@@ -277,7 +277,7 @@ export function TerminalInput({
 
   // Help panel component
   const HelpPanel = () => (
-    <div className="absolute bottom-full left-0 w-full bg-white/80 dark:bg-neutral-900/80 backdrop-blur-sm rounded-md overflow-hidden mb-1 text-neutral-900 dark:text-white">
+<div className="absolute bottom-full left-0 w-full bg-white/95 dark:bg-neutral-900/95 backdrop-blur-md rounded-md overflow-hidden mb-1 border border-white/20 dark:border-neutral-700/30 shadow-lg text-neutral-900 dark:text-white">
       <div className="p-3">
         <div className="text-base font-medium mb-2">Commands</div>
 
@@ -319,8 +319,7 @@ export function TerminalInput({
 
   // Clear confirmation component
   const ClearConfirmation = () => (
-    <div className="absolute bottom-full left-0 w-full bg-white/80 dark:bg-neutral-900/80 backdrop-blur-sm rounded-md overflow-hidden mb-1 text-neutral-900 dark:text-white">
-      <div className="p-3">
+<div className="absolute bottom-full left-0 w-full bg-white/95 dark:bg-neutral-900/95 backdrop-blur-md rounded-md overflow-hidden mb-1 border border-white/20 dark:border-neutral-700/30 shadow-lg text-neutral-900 dark:text-white">      <div className="p-3">
         <div className="text-base font-medium mb-2">Clear conversation?</div>
         <p className="mb-3 text-xs text-neutral-500 dark:text-neutral-400">
           This will clear all messages. This action cannot be undone.
@@ -361,7 +360,8 @@ export function TerminalInput({
 
       {/* Command suggestions */}
       {showCommands && !activeInterface && (
-        <div className="absolute bottom-full left-0 w-full bg-white/80 dark:bg-neutral-900/80 backdrop-blur-sm rounded-md overflow-hidden mb-1">
+// For the command suggestions dropdown
+<div className="absolute bottom-full left-0 w-full bg-white/99 dark:bg-neutral-900/99 backdrop-blur-md rounded-md overflow-hidden mb-1 border border-white/20 dark:border-neutral-700/30 shadow-lg">
           {commands
             .filter((cmd) => cmd.name.startsWith(value))
             .map((command) => (

@@ -19,7 +19,7 @@ export function renderMainOgImage() {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                backgroundImage: `linear-gradient(135deg, #191919 0%, #2e2e2e 100%), url(${new URL('/screenshots/main-interface.png', import.meta.url).toString()})`,
+                backgroundImage: 'linear-gradient(135deg, #191919 0%, #2e2e2e 100%), url(/screenshots/main-interface.png)',
                 backgroundSize: 'cover',
             }}
         ></div>

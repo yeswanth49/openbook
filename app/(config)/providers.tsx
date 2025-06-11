@@ -10,8 +10,8 @@ import { UserProvider } from '@/contexts/UserContext';
 import { LimitModalProvider } from '@/contexts/LimitModalContext';
 import { MotionProvider } from '@/contexts/MotionContext';
 
-if (typeof window !== 'undefined') {
-    posthog.init(clientEnv.NEXT_PUBLIC_POSTHOG_KEY!, {
+if (typeof window !== 'undefined' && clientEnv.NEXT_PUBLIC_POSTHOG_KEY) {
+    posthog.init(clientEnv.NEXT_PUBLIC_POSTHOG_KEY, {
         api_host: clientEnv.NEXT_PUBLIC_POSTHOG_HOST,
         person_profiles: 'always',
     });

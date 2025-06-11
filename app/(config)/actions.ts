@@ -45,7 +45,7 @@ export async function suggestQuestions(history: any[]) {
 - Do not include instructions or meta-commentary in the questions`,
         messages: history,
         schema: z.object({
-            questions: z.array(z.string()).describe('The generated questions based on the message history.'),
+            questions: z.array(z.string()).length(3).describe('The generated questions based on the message history.'),
         }),
     });
 

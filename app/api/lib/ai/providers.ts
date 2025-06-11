@@ -16,14 +16,14 @@ const middleware = extractReasoningMiddleware({
 // Custom provider with multiple AI models
 export const neuman = customProvider({
   languageModels: {
-    'neuman-default': openai('o4-mini-2025-04-16'),
+    'neuman-default': openai('o4-mini'),
     'neuman-grok-3': xai('grok-3-fast-beta'),
     'neuman-vision': xai('grok-2-vision-1212'),
     'neuman-4o': openai('gpt-4o', {
       structuredOutputs: true,
     }),
     'neuman-4.1-nano': openai('gpt-4.1-nano', {}),
-    'neuman-o4-mini': openai.responses('o4-mini-2025-04-16'),
+    'neuman-o4-mini': openai('o4-mini'),
     'neuman-qwq': wrapLanguageModel({
       model: groq('qwen-qwq-32b'),
       middleware,
@@ -42,48 +42,29 @@ export const neuman = customProvider({
  * Get provider-specific options based on model
  */
 export function getProviderOptions(model: string) {
+  const baseOptions = {
+    neuman: {},
+    google: {},
+    openai: {},
+    xai: {},
+    anthropic: { thinking: { type: 'enabled', budgetTokens: 12000 } },
+  } as Record<string, Record<string, unknown>>;
+
+  const modelSpecificOptions: Record<string, Record<string, unknown>> = {
+    'neuman-default': { neuman: { reasoningEffort: 'high' } },
+    'neuman-o4-mini': {
+      neuman: { reasoningEffort: 'medium' },
+      openai: { reasoningEffort: 'medium' },
+    },
+    'neuman-google': {
+      neuman: { thinkingConfig: { thinkingBudget: 5000 } },
+      google: { thinkingConfig: { thinkingBudget: 5000 } },
+    },
+  };
+
   return {
-    neuman: {
-      ...(model === 'neuman-default'
-        ? {
-            reasoningEffort: 'high',
-          }
-        : {}),
-      ...(model === 'neuman-o4-mini'
-        ? {
-            reasoningEffort: 'medium',
-          }
-        : {}),
-      ...(model === 'neuman-google'
-        ? {
-            thinkingConfig: {
-              thinkingBudget: 5000,
-            },
-          }
-        : {}),
-    },
-    google: {
-      thinkingConfig: {
-        thinkingBudget: 5000,
-      },
-    },
-    openai: {
-      ...(model === 'neuman-o4-mini'
-        ? {
-            reasoningEffort: 'medium',
-          }
-        : {}),
-    },
-    xai: {
-      ...(model === 'neuman-default'
-        ? {
-            reasoningEffort: 'high',
-          }
-        : {}),
-    },
-    anthropic: {
-      thinking: { type: 'enabled', budgetTokens: 12000 },
-    },
+    ...baseOptions,
+    ...(modelSpecificOptions[model] || {}),
   };
 }
 

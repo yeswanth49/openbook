@@ -1,4 +1,6 @@
-// @ts-nocheck
+/**
+ * NOTE: TypeScript checking is enabled for this file. Any type issues should be addressed rather than suppressed.
+ */
 /**
  * Main AI Chat API Route
  * Handles streaming chat with academic search and reason search tools
@@ -13,9 +15,9 @@ import {
     generateObject,
     NoSuchToolError,
     extractReasoningMiddleware,
-    DataStream,
 } from 'ai';
 import { z } from 'zod';
+import { debugLog } from '@/lib/logger';
 
 // Shared tools and services
 import { academicSearchTool } from '../lib/ai/tools/academic-search';
@@ -28,18 +30,28 @@ const middleware = extractReasoningMiddleware({
 
 export async function POST(req: Request) {
     const { messages, model, group, user_id, timezone } = await req.json();
-    const { tools: activeTools, instructions } = await getGroupConfig(group);
 
-    console.log('--------------------------------');
-    console.log('Messages received:', JSON.stringify(messages, null, 2));
-    console.log('Messages count:', messages.length);
-    console.log('--------------------------------');
-    console.log('Running with model: ', model.trim());
-    console.log('Group: ', group);
-    console.log('Timezone: ', timezone);
+    let activeTools: any;
+    let instructions: string | undefined;
+    try {
+        ({ tools: activeTools, instructions } = await getGroupConfig(group));
+    } catch (error: unknown) {
+        debugLog('Error fetching group config:', error);
+        return new Response(JSON.stringify({ error: 'Failed to load group configuration' }), {
+            status: 500,
+        });
+    }
+
+    debugLog('--------------------------------');
+    debugLog('Messages received:', JSON.stringify(messages, null, 2));
+    debugLog('Messages count:', messages.length);
+    debugLog('--------------------------------');
+    debugLog('Running with model: ', model.trim());
+    debugLog('Group: ', group);
+    debugLog('Timezone: ', timezone);
 
     return createDataStreamResponse({
-        execute: async (dataStream: DataStream) => {
+        execute: async (dataStream: any) => {
             const result = streamText({
                 model: neuman.languageModel(model),
                 messages: convertToCoreMessages(messages),
@@ -48,7 +60,7 @@ export async function POST(req: Request) {
                 experimental_activeTools: [...activeTools],
                 system: instructions,
                 toolChoice: 'auto',
-                providerOptions: getProviderOptions(model),
+                providerOptions: getProviderOptions(model) as any,
                 tools: {
                     academic_search: academicSearchTool,
                     reason_search: tool({
@@ -61,6 +73,9 @@ export async function POST(req: Request) {
                             return await executeReasonSearch(topic, depth, dataStream);
                         },
                     }),
+                    // The code interpreter below **does not execute code for real** – it only simulates
+                    // execution and returns a descriptive message. This is purely for demonstration
+                    // purposes and to avoid the security risks of arbitrary code execution.
                     code_interpreter: tool({
                         description: 'Execute Python code for calculations, data analysis, and computations.',
                         parameters: z.object({
@@ -148,15 +163,15 @@ export async function POST(req: Request) {
                         return null;
                     }
 
-                    console.log('Fixing tool call================================');
-                    console.log('toolCall', toolCall);
-                    console.log('tools', tools);
-                    console.log('parameterSchema', parameterSchema);
-                    console.log('error', error);
+                    debugLog('Fixing tool call================================');
+                    debugLog('toolCall', toolCall);
+                    debugLog('tools', tools);
+                    debugLog('parameterSchema', parameterSchema);
+                    debugLog('error', error);
 
                     const toolDefinition = tools[toolCall.toolName as keyof typeof tools];
                     if (!toolDefinition) {
-                        console.error(`Tool "${toolCall.toolName}" not found for repair.`);
+                        debugLog(`Tool "${toolCall.toolName}" not found for repair.`);
                         return null;
                     }
 
@@ -174,35 +189,35 @@ export async function POST(req: Request) {
                         ].join('\n'),
                     });
 
-                    console.log('repairedArgs', repairedArgs);
+                    debugLog('repairedArgs', repairedArgs);
 
                     return {
                         toolCallId: toolCall.toolCallId,
                         toolName: toolCall.toolName,
                         args: repairedArgs,
-                    };
+                    } as any;
                 },
                 // Event handlers for debugging and monitoring
                 onChunk(event) {
                     if (event.chunk.type === 'tool-call') {
-                        console.log('Called Tool: ', event.chunk.toolName);
+                        debugLog('Called Tool: ', event.chunk.toolName);
                     }
                 },
                 onStepFinish(event) {
                     if (event.warnings) {
-                        console.log('Warnings: ', event.warnings);
+                        debugLog('Warnings: ', event.warnings);
                     }
                 },
                 onFinish(event) {
-                    console.log('Fin reason: ', event.finishReason);
-                    console.log('Reasoning: ', event.reasoning);
-                    console.log('reasoning details: ', event.reasoningDetails);
-                    console.log('Steps: ', event.steps);
-                    console.log('Messages: ', event.response.messages);
-                    console.log('Response: ', event.response);
+                    debugLog('Fin reason: ', event.finishReason);
+                    debugLog('Reasoning: ', event.reasoning);
+                    debugLog('reasoning details: ', event.reasoningDetails);
+                    debugLog('Steps: ', event.steps);
+                    debugLog('Messages: ', event.response.messages);
+                    debugLog('Response: ', event.response);
                 },
                 onError(event) {
-                    console.log('Error: ', event.error);
+                    debugLog('Error: ', event.error);
                 },
             });
 

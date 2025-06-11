@@ -22,9 +22,9 @@ export const JOURNAL_ENTRIES_KEY = 'journalEntries'; // TODO: Consider migrating
 // UI preferences and settings
 export const SIDEBAR_STATE_KEY = 'sidebar-isOpen';
 export const ANIMATIONS_PREFERENCE_KEY = 'enableAnimations';
-export const SELECTED_MODEL_KEY = 'neuman-selected-model';
+export const SELECTED_MODEL_KEY = 'openbook_selected_model';
 export const INSTALL_PROMPT_DISMISSED_KEY = 'installPromptDismissed';
-export const USER_ID_KEY = 'mem0_user_id';
+export const USER_ID_KEY = 'openbook_user_id';
 
 /**
  * All localStorage keys used by the OpenBook application
@@ -90,13 +90,14 @@ export function clearAllStorageData(clearPreferences: boolean = true): void {
     localStorage.removeItem(key);
   });
   
-  // Fallback: safely clear any remaining keys that match whitelisted OpenBook prefixes
-  Object.keys(localStorage).forEach((key) => {
-    const isOpenBookKey = OPENBOOK_PREFIX_WHITELIST.some(prefix => key.startsWith(prefix));
-    if (isOpenBookKey && !OPENBOOK_STORAGE_KEYS.includes(key as any)) {
-      // Only remove keys that match our whitelist but aren't in our explicit list
-      // This helps catch any forgotten keys while being safe
-      localStorage.removeItem(key);
-    }
-  });
+  // Fallback: if the caller opted to clear preferences, remove any additional
+  // OpenBook-prefixed keys that we might have forgotten to whitelist explicitly.
+  if (clearPreferences) {
+    Object.keys(localStorage).forEach((key) => {
+      const isOpenBookKey = OPENBOOK_PREFIX_WHITELIST.some((prefix) => key.startsWith(prefix));
+      if (isOpenBookKey && !OPENBOOK_STORAGE_KEYS.includes(key as any)) {
+        localStorage.removeItem(key);
+      }
+    });
+  }
 } 

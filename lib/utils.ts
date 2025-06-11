@@ -14,13 +14,29 @@ export function generateId(prefix: string): string {
 }
 
 export function getUserId(): string {
-    if (typeof window === 'undefined') return ''; // Good guard for localStorage
+    if (typeof window === 'undefined') return ''; // Guard for SSR
 
+    // Attempt to read the canonical key first
     let userId = localStorage.getItem(USER_ID_KEY);
+
+    // One-time migration from the legacy key (pre-v0.9)
+    const LEGACY_USER_ID_KEY = 'mem0_user_id';
+    if (!userId) {
+        const legacyId = localStorage.getItem(LEGACY_USER_ID_KEY);
+        if (legacyId) {
+            userId = legacyId;
+            // Persist under the new key and clean up the old one
+            localStorage.setItem(USER_ID_KEY, legacyId);
+            localStorage.removeItem(LEGACY_USER_ID_KEY);
+        }
+    }
+
+    // Generate a fresh ID if neither current nor legacy keys existed
     if (!userId) {
         userId = generateId('user');
         localStorage.setItem(USER_ID_KEY, userId);
     }
+
     return userId;
 }
 

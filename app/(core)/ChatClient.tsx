@@ -61,6 +61,23 @@ const HomeContent = () => {
     // Set Google Gemini 2.5 Flash as the default model
     const [selectedModel, setSelectedModel] = useLocalStorage(SELECTED_MODEL_KEY, 'neuman-google');
 
+    // One-time migration: move previously saved model from the legacy key
+    useEffect(() => {
+        const legacyKey = 'neuman-selected-model';
+        if (typeof window === 'undefined') return;
+
+        // Only migrate if the legacy key exists and the new key is still empty
+        const legacyValue = localStorage.getItem(legacyKey);
+        const currentValue = localStorage.getItem(SELECTED_MODEL_KEY);
+        if (legacyValue && !currentValue) {
+            localStorage.setItem(SELECTED_MODEL_KEY, legacyValue);
+            localStorage.removeItem(legacyKey);
+
+            // Update React state so the UI reflects the migrated value immediately
+            setSelectedModel(legacyValue);
+        }
+    }, [setSelectedModel]);
+
     const initialState = useMemo(
         () => ({
             query: query || q,

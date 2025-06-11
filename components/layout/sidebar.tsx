@@ -33,7 +33,7 @@ import { useNotebooks } from '@/contexts/NotebookContext';
 import { useRouter } from 'next/navigation';
 import { useJournal } from '@/hooks/useJournal';
 import { cn } from '@/lib/utils';
-import { clearAllStorageData, STORAGE_KEY_CATEGORIES } from '@/lib/storageKeys';
+import { clearAllStorageData } from '@/lib/storageKeys';
 import { ConversationMetadata } from '@/components/features/spaces/conversation-metadata';
 import { ConversationNameDisplay, NameLoading } from '@/components/features/spaces/loading/name-loading';
 import { format } from 'date-fns';

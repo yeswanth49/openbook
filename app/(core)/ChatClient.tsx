@@ -3,8 +3,7 @@ import 'katex/dist/katex.min.css';
 
 import { AnimatePresence, motion } from 'framer-motion';
 import { useChat, UseChatOptions, Message } from '@ai-sdk/react';
-import { CalendarBlank, Clock as PhosphorClock, Info } from '@phosphor-icons/react';
-import { Switch } from '@/components/ui/switch';
+import { Info } from '@phosphor-icons/react';
 import { parseAsString, useQueryState } from 'nuqs';
 import { useTheme } from 'next-themes';
 import { toast } from 'sonner';
@@ -39,6 +38,8 @@ import { TerminalInput } from '@/components/features/spaces/input/input-content-
 import { useStudyMode } from '@/contexts/StudyModeContext';
 import { StudyModeBadge } from '@/components/features/study/study-mode-badge';
 import { StudyFramework } from '@/lib/types';
+import { Streak } from '@/components/features/spaces/Streak';
+import { SurprisePromptButton } from '@/components/features/spaces/SurprisePromptButton';
 
 interface Attachment {
     name: string;
@@ -423,97 +424,27 @@ const HomeContent = () => {
     }, [status]);
 
     const WidgetSection = memo(() => {
-        const [currentTime, setCurrentTime] = useState(new Date());
-        const timerRef = useRef<NodeJS.Timeout>();
-
-        useEffect(() => {
-            // Sync with the nearest second
-            const now = new Date();
-            const delay = 1000 - now.getMilliseconds();
-
-            // Initial sync
-            const timeout = setTimeout(() => {
-                setCurrentTime(new Date());
-
-                // Then start the interval
-                timerRef.current = setInterval(() => {
-                    setCurrentTime(new Date());
-                }, 1000);
-            }, delay);
-
-            return () => {
-                clearTimeout(timeout);
-                if (timerRef.current) {
-                    clearInterval(timerRef.current);
-                }
-            };
-        }, []);
-
-        // Get user's timezone
-        const timezone = new Intl.DateTimeFormat().resolvedOptions().timeZone;
-
-        // Format date and time with timezone
-        const dateFormatter = new Intl.DateTimeFormat('en-US', {
-            weekday: 'short',
-            month: 'short',
-            day: 'numeric',
-            timeZone: timezone,
-        });
-
-        const timeFormatter = new Intl.DateTimeFormat('en-US', {
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: true,
-            timeZone: timezone,
-        });
-
-        const formattedDate = dateFormatter.format(currentTime);
-        const formattedTime = timeFormatter.format(currentTime);
-
-        const handleDateTimeClick = useCallback(() => {
-            if (status !== 'ready') return;
-
-            appendWithPersist({
-                content: `What's the current date and time?`,
-                role: 'user',
-            });
-
-            lastSubmittedQueryRef.current = `What's the current date and time?`;
-            setHasSubmitted(true);
-        }, []);
+        const handleSurprisePrompt = useCallback(
+            (prompt: string) => {
+                if (status !== 'ready') return;
+                appendWithPersist({
+                    content: prompt,
+                    role: 'user',
+                });
+                lastSubmittedQueryRef.current = prompt;
+                setHasSubmitted(true);
+            },
+            [status, appendWithPersist, setHasSubmitted],
+        );
 
         return (
             <div className="w-full mt-0 sm:mt-2 md:mt-4">
                 <div className="flex flex-wrap gap-2 sm:gap-3 justify-center">
-                    {/* Time Widget */}
-                    <Button
-                        variant="outline"
-                        className="group flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-800 hover:shadow-xs transition-all h-auto"
-                        onClick={handleDateTimeClick}
-                    >
-                        <PhosphorClock
-                            weight="duotone"
-                            className="h-4 w-4 sm:h-5 sm:w-5 text-blue-500 dark:text-blue-400 group-hover:scale-110 transition-transform"
-                        />
-                        <span className="text-xs sm:text-sm text-neutral-700 dark:text-neutral-300 font-medium">
-                            {formattedTime}
-                        </span>
-                    </Button>
+                    {/* Daily streak indicator */}
+                    <Streak />
 
-                    {/* Date Widget */}
-                    <Button
-                        variant="outline"
-                        className="group flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-800 hover:shadow-xs transition-all h-auto"
-                        onClick={handleDateTimeClick}
-                    >
-                        <CalendarBlank
-                            weight="duotone"
-                            className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-500 dark:text-emerald-400 group-hover:scale-110 transition-transform"
-                        />
-                        <span className="text-xs sm:text-sm text-neutral-700 dark:text-neutral-300 font-medium">
-                            {formattedDate}
-                        </span>
-                    </Button>
+                    {/* Surprise prompt button */}
+                    <SurprisePromptButton onPrompt={handleSurprisePrompt} />
                 </div>
             </div>
         );

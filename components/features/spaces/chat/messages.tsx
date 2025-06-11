@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useRef, useEffect, useCallback } from 'react';
+import React, { useMemo, useState, useRef, useEffect } from 'react';
 import { Message } from '@/components/features/spaces/chat/message';
 import { TextUIPart, ReasoningUIPart, ToolInvocationUIPart, SourceUIPart } from '@ai-sdk/ui-utils';
 import { ReasoningPartView, ReasoningPart } from '@/components/features/spaces/chat/reasoning-part';
@@ -11,7 +11,6 @@ import ToolInvocationListView from '@/components/features/spaces/chat/tool-invoc
 import { motion, AnimatePresence } from 'framer-motion';
 import { MessageLoading, TypingIndicator, StreamingProgress } from '@/components/features/spaces/chat/message-loading';
 import { TypingMessage } from '@/components/features/spaces/chat/message-typing';
-import { CancelButton, FloatingCancelButton } from '@/components/features/spaces/cancel-button';
 import { AIProgressIndicator, WordCountIndicator } from '@/components/features/spaces/loading/progress-indicators';
 import AddToJournalButton from '@/components/features/spaces/add-to-journal-button';
 import { LoadingDots } from '@/components/ui/loading-dots';
@@ -496,32 +495,6 @@ const Messages: React.FC<MessagesProps> = ({
         await reload();
     };
 
-    // Handle cancel request
-    const handleCancel = () => {
-        // Stop ongoing request
-        if (status === 'submitted' || status === 'streaming') {
-            stop();
-
-            // Remove incomplete assistant message if exists
-            const newMessages = [...messages];
-            if (newMessages.length > 0 && newMessages[newMessages.length - 1].role === 'assistant') {
-                // Only remove if it seems incomplete (no content or very short)
-                const lastMessage = newMessages[newMessages.length - 1];
-                if (!lastMessage.content || lastMessage.content.length < 20) {
-                    newMessages.pop();
-                    setMessages(newMessages);
-                }
-            }
-
-            // Reset states
-            thinkingStartTime.current = null;
-            streamStartTime.current = null;
-            setThinkingDuration(0);
-            setStreamProgress(0);
-            setShowAdvancedProgress(false);
-        }
-    };
-
     // Generate loading text based on thinking duration
     const getLoadingText = () => {
         if (thinkingDuration <= 3) return 'Thinking...';
@@ -648,11 +621,6 @@ const Messages: React.FC<MessagesProps> = ({
                         transition={{ duration: 0.3 }}
                     >
                         <MessageLoading showThinking={true} loadingText={getLoadingText()} />
-
-                        {/* Cancel button during thinking phase */}
-                        <div className="flex justify-center mt-2">
-                            <CancelButton onCancel={handleCancel} isLoading={isJustThinking} status={status} />
-                        </div>
                     </motion.div>
                 )}
             </AnimatePresence>
@@ -674,11 +642,6 @@ const Messages: React.FC<MessagesProps> = ({
                             {streamProgress > 0 && streamProgress < 100 && (
                                 <StreamingProgress progress={streamProgress} />
                             )}
-
-                            {/* Cancel button during streaming phase */}
-                            <div className="flex justify-center mt-2">
-                                <CancelButton onCancel={handleCancel} isLoading={isStreaming} status={status} />
-                            </div>
                         </motion.div>
                     )}
             </AnimatePresence>
@@ -708,18 +671,6 @@ const Messages: React.FC<MessagesProps> = ({
                     >
                         <TypingIndicator />
                     </motion.div>
-                )}
-            </AnimatePresence>
-
-            {/* Floating cancel button for mobile */}
-            <AnimatePresence>
-                {isLoading && (
-                    <FloatingCancelButton
-                        onCancel={handleCancel}
-                        isLoading={isLoading}
-                        status={status}
-                        className="sm:hidden" // Only show on mobile
-                    />
                 )}
             </AnimatePresence>
 

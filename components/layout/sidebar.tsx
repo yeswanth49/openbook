@@ -626,7 +626,16 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
 
                         <div className="p-4">
                             <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-4">
-                                Clear all local storage? This will delete all your data and cannot be undone.
+                                This will permanently delete all your data including:
+                            </p>
+                            <ul className="text-xs text-neutral-500 dark:text-neutral-400 mb-4 list-disc list-inside space-y-1">
+                                <li>All spaces and conversations</li>
+                                <li>All journal entries</li>
+                                <li>All notebooks</li>
+                                <li>User preferences and settings</li>
+                            </ul>
+                            <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-4 font-medium">
+                                This action cannot be undone.
                             </p>
 
                             <div className="flex justify-end gap-2">
@@ -640,12 +649,33 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                                 <button
                                     className="px-3 py-1.5 text-xs font-medium rounded-md bg-red-500/80 text-white hover:bg-red-600 transition-colors"
                                     onClick={() => {
-                                        // Clear only app-specific keys
+                                        // Clear all application data
+                                        const keysToRemove = [
+                                            // Main data stores
+                                            'openbook_spaces_data',
+                                            'openbook_notebooks_data', 
+                                            'openbook_study_modes',
+                                            'openbook_user_data',
+                                            'journalEntries',
+                                            // UI preferences
+                                            'sidebar-isOpen',
+                                            'enableAnimations',
+                                            'neuman-selected-model',
+                                            'installPromptDismissed',
+                                            'mem0_user_id'
+                                        ];
+                                        
+                                        keysToRemove.forEach((key) => {
+                                            localStorage.removeItem(key);
+                                        });
+                                        
+                                        // Also clear any remaining keys that start with openbook_
                                         Object.keys(localStorage).forEach((key) => {
                                             if (key.startsWith('openbook_')) {
                                                 localStorage.removeItem(key);
                                             }
                                         });
+                                        
                                         // Use router navigation instead of reload
                                         router.push('/');
                                         setShowClearStorageConfirm(false);

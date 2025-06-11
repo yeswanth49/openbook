@@ -1,0 +1,156 @@
+'use client';
+
+import React, { useState, useEffect } from 'react';
+import { StudyFramework } from '@/lib/types';
+import { getFrameworkDisplayName, getFrameworkDescription, getFrameworkIcon } from '@/lib/study-prompts';
+import { motion, AnimatePresence } from 'framer-motion';
+
+interface StudyFrameworkPickerProps {
+    onSelect: (framework: StudyFramework) => void;
+    onClose: () => void;
+    className?: string;
+}
+
+export function StudyFrameworkPicker({ onSelect, onClose, className = '' }: StudyFrameworkPickerProps) {
+    const [selectedIndex, setSelectedIndex] = useState(0);
+    const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+
+    const frameworks = React.useMemo(
+        () => [
+            StudyFramework.MemoryPalace,
+            StudyFramework.FeynmanTechnique,
+            StudyFramework.SpacedRepetition,
+            StudyFramework.ExtremeMode,
+        ],
+        [],
+    );
+
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            switch (e.key) {
+                case '1':
+                case '2':
+                case '3':
+                case '4': {
+                    e.preventDefault();
+                    const index = parseInt(e.key, 10) - 1;
+                    if (index >= 0 && index < frameworks.length) {
+                        onSelect(frameworks[index]);
+                    }
+                    break;
+                }
+                case 'ArrowUp':
+                    e.preventDefault();
+                    setSelectedIndex((prev) => (prev > 0 ? prev - 1 : frameworks.length - 1));
+                    break;
+                case 'ArrowDown':
+                    e.preventDefault();
+                    setSelectedIndex((prev) => (prev < frameworks.length - 1 ? prev + 1 : 0));
+                    break;
+                case 'ArrowLeft':
+                    e.preventDefault();
+                    setSelectedIndex((prev) => (prev > 0 ? prev - 1 : frameworks.length - 1));
+                    break;
+                case 'ArrowRight':
+                    e.preventDefault();
+                    setSelectedIndex((prev) => (prev < frameworks.length - 1 ? prev + 1 : 0));
+                    break;
+                case 'Enter':
+                    e.preventDefault();
+                    onSelect(frameworks[selectedIndex]);
+                    break;
+                case 'Escape':
+                    e.preventDefault();
+                    onClose();
+                    break;
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [selectedIndex, frameworks, onSelect, onClose]);
+
+    return (
+        <motion.div 
+            className={`
+                absolute bottom-full left-0 w-80 mb-2 z-[70]
+                bg-white/80 dark:bg-neutral-900/80 
+                backdrop-blur-xl backdrop-saturate-150
+                border border-white/30 dark:border-neutral-700/40
+                shadow-xl shadow-black/5 dark:shadow-black/20
+                rounded-lg overflow-hidden 
+                text-neutral-900 dark:text-white
+                ${className}
+            `}
+            initial={{ opacity: 0, y: 10, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 10, scale: 0.95 }}
+            transition={{ 
+                duration: 0.2, 
+                ease: [0.4, 0.0, 0.2, 1] 
+            }}
+        >
+            <div className="p-2">
+                <div className="text-xs font-medium mb-2 text-neutral-800 dark:text-neutral-100">
+                    Study Framework
+                </div>
+
+                <div className="grid grid-cols-2 gap-1.5 mb-2">
+                    {frameworks.map((framework, index) => {
+                        const isSelected = index === selectedIndex;
+                        const isHovered = hoveredIndex === index;
+                        const displayIndex = index + 1;
+
+                        return (
+                            <motion.div
+                                key={framework}
+                                className={`
+                                    p-2 rounded cursor-pointer transition-all duration-150 
+                                    border backdrop-blur-sm
+                                    ${
+                                        isSelected || isHovered
+                                            ? 'bg-white/50 dark:bg-neutral-800/50 border-neutral-300/40 dark:border-neutral-600/40 shadow-md'
+                                            : 'bg-white/20 dark:bg-neutral-800/20 border-neutral-200/20 dark:border-neutral-700/20 hover:bg-white/40 dark:hover:bg-neutral-800/40'
+                                    }
+                                `}
+                                onClick={() => onSelect(framework)}
+                                onMouseEnter={() => setHoveredIndex(index)}
+                                onMouseLeave={() => setHoveredIndex(null)}
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
+                            >
+                                <div className="flex items-center gap-1 mb-0.5">
+                                    <span className="text-sm">{getFrameworkIcon(framework)}</span>
+                                    <span className="text-[9px] text-neutral-500 dark:text-neutral-400 font-mono bg-neutral-100/40 dark:bg-neutral-700/40 px-0.5 py-0.5 rounded">
+                                        {displayIndex}
+                                    </span>
+                                </div>
+                                <div className="text-[11px] font-medium mb-0.5 text-neutral-800 dark:text-neutral-100">
+                                    {getFrameworkDisplayName(framework)}
+                                </div>
+                                <div className="text-[9px] text-neutral-600 dark:text-neutral-400 leading-tight">
+                                    {getFrameworkDescription(framework)}
+                                </div>
+                            </motion.div>
+                        );
+                    })}
+                </div>
+
+                <div className="border-t border-neutral-200/20 dark:border-neutral-700/20 pt-1.5">
+                    <div className="text-[9px] text-neutral-500 dark:text-neutral-400">
+                        <div className="flex justify-between items-center">
+                            <span className="flex items-center gap-1">
+                                <span className="bg-neutral-100/40 dark:bg-neutral-700/40 px-0.5 py-0.5 rounded font-mono text-[8px]">1-4</span>
+                                <span>select</span>
+                            </span>
+                            <span className="flex items-center gap-1">
+                                <span className="bg-neutral-100/40 dark:bg-neutral-700/40 px-0.5 py-0.5 rounded font-mono text-[8px]">esc</span>
+                                <span>close</span>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </motion.div>
+    );
+} 

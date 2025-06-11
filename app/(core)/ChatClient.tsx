@@ -34,7 +34,7 @@ import Messages from '@/components/features/spaces/chat/messages';
 import { Input } from '@/components/ui/input';
 import Sidebar from '@/components/layout/sidebar';
 import { useSpaces, type ChatMessage } from '@/contexts/SpacesContext'; // Adjusted path, assuming ChatMessage is exported from index of SpacesContext
-import { TerminalInput } from '@/components/features/spaces/input/input-content-box';
+import { ChatInput } from '@/components/features/spaces/input/input-content-box';
 import { useStudyMode } from '@/contexts/StudyModeContext';
 import { StudyModeBadge } from '@/components/features/study/study-mode-badge';
 import { StudyFramework } from '@/lib/types';
@@ -514,7 +514,7 @@ const HomeContent = () => {
                         )}
                         {messages.length === 0 && !hasSubmitted && (
                             <div className="!mt-4 bg-white/60 dark:bg-neutral-900/60 backdrop-blur-sm rounded-md p-1">
-                                <TerminalInput
+                                <ChatInput
                                     value={input}
                                     onChange={setInput}
                                     onSubmit={() => {
@@ -535,14 +535,14 @@ const HomeContent = () => {
                                             });
                                         }, 100);
                                     }}
-                                    selectedModel={selectedModel}
-                                    setSelectedModel={setSelectedModel}
-                                    selectedGroup={selectedGroup}
-                                    setSelectedGroup={setSelectedGroup}
-                                    fileInputRef={fileInputRef}
-                                    attachments={attachments}
-                                    setAttachments={setAttachments}
                                     onStop={stop}
+                                    selectedModel={selectedModel}
+                                    onModelChange={setSelectedModel}
+                                    selectedGroup={selectedGroup}
+                                    onGroupChange={setSelectedGroup}
+                                    attachments={attachments}
+                                    onAttachmentsChange={setAttachments}
+                                    fileInputRef={fileInputRef}
                                     status={status}
                                     onFrameworkSelect={handleFrameworkSelect}
                                 />
@@ -604,7 +604,7 @@ const HomeContent = () => {
                         >
                             <div className="w-[95%] xs:w-[90%] sm:max-w-2xl md:max-w-3xl mx-auto px-2 xs:px-3 sm:px-4 md:px-6 pointer-events-auto">
                                 <div className="bg-white/60 dark:bg-neutral-900/60 backdrop-blur-sm rounded-md p-1 sm:p-1.5 shadow-lg w-full">
-                                    <TerminalInput
+                                    <ChatInput
                                         value={input}
                                         onChange={setInput}
                                         onSubmit={() => {
@@ -625,14 +625,14 @@ const HomeContent = () => {
                                                 });
                                             }, 100);
                                         }}
-                                        selectedModel={selectedModel}
-                                        setSelectedModel={setSelectedModel}
-                                        selectedGroup={selectedGroup}
-                                        setSelectedGroup={setSelectedGroup}
-                                        fileInputRef={fileInputRef}
-                                        attachments={attachments}
-                                        setAttachments={setAttachments}
                                         onStop={stop}
+                                        selectedModel={selectedModel}
+                                        onModelChange={setSelectedModel}
+                                        selectedGroup={selectedGroup}
+                                        onGroupChange={setSelectedGroup}
+                                        attachments={attachments}
+                                        onAttachmentsChange={setAttachments}
+                                        fileInputRef={fileInputRef}
                                         status={status}
                                         onFrameworkSelect={handleFrameworkSelect}
                                     />

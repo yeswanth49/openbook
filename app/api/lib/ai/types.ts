@@ -48,18 +48,20 @@ export interface ProcessedResult {
 
 export interface SearchResult {
   type: 'web' | 'academic' | 'x';
-  query: ResearchPlan['search_queries'][0];
+  query: SearchQuery;
   results: ProcessedResult[];
 }
 
 // Final synthesis type
 export interface FinalSynthesis {
-  key_findings: Array<{
-    finding: string;
-    confidence: number;
-    supporting_evidence: string[];
-  }>;
+  key_findings: KeyFinding[];
   remaining_uncertainties: string[];
+}
+
+export interface KeyFinding {
+  finding: string;
+  confidence: number;
+  supporting_evidence: string[];
 }
 
 // Reason search result type
@@ -91,10 +93,10 @@ export interface ExaResult {
 }
 
 // Research plan structure for reason_search tool
-export interface ResearchPlan {
-  search_queries: SearchQuery[];
-  required_analyses: RequiredAnalysis[];
-}
+// export interface ResearchPlan {
+//   search_queries: SearchQuery[];
+//   required_analyses: RequiredAnalysis[];
+// }
 
 export interface SearchQuery {
   query: string;
@@ -107,21 +109,6 @@ export interface RequiredAnalysis {
   type: string;
   description: string;
   importance: number;
-}
-
-// Search result types
-export interface SearchResult {
-  type: 'web' | 'academic' | 'x';
-  query: SearchQuery;
-  results: ProcessedResult[];
-}
-
-export interface ProcessedResult {
-  source: 'web' | 'academic' | 'x';
-  title: string;
-  url: string;
-  content: string;
-  tweetId?: string; // Only for X/Twitter results
 }
 
 // Analysis result types
@@ -163,18 +150,6 @@ export interface RecommendedAction {
   priority: number;
 }
 
-// Final synthesis types
-export interface FinalSynthesis {
-  key_findings: KeyFinding[];
-  remaining_uncertainties: string[];
-}
-
-export interface KeyFinding {
-  finding: string;
-  confidence: number;
-  supporting_evidence: string[];
-}
-
 // Progress tracking types
 export interface ProgressUpdate {
   id: string;
@@ -203,16 +178,14 @@ export interface AcademicSearchOptions {
   summary?: boolean;
 }
 
-
-
 // Reason search specific types
 export interface ReasonSearchOptions {
   topic: string;
   depth: 'basic' | 'advanced';
 }
 
-export interface ReasonSearchResult {
-  plan: ResearchPlan;
-  results: SearchResult[];
-  synthesis: FinalSynthesis;
-} 
+// export interface ReasonSearchResult {
+//   plan: ResearchPlan;
+//   results: SearchResult[];
+//   synthesis: FinalSynthesis;
+// } 

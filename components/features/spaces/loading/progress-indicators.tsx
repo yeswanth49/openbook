@@ -8,8 +8,9 @@
 import React from 'react';
 
 interface AIProgressProps {
-    // Keep the prop definitions so existing callers remain type-safe,
-    // but they are no longer used in this interim implementation.
+    // TODO: [TICKET-XXX] These props are retained for type safety but are currently unused.
+    // When the redesigned progress UI is implemented, ensure each prop is properly consumed
+    // or remove it if no longer necessary.
     status?: string;
     startTime?: number | null;
     estimatedTokens?: number;

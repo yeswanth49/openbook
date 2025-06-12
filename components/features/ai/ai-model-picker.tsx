@@ -45,7 +45,7 @@ export function AiModelPicker({ selectedModel, onSelect, onClose, className = ''
     return (
         <motion.div 
             className={`
-                absolute bottom-full left-0 w-80 mb-2 z-[70]
+                absolute bottom-full left-0 w-80 mb-2 z-[1000]
                 bg-white/80 dark:bg-neutral-900/80 
                 backdrop-blur-xl backdrop-saturate-150
                 border border-white/30 dark:border-neutral-700/40

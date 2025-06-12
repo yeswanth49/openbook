@@ -184,7 +184,7 @@ export function ChatInput({
 
             {/* Command suggestions */}
             {showSuggestions && !activeMenu && (
-                <div className="absolute bottom-full left-0 w-80 mb-2 z-[70] bg-white/80 dark:bg-neutral-900/80 backdrop-blur-xl backdrop-saturate-150 border border-white/30 dark:border-neutral-700/40 shadow-xl shadow-black/5 dark:shadow-black/20 rounded-lg overflow-hidden text-neutral-900 dark:text-white">
+                <div className="absolute bottom-full left-0 w-80 mb-2 z-[1000] bg-white/80 dark:bg-neutral-900/80 backdrop-blur-xl backdrop-saturate-150 border border-white/30 dark:border-neutral-700/40 shadow-xl shadow-black/5 dark:shadow-black/20 rounded-lg overflow-hidden text-neutral-900 dark:text-white">
                     <div className="p-2">
                         {COMMANDS
                             .filter(cmd => cmd.id.startsWith(value))

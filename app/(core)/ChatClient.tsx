@@ -422,7 +422,7 @@ const HomeContent = () => {
         return (
             <div
                 className={cn(
-                    'fixed top-0 left-0 right-0 z-60 flex justify-between items-center p-3 sm:p-4',
+                    'fixed top-0 left-0 right-0 z-40 flex justify-between items-center p-3 sm:p-4',
                     // No background, no shadow
                     'bg-transparent',
                 )}
@@ -482,7 +482,7 @@ const HomeContent = () => {
                 )}
             >
                 <Navbar />
-                <div className="w-full p-2 sm:p-4 md:p-10 !mt-20 sm:!mt-16 flex !flex-col border-b border-neutral-100 dark:border-neutral-800 md:border-0">
+                <div className="w-full p-2 sm:p-4 md:p-10 !mt-32 sm:!mt-40 flex !flex-col border-b border-neutral-100 dark:border-neutral-800 md:border-0">
                     <div
                         className={`w-full max-w-[95%] xs:max-w-[90%] sm:max-w-2xl md:max-w-3xl lg:max-w-4xl space-y-4 sm:space-y-6 mx-auto transition-all duration-300 overflow-x-hidden`}
                     >
@@ -513,7 +513,7 @@ const HomeContent = () => {
                             </div>
                         )}
                         {messages.length === 0 && !hasSubmitted && (
-                            <div className="!mt-4 bg-white/60 dark:bg-neutral-900/60 backdrop-blur-sm rounded-md p-1">
+                            <div className="relative z-50 !mt-4 bg-white/60 dark:bg-neutral-900/60 backdrop-blur-sm rounded-md p-1">
                                 <ChatInput
                                     value={input}
                                     onChange={setInput}
@@ -603,7 +603,7 @@ const HomeContent = () => {
                             }}
                         >
                             <div className="w-[95%] xs:w-[90%] sm:max-w-2xl md:max-w-3xl mx-auto px-2 xs:px-3 sm:px-4 md:px-6 pointer-events-auto">
-                                <div className="bg-white/60 dark:bg-neutral-900/60 backdrop-blur-sm rounded-md p-1 sm:p-1.5 shadow-lg w-full">
+                                <div className="relative z-50 bg-white/60 dark:bg-neutral-900/60 backdrop-blur-sm rounded-md p-1 sm:p-1.5 shadow-lg w-full">
                                     <ChatInput
                                         value={input}
                                         onChange={setInput}

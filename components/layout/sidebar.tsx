@@ -9,11 +9,7 @@ import {
     Search,
     PenLine,
     ChevronDown,
-    Settings,
-    Crown,
     MessageSquare,
-    Flag,
-    HelpCircle,
     LogOut,
     FolderPlus,
     Trash2,
@@ -24,6 +20,7 @@ import {
     PinOff,
     RefreshCw,
     Clock,
+    AppWindowMac,
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -294,24 +291,18 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                     {/* Footer */}
                     <div className="border-t border-neutral-100 dark:border-neutral-800 py-3 px-4">
                         <div className="space-y-1">
-                            <button className="flex items-center gap-2 w-full text-left px-2 py-1.5 text-sm text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded">
-                                <Settings className="h-4 w-4 text-neutral-400" />
-                                <span>Settings</span>
-                            </button>
                             <Link href="https://x.com/GoOpenBook" target="_blank" className="block">
                                 <button className="flex items-center gap-2 w-full text-left px-2 py-1.5 text-sm text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded">
                                     <MessageSquare className="h-4 w-4 text-neutral-400" />
                                     <span>Follow on X</span>
                                 </button>
                             </Link>
-                            <button className="flex items-center gap-2 w-full text-left px-2 py-1.5 text-sm text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded">
-                                <Flag className="h-4 w-4 text-neutral-400" />
-                                <span>Report Bug</span>
-                            </button>
-                            <button className="flex items-center gap-2 w-full text-left px-2 py-1.5 text-sm text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded">
-                                <HelpCircle className="h-4 w-4 text-neutral-400" />
-                                <span>Help</span>
-                            </button>
+                            <Link href="https://openbook.featurebase.app/roadmap" target="_blank" className="block">
+                                <button className="flex items-center gap-2 w-full text-left px-2 py-1.5 text-sm text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded">
+                                    <AppWindowMac className="h-4 w-4 text-neutral-400" />
+                                    <span>Feedback</span>
+                                </button>
+                            </Link>
                             {/* Add Clear Storage button */}
                             <button
                                 onClick={clearLocalStorage}

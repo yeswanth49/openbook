@@ -26,6 +26,21 @@ export function StudyFrameworkPicker({ onSelect, onClose, className = '' }: Stud
         [],
     );
 
+    // Helper to calculate the next index based on direction
+    const calculateNewIndex = useCallback(
+        (
+            currentIndex: number,
+            direction: "prev" | "next",
+        ): number => {
+            if (direction === "prev") {
+                return currentIndex > 0 ? currentIndex - 1 : frameworks.length - 1;
+            }
+            // direction === "next"
+            return currentIndex < frameworks.length - 1 ? currentIndex + 1 : 0;
+        },
+        [frameworks],
+    );
+
     // Handle keyboard interaction only when the picker itself is focused
     const handleKeyDown = useCallback(
         (e: React.KeyboardEvent<HTMLDivElement>) => {
@@ -42,15 +57,21 @@ export function StudyFrameworkPicker({ onSelect, onClose, className = '' }: Stud
                     break;
                 }
                 case 'ArrowUp':
-                case 'ArrowLeft':
+                case 'ArrowLeft': {
                     e.preventDefault();
-                    setSelectedIndex((prev) => (prev > 0 ? prev - 1 : frameworks.length - 1));
+                    const newIndex = calculateNewIndex(selectedIndex, 'prev');
+                    setSelectedIndex(newIndex);
+                    setHoveredIndex(newIndex);
                     break;
+                }
                 case 'ArrowDown':
-                case 'ArrowRight':
+                case 'ArrowRight': {
                     e.preventDefault();
-                    setSelectedIndex((prev) => (prev < frameworks.length - 1 ? prev + 1 : 0));
+                    const newIndex = calculateNewIndex(selectedIndex, 'next');
+                    setSelectedIndex(newIndex);
+                    setHoveredIndex(newIndex);
                     break;
+                }
                 case 'Enter':
                     e.preventDefault();
                     onSelect(frameworks[selectedIndex]);
@@ -61,7 +82,7 @@ export function StudyFrameworkPicker({ onSelect, onClose, className = '' }: Stud
                     break;
             }
         },
-        [frameworks, onSelect, onClose, selectedIndex],
+        [frameworks, onSelect, onClose, selectedIndex, calculateNewIndex],
     );
 
     // Auto-focus the container so it can capture keyboard events immediately

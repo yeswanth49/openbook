@@ -39,10 +39,13 @@ interface ChatInputProps {
     onFrameworkSelect?: (framework: string) => void;
 }
 
+// Derive the Extreme command from the StudyFramework enum to avoid string drift
+const EXTREME_COMMAND = `/${StudyFramework.ExtremeMode.split('-')[0]}` as const; // "/extreme"
+
 const COMMANDS: ChatCommand[] = [
     { id: '/model', label: 'AI model' },
     { id: '/frameworks', label: 'Study frameworks' },
-    { id: '/extreme', label: 'Extreme mode' },
+    { id: EXTREME_COMMAND, label: 'Extreme mode' },
     { id: '/clear', label: 'Clear chat' },
 ];
 
@@ -102,9 +105,9 @@ export function ChatInput({
 
     const handleCommand = (cmd: string) => {
         switch (cmd) {
-            case '/extreme':
+            case EXTREME_COMMAND:
                 onGroupChange('extreme');
-                onFrameworkSelect?.('extreme-mode');
+                onFrameworkSelect?.(StudyFramework.ExtremeMode);
                 toast.success('Extreme mode activated');
                 onChange('');
                 break;

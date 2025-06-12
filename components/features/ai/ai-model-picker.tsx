@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { motion } from 'framer-motion';
 
 // Define the model options - with Google Gemini 2.5 Flash as the default
@@ -41,6 +41,22 @@ interface AiModelPickerProps {
 
 export function AiModelPicker({ selectedModel, onSelect, onClose, className = '' }: AiModelPickerProps) {
     const currentModel = models.find((model) => model.value === selectedModel) || models[0];
+
+    // Close the picker when the user presses the Escape key
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') {
+                e.preventDefault();
+                onClose();
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+
+        return () => {
+            window.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [onClose]);
 
     return (
         <motion.div 

@@ -39,6 +39,7 @@ import { ConversationNameDisplay, NameLoading } from '@/components/features/spac
 import { format } from 'date-fns';
 import SidebarNotebook from '@/components/layout/SidebarNotebook';
 import { motion, AnimatePresence } from 'framer-motion';
+import { SearchModal } from '@/components/features/search/search-modal';
 
 interface SidebarProps {
     isOpen: boolean;
@@ -47,9 +48,7 @@ interface SidebarProps {
 
 export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
     const [showNewMenu, setShowNewMenu] = useState(false);
-    const [searchQuery, setSearchQuery] = useState('');
     const [initialExpansionDone, setInitialExpansionDone] = useState(false);
-    const [showSearchResults, setShowSearchResults] = useState(false);
     const [showSearchModal, setShowSearchModal] = useState(false);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [itemToDelete, setItemToDelete] = useState<{
@@ -58,12 +57,6 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
         type: 'journal' | 'space';
     } | null>(null);
     const [showClearStorageConfirm, setShowClearStorageConfirm] = useState(false);
-    const [searchResults, setSearchResults] = useState<{
-        journals: { id: string; title: string; preview?: string; matchType: string }[];
-        spaces: { id: string; name: string; preview?: string; matchType: string }[];
-    }>({ journals: [], spaces: [] });
-    const searchInputRef = useRef<HTMLInputElement>(null);
-    const searchResultsRef = useRef<HTMLDivElement>(null);
     const { notebooks, createNotebook } = useNotebooks();
     const { entries, deleteEntry } = useJournal();
     const { spaces, switchSpace, deleteSpace } = useSpaces();
@@ -93,117 +86,6 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
         }
     }, [currentPageType, initialExpansionDone]);
 
-    // Enhanced search functionality
-    useEffect(() => {
-        if (searchQuery.trim().length > 0) {
-            // Get search query
-            const query = searchQuery.trim();
-
-            // Search in journals (including content)
-            const matchingJournals = entries
-                .filter(
-                    (entry) =>
-                        // Search in title
-                        entry.title.toLowerCase().includes(query.toLowerCase()) ||
-                        // Search in block content
-                        entry.blocks.some((block) => block.content.toLowerCase().includes(query.toLowerCase())),
-                )
-                .map((entry) => {
-                    // First try to find a block that matches the query
-                    const matchingBlock = entry.blocks.find((block) =>
-                        block.content.toLowerCase().includes(query.toLowerCase()),
-                    );
-
-                    // Then determine the best preview and match type
-                    if (matchingBlock) {
-                        return {
-                            id: entry.id,
-                            title: entry.title,
-                            preview: matchingBlock.content,
-                            matchType: 'content',
-                        };
-                    } else {
-                        return {
-                            id: entry.id,
-                            title: entry.title,
-                            matchType: 'title',
-                        };
-                    }
-                });
-
-            // Search in spaces (including message content)
-            const matchingSpaces = spaces
-                .filter(
-                    (space) =>
-                        // Search in space name
-                        space.name.toLowerCase().includes(query.toLowerCase()) ||
-                        // Search in message content
-                        space.messages.some((message) => message.content.toLowerCase().includes(query.toLowerCase())),
-                )
-                .map((space) => {
-                    // Try to find a message that matches the query
-                    const matchingMessage = space.messages.find((message) =>
-                        message.content.toLowerCase().includes(query.toLowerCase()),
-                    );
-
-                    if (matchingMessage) {
-                        return {
-                            id: space.id,
-                            name: space.name,
-                            preview: matchingMessage.content,
-                            matchType: 'message',
-                        };
-                    } else {
-                        return {
-                            id: space.id,
-                            name: space.name,
-                            matchType: 'name',
-                        };
-                    }
-                });
-
-            setSearchResults({
-                journals: matchingJournals,
-                spaces: matchingSpaces,
-            });
-
-            setShowSearchResults(true);
-        } else {
-            setShowSearchResults(false);
-        }
-    }, [searchQuery, entries, spaces]);
-
-    // Close search results when clicking outside
-    useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (
-                searchResultsRef.current &&
-                !searchResultsRef.current.contains(event.target as Node) &&
-                searchInputRef.current &&
-                !searchInputRef.current.contains(event.target as Node)
-            ) {
-                setShowSearchResults(false);
-            }
-        };
-
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
-        };
-    }, []);
-
-    // Handle search item click
-    const handleSearchItemClick = (type: 'journal' | 'space', id: string) => {
-        if (type === 'journal') {
-            router.push(`/journal/${id}`);
-        } else {
-            switchSpace(id);
-            router.push(`/space/${id}`);
-        }
-        setSearchQuery('');
-        setShowSearchResults(false);
-    };
-
     // Add a state to track newly created items
     const [editingJournalId, setEditingJournalId] = useState<string | null>(null);
     const [editingJournalTitle, setEditingJournalTitle] = useState('');
@@ -220,7 +102,6 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
             // Also close modal with Escape key
             if (e.key === 'Escape' && showSearchModal) {
                 setShowSearchModal(false);
-                setSearchQuery('');
             }
         };
 
@@ -244,29 +125,6 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
 
     return (
         <>
-            {/* Add keyframes animations for the modal */}
-            <style jsx global>{`
-                @keyframes fadeIn {
-                    from {
-                        opacity: 0;
-                        transform: scale(0.96);
-                    }
-                    to {
-                        opacity: 1;
-                        transform: scale(1);
-                    }
-                }
-                @keyframes overlayShow {
-                    from {
-                        opacity: 0;
-                        backdrop-filter: blur(0px);
-                    }
-                    to {
-                        opacity: 1;
-                        backdrop-filter: blur(2px);
-                    }
-                }
-            `}</style>
 
             {/* Toggle button that always stays visible */}
             <button
@@ -467,144 +325,11 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                 </div>
             </aside>
 
-            {/* Add the search modal */}
-            {showSearchModal && (
-                <div
-                    className="fixed inset-0 bg-black/10 backdrop-blur-[2px] z-50 flex items-center justify-center p-4"
-                    onClick={() => {
-                        setShowSearchModal(false);
-                        setSearchQuery('');
-                        setShowSearchResults(false);
-                    }}
-                    style={{ animation: 'overlayShow 0.2s cubic-bezier(0.16, 1, 0.3, 1)' }}
-                >
-                    <div
-                        className="bg-white dark:bg-neutral-900 rounded-md shadow-sm max-w-md w-full transform transition-all ease-out duration-300 border border-neutral-200 dark:border-neutral-800"
-                        style={{ animation: 'fadeIn 0.2s ease-out' }}
-                        onClick={(e) => e.stopPropagation()}
-                    >
-                        <div className="p-4">
-                            <div className="relative">
-                                <Search className="absolute left-3 top-2.5 h-4 w-4 text-neutral-400" />
-                                <Input
-                                    ref={searchInputRef}
-                                    placeholder="Search..."
-                                    className="pl-9 h-9 bg-white dark:bg-neutral-900 border-neutral-200 dark:border-neutral-700 rounded-md focus-visible:ring-emerald-500/30 focus-visible:ring-offset-0"
-                                    value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                    autoFocus
-                                />
-                                {searchQuery && (
-                                    <button
-                                        className="absolute right-2 top-2.5 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300"
-                                        onClick={() => {
-                                            setSearchQuery('');
-                                            setShowSearchResults(false);
-                                        }}
-                                    >
-                                        <X className="h-4 w-4" />
-                                    </button>
-                                )}
-                            </div>
-
-                            {/* Search Results */}
-                            <div className="mt-3 max-h-64 overflow-y-auto">
-                                {searchQuery.trim().length > 0 ? (
-                                    <>
-                                        {searchResults.journals.length === 0 && searchResults.spaces.length === 0 ? (
-                                            <div className="p-3 text-sm text-neutral-500 dark:text-neutral-400 text-center">
-                                                No results found
-                                            </div>
-                                        ) : (
-                                            <>
-                                                {searchResults.journals.length > 0 && (
-                                                    <div className="mb-3">
-                                                        <div className="px-1 py-1 text-xs font-medium text-emerald-500/70 dark:text-emerald-400/70 tracking-wider">
-                                                            Journals
-                                                        </div>
-                                                        <div className="space-y-1">
-                                                            {searchResults.journals.map((journal) => (
-                                                                <button
-                                                                    key={journal.id}
-                                                                    className="flex flex-col w-full text-left px-2 py-2 text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-md"
-                                                                    onClick={() => {
-                                                                        handleSearchItemClick('journal', journal.id);
-                                                                        setShowSearchModal(false);
-                                                                    }}
-                                                                >
-                                                                    <div className="flex items-center">
-                                                                        <PenLine className="h-3.5 w-3.5 text-neutral-400 mr-2 flex-shrink-0" />
-                                                                        <span className="font-medium truncate">
-                                                                            {journal.title}
-                                                                        </span>
-                                                                    </div>
-                                                                    {journal.preview && (
-                                                                        <div className="ml-5 mt-1 text-xs text-neutral-500 dark:text-neutral-500 line-clamp-1">
-                                                                            {journal.preview}
-                                                                        </div>
-                                                                    )}
-                                                                </button>
-                                                            ))}
-                                                        </div>
-                                                    </div>
-                                                )}
-
-                                                {searchResults.spaces.length > 0 && (
-                                                    <div>
-                                                        <div className="px-1 py-1 text-xs font-medium text-emerald-500/70 dark:text-emerald-400/70 tracking-wider">
-                                                            Spaces
-                                                        </div>
-                                                        <div className="space-y-1">
-                                                            {searchResults.spaces.map((space) => (
-                                                                <button
-                                                                    key={space.id}
-                                                                    className="flex flex-col w-full text-left px-2 py-2 text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-md"
-                                                                    onClick={() => {
-                                                                        handleSearchItemClick('space', space.id);
-                                                                        setShowSearchModal(false);
-                                                                    }}
-                                                                >
-                                                                    <div className="flex items-center">
-                                                                        <span className="w-3 h-3 rounded-sm bg-neutral-200 dark:bg-neutral-700 mr-2 flex-shrink-0"></span>
-                                                                        <span className="font-medium truncate">
-                                                                            {space.name}
-                                                                        </span>
-                                                                    </div>
-                                                                    {space.preview && (
-                                                                        <div className="ml-5 mt-1 text-xs text-neutral-500 dark:text-neutral-500 line-clamp-1">
-                                                                            {space.preview}
-                                                                        </div>
-                                                                    )}
-                                                                </button>
-                                                            ))}
-                                                        </div>
-                                                    </div>
-                                                )}
-                                            </>
-                                        )}
-                                    </>
-                                ) : (
-                                    <div className="py-8 text-sm text-neutral-500 dark:text-neutral-400 text-center">
-                                        Type to search journals and spaces
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-
-                        <div className="border-t border-neutral-100 dark:border-neutral-800 p-2 flex justify-end">
-                            <button
-                                className="px-2 py-1 text-xs rounded text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-300 transition-colors"
-                                onClick={() => {
-                                    setShowSearchModal(false);
-                                    setSearchQuery('');
-                                }}
-                            >
-                                ESC
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
+            {/* Search Modal */}
+            <SearchModal 
+                isOpen={showSearchModal} 
+                onClose={() => setShowSearchModal(false)} 
+            />
 
             {/* Add the clear storage confirmation dialog */}
             {showClearStorageConfirm && (

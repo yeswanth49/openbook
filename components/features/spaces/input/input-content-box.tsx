@@ -138,11 +138,12 @@ export function ChatInput({
     };
 
     const handleFrameworkSelect = (framework: StudyFramework) => {
-        if (framework === 'extreme-mode') {
+        if (framework === StudyFramework.ExtremeMode) {
             onGroupChange('extreme');
             toast.success('Extreme mode activated');
         } else {
-            onGroupChange('extreme');
+            // For all other frameworks, ensure we revert to the default chat group
+            onGroupChange('chat');
             toast.success(`${framework} activated`);
         }
         onFrameworkSelect?.(framework);

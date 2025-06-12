@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { StudyFramework } from '@/lib/types';
 import { getFrameworkDisplayName, getFrameworkDescription, getFrameworkIcon } from '@/lib/study-prompts';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -14,6 +14,7 @@ interface StudyFrameworkPickerProps {
 export function StudyFrameworkPicker({ onSelect, onClose, className = '' }: StudyFrameworkPickerProps) {
     const [selectedIndex, setSelectedIndex] = useState(0);
     const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+    const containerRef = useRef<HTMLDivElement>(null);
 
     const frameworks = React.useMemo(
         () => [
@@ -25,8 +26,9 @@ export function StudyFrameworkPicker({ onSelect, onClose, className = '' }: Stud
         [],
     );
 
-    useEffect(() => {
-        const handleKeyDown = (e: KeyboardEvent) => {
+    // Handle keyboard interaction only when the picker itself is focused
+    const handleKeyDown = useCallback(
+        (e: React.KeyboardEvent<HTMLDivElement>) => {
             switch (e.key) {
                 case '1':
                 case '2':
@@ -40,17 +42,11 @@ export function StudyFrameworkPicker({ onSelect, onClose, className = '' }: Stud
                     break;
                 }
                 case 'ArrowUp':
-                    e.preventDefault();
-                    setSelectedIndex((prev) => (prev > 0 ? prev - 1 : frameworks.length - 1));
-                    break;
-                case 'ArrowDown':
-                    e.preventDefault();
-                    setSelectedIndex((prev) => (prev < frameworks.length - 1 ? prev + 1 : 0));
-                    break;
                 case 'ArrowLeft':
                     e.preventDefault();
                     setSelectedIndex((prev) => (prev > 0 ? prev - 1 : frameworks.length - 1));
                     break;
+                case 'ArrowDown':
                 case 'ArrowRight':
                     e.preventDefault();
                     setSelectedIndex((prev) => (prev < frameworks.length - 1 ? prev + 1 : 0));
@@ -64,14 +60,22 @@ export function StudyFrameworkPicker({ onSelect, onClose, className = '' }: Stud
                     onClose();
                     break;
             }
-        };
+        },
+        [frameworks, onSelect, onClose, selectedIndex],
+    );
 
-        window.addEventListener('keydown', handleKeyDown);
-        return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [selectedIndex, frameworks, onSelect, onClose]);
+    // Auto-focus the container so it can capture keyboard events immediately
+    useEffect(() => {
+        containerRef.current?.focus();
+    }, []);
 
     return (
         <motion.div 
+            ref={containerRef}
+            tabIndex={-1}
+            onKeyDown={handleKeyDown}
+            role="dialog"
+            aria-modal="true"
             className={`
                 absolute bottom-full left-0 w-80 mb-2 z-[70]
                 bg-white/80 dark:bg-neutral-900/80 
@@ -104,6 +108,9 @@ export function StudyFrameworkPicker({ onSelect, onClose, className = '' }: Stud
                         return (
                             <motion.div
                                 key={framework}
+                                role="button"
+                                aria-label={getFrameworkDisplayName(framework)}
+                                aria-pressed={isSelected}
                                 className={`
                                     p-2 rounded cursor-pointer transition-all duration-150 
                                     border backdrop-blur-sm

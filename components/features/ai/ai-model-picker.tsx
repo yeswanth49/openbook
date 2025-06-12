@@ -72,11 +72,17 @@ export function AiModelPicker({ selectedModel, onSelect, onClose, className = ''
                     </div>
                 </div>
 
-                <div className="max-h-[160px] overflow-y-auto mb-1.5">
+                <div
+                    className="max-h-[160px] overflow-y-auto mb-1.5"
+                    role="listbox"
+                    aria-label="Available AI models"
+                >
                     <div className="space-y-2">
                         {models.map((model) => (
                             <motion.div
                                 key={model.value}
+                                role="option"
+                                aria-selected={model.value === selectedModel}
                                 className={`
                                     p-1.5 cursor-pointer rounded transition-all duration-150 
                                     border backdrop-blur-sm

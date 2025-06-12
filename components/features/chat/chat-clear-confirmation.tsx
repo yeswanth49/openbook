@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
 
 interface ChatClearConfirmationProps {
@@ -10,8 +10,29 @@ interface ChatClearConfirmationProps {
 }
 
 export function ChatClearConfirmation({ onConfirm, onCancel, className = '' }: ChatClearConfirmationProps) {
+    const containerRef = useRef<HTMLDivElement>(null);
+
+    const handleKeyDown = useCallback(
+        (e: React.KeyboardEvent<HTMLDivElement>) => {
+            if (e.key === 'Escape') {
+                e.preventDefault();
+                onCancel();
+            }
+        },
+        [onCancel],
+    );
+
+    useEffect(() => {
+        containerRef.current?.focus();
+    }, []);
+
     return (
         <motion.div 
+            ref={containerRef}
+            tabIndex={-1}
+            onKeyDown={handleKeyDown}
+            role="dialog"
+            aria-modal="true"
             className={`
                 absolute bottom-full left-0 w-80 mb-2 z-[70]
                 bg-white/80 dark:bg-neutral-900/80 

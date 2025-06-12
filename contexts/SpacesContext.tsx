@@ -223,22 +223,11 @@ export const SpacesProvider = ({ children }: { children: ReactNode }) => {
             }
         }
 
-        const newSpace: Space = {
-            id: crypto.randomUUID(),
-            name,
-            messages: [],
-            archived: false,
-            createdAt: Date.now(),
-            updatedAt: Date.now(),
-            notebook_id,
-            metadata: {
-                manuallyRenamed: false, // Default to auto-naming for new spaces
-                isGeneratingName: false,
-            },
-        };
+        // Pre-generate ID so we can reference it inside the functional update
+        const newId = crypto.randomUUID();
 
-        // Store the ID we're attempting to create
-        pendingSpaceCreation.current = newSpace.id;
+        // Store the ID we're attempting to create (for return value later)
+        pendingSpaceCreation.current = newId;
 
         // Use functional form to prevent race conditions
         setSpaces((prev) => {
@@ -253,8 +242,39 @@ export const SpacesProvider = ({ children }: { children: ReactNode }) => {
                 }
             }
 
+            // Determine a unique name based on the latest state (prev)
+            const baseName = 'Untitled';
+            const trimmedInputName = name.trim();
+
+            let uniqueName = trimmedInputName;
+            if (!trimmedInputName || trimmedInputName === baseName) {
+                let suffix = 1;
+                const relevantSpaces = notebook_id ? prev.filter((s) => s.notebook_id === notebook_id) : prev;
+                let candidate = baseName;
+                const existingNames = new Set(relevantSpaces.map((s) => s.name));
+                while (existingNames.has(candidate)) {
+                    suffix += 1;
+                    candidate = `${baseName} ${suffix}`;
+                }
+                uniqueName = candidate;
+            }
+
+            const newSpace: Space = {
+                id: newId,
+                name: uniqueName,
+                messages: [],
+                archived: false,
+                createdAt: Date.now(),
+                updatedAt: Date.now(),
+                notebook_id,
+                metadata: {
+                    manuallyRenamed: false, // Default to auto-naming for new spaces
+                    isGeneratingName: false,
+                },
+            };
+
             // Space creation allowed - will be added to spaces array
-            setCurrentSpaceId(newSpace.id);
+            setCurrentSpaceId(newId);
             return [...prev, newSpace];
         });
 

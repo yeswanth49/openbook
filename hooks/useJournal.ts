@@ -71,12 +71,26 @@ export function useJournal() {
                     ? crypto.randomUUID()
                     : Math.random().toString(36).substring(2, 9);
 
-            // Use a simple default title
-            const defaultTitle = 'Untitled';
+            // Generate a minimally-unique default title ("Untitled", "Untitled 2", ...)
+            const baseTitle = 'Untitled';
+            let suffix = 1;
+            const relevantEntries = notebook_id
+                ? entries.filter((e) => e.notebook_id === notebook_id)
+                : entries;
+            const existing = relevantEntries.map((e) => e.title);
+            let defaultTitle = baseTitle;
+            while (existing.includes(defaultTitle)) {
+                suffix += 1;
+                defaultTitle = `${baseTitle} ${suffix}`;
+            }
+
+            const trimmedInputTitle = title.trim();
+            // Use input title only if it isn't the placeholder base title
+            const finalTitle = !trimmedInputTitle || trimmedInputTitle === baseTitle ? defaultTitle : trimmedInputTitle;
 
             const newEntry: JournalEntry = {
                 id,
-                title: title.trim() || defaultTitle,
+                title: finalTitle,
                 blocks: [],
                 createdAt: now,
                 updatedAt: now,
@@ -96,16 +110,17 @@ export function useJournal() {
 
     const updateEntry = useCallback((id: string, updates: Partial<Pick<JournalEntry, 'title' | 'blocks'>>) => {
         setEntries((prev) => {
-            // Use a simple default title
             const defaultTitle = 'Untitled';
 
-            // Ensure title is not empty
+            // Create an immutable copy to avoid mutating the original updates object
+            const sanitized: Partial<Pick<JournalEntry, 'title' | 'blocks'>> = { ...updates };
+
             if (updates.title !== undefined) {
-                updates.title = updates.title.trim() || defaultTitle;
+                sanitized.title = updates.title.trim() || defaultTitle;
             }
 
             const updated = prev.map((entry) =>
-                entry.id === id ? { ...entry, ...updates, updatedAt: new Date().toISOString() } : entry,
+                entry.id === id ? { ...entry, ...sanitized, updatedAt: new Date().toISOString() } : entry,
             );
 
             // No need to save here, the useEffect will handle it

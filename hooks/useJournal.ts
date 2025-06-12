@@ -8,6 +8,36 @@ import { JOURNAL_ENTRIES_KEY } from '@/lib/storageKeys';
 const STORAGE_KEY = JOURNAL_ENTRIES_KEY;
 const JOURNAL_LIMIT = 3;
 
+// -----------------------------------------------------------------------------
+// Helper utilities
+// -----------------------------------------------------------------------------
+
+/**
+ * Generate a unique "Untitled" style title within the provided entries scope.
+ * If other "Untitled" or "Untitled n" titles exist (optionally scoped to a
+ * notebook), this helper will increment the numeric suffix to ensure the
+ * returned title is unique.
+ */
+function generateUniqueUntitledTitle(entries: JournalEntry[], notebook_id?: string): string {
+    const baseTitle = 'Untitled';
+
+    const relevantEntries = notebook_id ? entries.filter((e) => e.notebook_id === notebook_id) : entries;
+    const existingTitles = new Set(relevantEntries.map((e) => e.title));
+
+    // If "Untitled" itself is free we can return it directly.
+    if (!existingTitles.has(baseTitle)) return baseTitle;
+
+    let suffix = 2; // start from 2 because "Untitled" is considered the first
+    let candidate = `${baseTitle} ${suffix}`;
+
+    while (existingTitles.has(candidate)) {
+        suffix += 1;
+        candidate = `${baseTitle} ${suffix}`;
+    }
+
+    return candidate;
+}
+
 export function useJournal() {
     const [entries, setEntries] = useState<JournalEntry[]>([]);
     const [initialized, setInitialized] = useState(false);
@@ -71,22 +101,12 @@ export function useJournal() {
                     ? crypto.randomUUID()
                     : Math.random().toString(36).substring(2, 9);
 
-            // Generate a minimally-unique default title ("Untitled", "Untitled 2", ...)
-            const baseTitle = 'Untitled';
-            let suffix = 1;
-            const relevantEntries = notebook_id
-                ? entries.filter((e) => e.notebook_id === notebook_id)
-                : entries;
-            const existing = relevantEntries.map((e) => e.title);
-            let defaultTitle = baseTitle;
-            while (existing.includes(defaultTitle)) {
-                suffix += 1;
-                defaultTitle = `${baseTitle} ${suffix}`;
-            }
-
+            // Determine a unique default title when the input title is empty or auto-generated
             const trimmedInputTitle = title.trim();
-            // Use input title only if it isn't the placeholder base title
-            const finalTitle = !trimmedInputTitle || trimmedInputTitle === baseTitle ? defaultTitle : trimmedInputTitle;
+            const defaultTitle = generateUniqueUntitledTitle(entries, notebook_id);
+
+            // Use input title only if it's non-empty and not an auto-generated placeholder
+            const finalTitle = !trimmedInputTitle || trimmedInputTitle === 'Untitled' ? defaultTitle : trimmedInputTitle;
 
             const newEntry: JournalEntry = {
                 id,
@@ -110,21 +130,36 @@ export function useJournal() {
 
     const updateEntry = useCallback((id: string, updates: Partial<Pick<JournalEntry, 'title' | 'blocks'>>) => {
         setEntries((prev) => {
-            const defaultTitle = 'Untitled';
+            return prev.map((entry) => {
+                if (entry.id !== id) return entry;
 
-            // Create an immutable copy to avoid mutating the original updates object
-            const sanitized: Partial<Pick<JournalEntry, 'title' | 'blocks'>> = { ...updates };
+                // Prepare new values defaulting to current ones
+                let newTitle = entry.title;
+                let newBlocks = entry.blocks;
 
-            if (updates.title !== undefined) {
-                sanitized.title = updates.title.trim() || defaultTitle;
-            }
+                if (updates.title !== undefined) {
+                    const trimmed = updates.title.trim();
 
-            const updated = prev.map((entry) =>
-                entry.id === id ? { ...entry, ...sanitized, updatedAt: new Date().toISOString() } : entry,
-            );
+                    if (trimmed) {
+                        // Non-empty explicit title provided by the user
+                        newTitle = trimmed;
+                    } else {
+                        // Empty/whitespace title – fall back to a unique auto-generated one
+                        newTitle = generateUniqueUntitledTitle(prev, entry.notebook_id);
+                    }
+                }
 
-            // No need to save here, the useEffect will handle it
-            return updated;
+                if (updates.blocks !== undefined) {
+                    newBlocks = updates.blocks;
+                }
+
+                return {
+                    ...entry,
+                    title: newTitle,
+                    blocks: newBlocks,
+                    updatedAt: new Date().toISOString(),
+                };
+            });
         });
     }, []);
 

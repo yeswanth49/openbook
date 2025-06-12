@@ -2,7 +2,11 @@
 
 import * as React from 'react';
 import type { ReactNode } from 'react';
-import { generateConversationName, shouldUpdateConversationName } from '@/lib/conversation-utils';
+import {
+    generateConversationName,
+    shouldUpdateConversationName,
+    isDefaultAutoName,
+} from '@/lib/conversation-utils';
 import { useUser } from './UserContext';
 import { useLimitModal } from './LimitModalContext';
 
@@ -239,6 +243,9 @@ export const SpacesProvider = ({ children }: { children: ReactNode }) => {
                 const currentNotebookSpacesCount = prev.filter((s) => s.notebook_id === notebook_id).length;
                 if (currentNotebookSpacesCount >= 3) {
                     // Abort creation – limit reached (race-condition safety)
+                    if (pendingSpaceCreation.current === newId) {
+                        pendingSpaceCreation.current = null;
+                    }
                     return prev;
                 }
             }
@@ -248,11 +255,13 @@ export const SpacesProvider = ({ children }: { children: ReactNode }) => {
             const trimmedInputName = name.trim();
 
             let uniqueName = trimmedInputName;
-            if (!trimmedInputName || trimmedInputName === baseName) {
+
+            // Treat empty input or any auto-generated default as needing a new unique name
+            if (!trimmedInputName || isDefaultAutoName(trimmedInputName)) {
                 let suffix = 1;
                 const relevantSpaces = notebook_id ? prev.filter((s) => s.notebook_id === notebook_id) : prev;
-                let candidate = baseName;
                 const existingNames = new Set(relevantSpaces.map((s) => s.name));
+                let candidate = baseName;
                 while (existingNames.has(candidate)) {
                     suffix += 1;
                     candidate = `${baseName} ${suffix}`;
@@ -287,6 +296,9 @@ export const SpacesProvider = ({ children }: { children: ReactNode }) => {
 
         // If creation was aborted due to limit/race condition, bail out
         if (!creationSucceeded) {
+            if (pendingSpaceCreation.current === newId) {
+                pendingSpaceCreation.current = null;
+            }
             return null;
         }
 

@@ -18,18 +18,14 @@ interface ConversationMetadata {
 // -----------------------------------------------------------------------------
 
 /**
- * Regex that matches default/auto-generated conversation names. These include:
- * 1. "Untitled" or "Untitled <number>"
- * 2. "Conversation <time string>" (e.g. "Conversation 12:34 PM")
- * 3. "Space - <number>" or other system-generated variants that begin with
- *    "Space - " followed by digits.
+ * Stricter time pattern: matches h:mm AM/PM formats like "12:34 PM" (case-insensitive)
  */
-const DEFAULT_NAME_REGEX = /^(Untitled(?: \d+)?|Conversation [\d:APMapm ]+|Space - \d+)$/;
+const DEFAULT_NAME_REGEX = /^(Untitled(?: \d+)?|Conversation \d{1,2}:\d{2}\s?(?:AM|PM|am|pm)|Space - \d+)$/;
 
 /**
  * Determine whether a given space name is one of the auto-generated defaults.
  */
-function isDefaultSpaceName(name: string): boolean {
+export function isDefaultAutoName(name: string): boolean {
     return DEFAULT_NAME_REGEX.test(name.trim());
 }
 
@@ -75,7 +71,7 @@ export function generateConversationName(space: Space): string {
     if (!space.messages.length) return space.name;
 
     // If the current name is not one of the default/auto-generated ones, keep it
-    if (!isDefaultSpaceName(space.name)) {
+    if (!isDefaultAutoName(space.name)) {
         return space.name;
     }
 
@@ -161,7 +157,7 @@ export function calculateConversationMetadata(space: Space): ConversationMetadat
  */
 export function shouldUpdateConversationName(space: Space): boolean {
     // Skip updating if the name is NOT one of our default names
-    if (!isDefaultSpaceName(space.name)) {
+    if (!isDefaultAutoName(space.name)) {
         return false;
     }
 

@@ -40,7 +40,8 @@ interface ChatInputProps {
 }
 
 // Derive the Extreme command from the StudyFramework enum to avoid string drift
-const EXTREME_COMMAND = `/${StudyFramework.ExtremeMode.split('-')[0]}` as const; // "/extreme"
+// Ensure the command is always lowercase to match user input normalization
+const EXTREME_COMMAND = `/${StudyFramework.ExtremeMode.split('-')[0].toLowerCase()}` as const; // "/extreme"
 
 const COMMANDS: ChatCommand[] = [
     { id: '/model', label: 'AI model' },
@@ -190,7 +191,8 @@ export function ChatInput({
                 <div className="absolute bottom-full left-0 w-80 mb-2 z-[1000] bg-white/80 dark:bg-neutral-900/80 backdrop-blur-xl backdrop-saturate-150 border border-white/30 dark:border-neutral-700/40 shadow-xl shadow-black/5 dark:shadow-black/20 rounded-lg overflow-hidden text-neutral-900 dark:text-white">
                     <div className="p-2">
                         {COMMANDS
-                            .filter(cmd => cmd.id.startsWith(value))
+                            // Use case-insensitive comparison to match user input regardless of casing
+                            .filter(cmd => cmd.id.startsWith(value.toLowerCase()))
                             .map(cmd => (
                                 <div
                                     key={cmd.id}

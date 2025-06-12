@@ -102,16 +102,24 @@ export default function SidebarNotebook({ notebook, currentPageType, currentPage
     const handleCreateJournal = () => {
         const defaultTitle = 'Untitled';
         const newEntry = createEntry(defaultTitle, notebook.id);
-        if (newEntry) {
-            setEditingJournalId(newEntry.id);
-            setEditingJournalTitle(defaultTitle);
-            if (!journalsOpen) setJournalsOpen(true);
+        if (!newEntry) {
+            // Limit hit – abort early
+            return;
         }
+
+        setEditingJournalId(newEntry.id);
+        setEditingJournalTitle(defaultTitle);
+        if (!journalsOpen) setJournalsOpen(true);
     };
 
     const handleCreateSpace = () => {
         const defaultTitle = 'Untitled';
         const newSpaceId = createSpace(defaultTitle, notebook.id);
+        if (!newSpaceId) {
+            // Limit hit – abort early
+            return;
+        }
+
         setEditingSpaceId(newSpaceId);
         setEditingSpaceName(defaultTitle);
         if (!spacesOpen) setSpacesOpen(true);

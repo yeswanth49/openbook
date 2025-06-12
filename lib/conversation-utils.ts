@@ -13,6 +13,26 @@ interface ConversationMetadata {
     keyTerms: string[];
 }
 
+// -----------------------------------------------------------------------------
+// Helper utilities
+// -----------------------------------------------------------------------------
+
+/**
+ * Regex that matches default/auto-generated conversation names. These include:
+ * 1. "Untitled" or "Untitled <number>"
+ * 2. "Conversation <time string>" (e.g. "Conversation 12:34 PM")
+ * 3. "Space - <number>" or other system-generated variants that begin with
+ *    "Space - " followed by digits.
+ */
+const DEFAULT_NAME_REGEX = /^(Untitled(?: \d+)?|Conversation [\d:APMapm ]+|Space - \d+)$/;
+
+/**
+ * Determine whether a given space name is one of the auto-generated defaults.
+ */
+function isDefaultSpaceName(name: string): boolean {
+    return DEFAULT_NAME_REGEX.test(name.trim());
+}
+
 /**
  * Extract key terms from conversation content
  */
@@ -54,12 +74,8 @@ export function extractKeyTerms(messages: ChatMessage[]): string[] {
 export function generateConversationName(space: Space): string {
     if (!space.messages.length) return space.name;
 
-    // If the conversation has a user-set name that doesn't follow the default pattern, preserve it
-    if (
-        !space.name.startsWith('Space - ') &&
-        !space.name.startsWith('Conversation ') &&
-        !space.name.startsWith('Untitled')
-    ) {
+    // If the current name is not one of the default/auto-generated ones, keep it
+    if (!isDefaultSpaceName(space.name)) {
         return space.name;
     }
 
@@ -144,12 +160,8 @@ export function calculateConversationMetadata(space: Space): ConversationMetadat
  * Determine if a conversation name should be auto-updated
  */
 export function shouldUpdateConversationName(space: Space): boolean {
-    // Don't update custom names
-    if (
-        !space.name.startsWith('Space - ') &&
-        !space.name.startsWith('Conversation ') &&
-        !space.name.startsWith('Untitled')
-    ) {
+    // Skip updating if the name is NOT one of our default names
+    if (!isDefaultSpaceName(space.name)) {
         return false;
     }
 

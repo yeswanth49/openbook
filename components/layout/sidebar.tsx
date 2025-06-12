@@ -42,7 +42,6 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
-    const [showNewMenu, setShowNewMenu] = useState(false);
     const [initialExpansionDone, setInitialExpansionDone] = useState(false);
     const [showSearchModal, setShowSearchModal] = useState(false);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);

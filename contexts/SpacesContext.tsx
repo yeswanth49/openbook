@@ -223,21 +223,22 @@ export const SpacesProvider = ({ children }: { children: ReactNode }) => {
             }
         }
 
-        // Pre-generate ID so we can reference it inside the functional update
+        // Pre-generate ID so each invocation works with its own reference
         const newId = crypto.randomUUID();
 
-        // Store the ID we're attempting to create (for return value later)
+        // Track if this space is actually created inside the updater
+        let creationSucceeded = false;
+
+        // Store the ID we are about to attempt (for diagnostic purposes only)
         pendingSpaceCreation.current = newId;
 
-        // Use functional form to prevent race conditions
+        // Use functional form to ensure atomic checks/updates
         setSpaces((prev) => {
             // Re-check the count inside the functional update to ensure atomicity
             if (!premium && notebook_id) {
                 const currentNotebookSpacesCount = prev.filter((s) => s.notebook_id === notebook_id).length;
                 if (currentNotebookSpacesCount >= 3) {
-                    // This condition should rarely hit due to the earlier check,
-                    // but it provides a safety net for race conditions
-                    pendingSpaceCreation.current = null; // Clear the pending ID since creation was aborted
+                    // Abort creation – limit reached (race-condition safety)
                     return prev;
                 }
             }
@@ -273,15 +274,26 @@ export const SpacesProvider = ({ children }: { children: ReactNode }) => {
                 },
             };
 
-            // Space creation allowed - will be added to spaces array
-            setCurrentSpaceId(newId);
+            creationSucceeded = true;
+
+            // Clear the ref for this specific creation attempt
+            if (pendingSpaceCreation.current === newId) {
+                pendingSpaceCreation.current = null;
+            }
+
+            // Add the new space to state
             return [...prev, newSpace];
         });
 
-        // Return the ID (or null if aborted due to race condition)
-        const result = pendingSpaceCreation.current;
-        pendingSpaceCreation.current = null; // Reset after use
-        return result;
+        // If creation was aborted due to limit/race condition, bail out
+        if (!creationSucceeded) {
+            return null;
+        }
+
+        // Now that the state has updated, we can safely switch the current space
+        setCurrentSpaceId(newId);
+
+        return newId;
     };
 
     const deleteSpace = (id: string) => {

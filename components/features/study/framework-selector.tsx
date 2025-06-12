@@ -69,7 +69,7 @@ export function FrameworkSelector({ onSelect, onClose }: FrameworkSelectorProps)
     }, [selectedIndex, frameworks, onSelect, onClose]);
 
     return (
-        <div className="absolute bottom-full left-0 w-full bg-white/80 dark:bg-neutral-900/80 backdrop-blur-sm rounded-md overflow-hidden mb-1 text-neutral-900 dark:text-white">
+        <div className="absolute bottom-full left-0 w-full bg-white dark:bg-neutral-900 backdrop-blur-sm rounded-md overflow-hidden mb-1 text-neutral-900 dark:text-white">
             <div className="p-3">
                 <div className="text-base font-medium mb-3">Select Study Framework</div>
 

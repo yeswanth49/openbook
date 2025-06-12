@@ -26,7 +26,7 @@ export default function Editor({ initialBlocks, onBlocksChange, title, onTitleCh
     );
 
     // Create a more descriptive default title
-    const defaultTitle = `Journal - ${new Date().toLocaleDateString()}`;
+    const defaultTitle = 'Untitled';
     const [currentTitle, setCurrentTitle] = useState(title || defaultTitle);
 
     const [showSlashMenu, setShowSlashMenu] = useState(false);

@@ -5,7 +5,6 @@ import {
     BookOpen,
     ChevronLeft,
     ChevronRight,
-    Plus,
     Search,
     PenLine,
     ChevronDown,
@@ -21,6 +20,7 @@ import {
     RefreshCw,
     Clock,
     AppWindowMac,
+    Plus,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useSpaces, Space as SpaceType } from '@/contexts/SpacesContext';
@@ -108,7 +108,6 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
 
     // Update handleCreateNotebook
     const handleCreateNotebook = () => {
-        setShowNewMenu(false);
         const defaultName = `Notebook ${notebooks.length + 1}`;
         createNotebook(defaultName);
     };
@@ -143,7 +142,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
 
             <aside
                 className={cn(
-                    'fixed top-0 left-0 h-screen transition-[width] duration-200 ease-out flex flex-col overflow-hidden',
+                    'fixed top-0 left-0 h-screen transition-[width] duration-200 ease-out flex flex-col',
                     'bg-white dark:bg-neutral-900 border-r border-neutral-100 dark:border-neutral-800',
                     isOpen ? 'w-64 pointer-events-auto' : 'w-0 pointer-events-none',
                 )}
@@ -151,11 +150,11 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                 {/* Hide content when closed for accessibility and performance */}
                 <div
                     className={cn(
-                        'flex flex-col h-full flex-1 transition-opacity duration-200 ease-out overflow-hidden',
+                        'flex flex-col h-full flex-1 transition-opacity duration-200 ease-out',
                         isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none',
                     )}
                 >
-                    <div className="p-4 border-b border-neutral-100 dark:border-neutral-800">
+                    <div className="p-4 border-b border-neutral-100 dark:border-neutral-800 relative">
                         {/* Brand row */}
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
@@ -164,32 +163,14 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                                     OpenBook
                                 </span>
                             </div>
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-7 w-7 rounded-full hover:bg-neutral-100 dark:hover:bg-neutral-800"
-                                onClick={() => setShowNewMenu(!showNewMenu)}
-                                aria-label="New"
+                            <button
+                                onClick={handleCreateNotebook}
+                                aria-label="New notebook"
+                                className="h-7 w-7 flex items-center justify-center rounded-full hover:bg-neutral-100 dark:hover:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-colors"
                             >
                                 <Plus className="h-4 w-4 text-emerald-500" />
-                            </Button>
+                            </button>
                         </div>
-
-                        {showNewMenu && (
-                            <div className="absolute right-4 mt-1 bg-white dark:bg-neutral-900 border border-neutral-100 dark:border-neutral-800 rounded-md z-10 shadow-sm">
-                                <div className="p-1">
-                                    <button
-                                        className="flex items-center gap-2 w-full text-left p-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded"
-                                        onClick={handleCreateNotebook}
-                                    >
-                                        <BookOpen className="h-4 w-4 text-neutral-500 dark:text-neutral-400" />
-                                        <span className="text-sm text-neutral-700 dark:text-neutral-300">
-                                            New Notebook
-                                        </span>
-                                    </button>
-                                </div>
-                            </div>
-                        )}
 
                         {/* Search button styled like the original input */}
                         <div className="relative px-4 mt-4 mb-2">

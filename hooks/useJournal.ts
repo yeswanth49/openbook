@@ -71,8 +71,8 @@ export function useJournal() {
                     ? crypto.randomUUID()
                     : Math.random().toString(36).substring(2, 9);
 
-            // Create a more descriptive default title with date
-            const defaultTitle = `Journal - ${new Date().toLocaleDateString()}`;
+            // Use a simple default title
+            const defaultTitle = 'Untitled';
 
             const newEntry: JournalEntry = {
                 id,
@@ -96,8 +96,8 @@ export function useJournal() {
 
     const updateEntry = useCallback((id: string, updates: Partial<Pick<JournalEntry, 'title' | 'blocks'>>) => {
         setEntries((prev) => {
-            // Create a more descriptive default title with date
-            const defaultTitle = `Journal - ${new Date().toLocaleDateString()}`;
+            // Use a simple default title
+            const defaultTitle = 'Untitled';
 
             // Ensure title is not empty
             if (updates.title !== undefined) {

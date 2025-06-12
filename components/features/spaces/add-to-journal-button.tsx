@@ -71,8 +71,8 @@ export default function AddToJournalButton({ userMessage, assistantMessage, clas
                     throw err; // Re-throw to be handled by outer catch
                 }
             } else {
-                // Create new entry for today
-                const title = `Journal - ${new Date().toLocaleDateString()}`;
+                // Create new untitled entry
+                const title = 'Untitled';
                 const newEntry = createEntry(title);
 
                 if (!newEntry) {

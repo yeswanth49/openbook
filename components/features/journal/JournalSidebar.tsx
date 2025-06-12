@@ -33,7 +33,7 @@ export const JournalSidebar: React.FC<JournalSidebarProps> = ({ selectedEntryId,
 
     // Create a new entry with the date-based naming convention
     const handleNew = () => {
-        const defaultTitle = `Journal - ${format(new Date(), 'MM/dd/yyyy')}`;
+        const defaultTitle = 'Untitled';
         const title = window.prompt('New entry title', defaultTitle)?.trim() || defaultTitle;
         const newEntry = createEntry(title);
         if (newEntry) {

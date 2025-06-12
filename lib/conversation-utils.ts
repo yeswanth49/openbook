@@ -55,7 +55,11 @@ export function generateConversationName(space: Space): string {
     if (!space.messages.length) return space.name;
 
     // If the conversation has a user-set name that doesn't follow the default pattern, preserve it
-    if (!space.name.startsWith('Space - ') && !space.name.startsWith('Conversation ')) {
+    if (
+        !space.name.startsWith('Space - ') &&
+        !space.name.startsWith('Conversation ') &&
+        !space.name.startsWith('Untitled')
+    ) {
         return space.name;
     }
 
@@ -141,7 +145,11 @@ export function calculateConversationMetadata(space: Space): ConversationMetadat
  */
 export function shouldUpdateConversationName(space: Space): boolean {
     // Don't update custom names
-    if (!space.name.startsWith('Space - ') && !space.name.startsWith('Conversation ')) {
+    if (
+        !space.name.startsWith('Space - ') &&
+        !space.name.startsWith('Conversation ') &&
+        !space.name.startsWith('Untitled')
+    ) {
         return false;
     }
 

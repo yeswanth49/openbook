@@ -8,12 +8,12 @@ import {
     Edit2,
     Trash2,
     PenLine,
-    FolderPlus,
     Pin,
     PinOff,
     RefreshCw,
     Clock,
     ChevronLeft,
+    MessageSquare,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
@@ -100,7 +100,7 @@ export default function SidebarNotebook({ notebook, currentPageType, currentPage
     };
 
     const handleCreateJournal = () => {
-        const defaultTitle = `Journal - ${new Date().toLocaleDateString()}`;
+        const defaultTitle = 'Untitled';
         const newEntry = createEntry(defaultTitle, notebook.id);
         if (newEntry) {
             setEditingJournalId(newEntry.id);
@@ -110,7 +110,7 @@ export default function SidebarNotebook({ notebook, currentPageType, currentPage
     };
 
     const handleCreateSpace = () => {
-        const defaultTitle = `Space - ${new Date().toLocaleDateString()}`;
+        const defaultTitle = 'Untitled';
         const newSpaceId = createSpace(defaultTitle, notebook.id);
         setEditingSpaceId(newSpaceId);
         setEditingSpaceName(defaultTitle);
@@ -185,7 +185,7 @@ export default function SidebarNotebook({ notebook, currentPageType, currentPage
                     transition={elementTransition.transition}
                     className="px-4 py-2 border-b border-neutral-100 dark:border-neutral-800 mb-2"
                 >
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 relative">
                         <motion.button
                             {...hoverAnimation}
                             onClick={handleNotebookToggle}
@@ -211,26 +211,6 @@ export default function SidebarNotebook({ notebook, currentPageType, currentPage
                             <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300 flex-1">
                                 {notebook.name}
                             </span>
-                        )}
-                        {!editingNotebookName && (
-                            <div className="flex items-center gap-1">
-                                <motion.button
-                                    {...hoverAnimation}
-                                    onClick={handleNotebookRename}
-                                    className="p-1 rounded hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors duration-150"
-                                    title="Rename notebook"
-                                >
-                                    <Edit2 className="h-3 w-3 text-neutral-500 dark:text-neutral-400" />
-                                </motion.button>
-                                <motion.button
-                                    {...hoverAnimation}
-                                    onClick={() => deleteNotebook(notebook.id)}
-                                    className="p-1 rounded hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors duration-150"
-                                    title="Delete notebook"
-                                >
-                                    <Trash2 className="h-3 w-3 text-neutral-500 dark:text-neutral-400" />
-                                </motion.button>
-                            </div>
                         )}
                     </div>
                 </motion.div>
@@ -259,11 +239,13 @@ export default function SidebarNotebook({ notebook, currentPageType, currentPage
                                 </span>
                             </motion.button>
                         </div>
-
                         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                             <motion.button
                                 {...hoverAnimation}
-                                onClick={handleNotebookRename}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleNotebookRename();
+                                }}
                                 className="p-1 rounded hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors duration-150"
                                 title="Rename notebook"
                             >
@@ -271,7 +253,10 @@ export default function SidebarNotebook({ notebook, currentPageType, currentPage
                             </motion.button>
                             <motion.button
                                 {...hoverAnimation}
-                                onClick={() => deleteNotebook(notebook.id)}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    deleteNotebook(notebook.id);
+                                }}
                                 className="p-1 rounded hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors duration-150"
                                 title="Delete notebook"
                             >
@@ -298,24 +283,32 @@ export default function SidebarNotebook({ notebook, currentPageType, currentPage
                                 className="px-4 py-1.5 flex items-center justify-between cursor-pointer"
                                 onClick={() => setJournalsOpen(!journalsOpen)}
                             >
-                                <h4 className="text-xs font-medium text-neutral-500 dark:text-neutral-400 tracking-wider">
-                                    JOURNALS
-                                </h4>
-                                <ChevronDown
-                                    className={cn(
-                                        'h-3 w-3 text-neutral-400 transition-transform duration-200 ease-in-out',
-                                        journalsOpen ? 'rotate-180' : '',
-                                    )}
-                                />
+                                <div className="flex items-center gap-1">
+                                    <PenLine className="h-3 w-3 text-neutral-400" />
+                                    <h4 className="text-xs font-medium text-neutral-500 dark:text-neutral-400 tracking-wider">
+                                        JOURNALS
+                                    </h4>
+                                </div>
+                                <div className="flex items-center gap-1">
+                                    <motion.button
+                                        {...hoverAnimation}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleCreateJournal();
+                                        }}
+                                        className="p-1 rounded hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors duration-150"
+                                        title="New journal"
+                                    >
+                                        <PenLine className="h-3 w-3 text-neutral-500 dark:text-neutral-400" />
+                                    </motion.button>
+                                    <ChevronDown
+                                        className={cn(
+                                            'h-3 w-3 text-neutral-400 transition-transform duration-200 ease-in-out',
+                                            journalsOpen ? 'rotate-180' : '',
+                                        )}
+                                    />
+                                </div>
                             </div>
-
-                            <button
-                                onClick={handleCreateJournal}
-                                className="w-full flex items-center gap-2 text-left px-4 py-1.5 text-sm text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 mt-1"
-                            >
-                                <PenLine className="h-3.5 w-3.5 text-neutral-400" />
-                                <span>New Journal</span>
-                            </button>
 
                             {journalsOpen && (
                                 <div className="space-y-0.5 mt-1">
@@ -404,24 +397,32 @@ export default function SidebarNotebook({ notebook, currentPageType, currentPage
                                 className="px-4 py-1.5 flex items-center justify-between cursor-pointer"
                                 onClick={() => setSpacesOpen(!spacesOpen)}
                             >
-                                <h4 className="text-xs font-medium text-neutral-500 dark:text-neutral-400 tracking-wider">
-                                    SPACES
-                                </h4>
-                                <ChevronDown
-                                    className={cn(
-                                        'h-3 w-3 text-neutral-400 transition-transform duration-200 ease-in-out',
-                                        spacesOpen ? 'rotate-180' : '',
-                                    )}
-                                />
+                                <div className="flex items-center gap-1">
+                                    <MessageSquare className="h-3 w-3 text-neutral-400" />
+                                    <h4 className="text-xs font-medium text-neutral-500 dark:text-neutral-400 tracking-wider">
+                                        SPACES
+                                    </h4>
+                                </div>
+                                <div className="flex items-center gap-1">
+                                    <motion.button
+                                        {...hoverAnimation}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleCreateSpace();
+                                        }}
+                                        className="p-1 rounded hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors duration-150"
+                                        title="New space"
+                                    >
+                                        <MessageSquare className="h-3 w-3 text-neutral-500 dark:text-neutral-400" />
+                                    </motion.button>
+                                    <ChevronDown
+                                        className={cn(
+                                            'h-3 w-3 text-neutral-400 transition-transform duration-200 ease-in-out',
+                                            spacesOpen ? 'rotate-180' : '',
+                                        )}
+                                    />
+                                </div>
                             </div>
-
-                            <button
-                                onClick={handleCreateSpace}
-                                className="w-full flex items-center gap-2 text-left px-4 py-1.5 text-sm text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 mt-1"
-                            >
-                                <FolderPlus className="h-3.5 w-3.5 text-neutral-400" />
-                                <span>New Space</span>
-                            </button>
 
                             {spacesOpen && (
                                 <div className="space-y-0.5 mt-1">
@@ -522,6 +523,14 @@ export default function SidebarNotebook({ notebook, currentPageType, currentPage
                                                         </button>
                                                     </div>
                                                 )}
+                                            </div>
+
+                                            {/* Timestamp hover (matches journal styling) */}
+                                            <div className="ml-9 px-4 mt-0 pb-0.5 overflow-hidden transition-all duration-300 max-h-0 opacity-0 transform translate-y-[-5px] group-hover:opacity-100 group-hover:max-h-8 group-hover:mt-0.5 group-hover:translate-y-0">
+                                                <div className="flex items-center gap-1.5 text-xs text-neutral-500 dark:text-neutral-400">
+                                                    <Clock className="h-2.5 w-2.5 mr-0.5" />
+                                                    <span>{format(new Date(space.updatedAt), 'MMM d, yyyy')}</span>
+                                                </div>
                                             </div>
                                         </div>
                                     ))}

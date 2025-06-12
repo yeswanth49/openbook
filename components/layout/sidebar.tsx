@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import {
     BookOpen,
     ChevronLeft,
@@ -22,7 +22,6 @@ import {
     Clock,
     AppWindowMac,
 } from 'lucide-react';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useSpaces, Space as SpaceType } from '@/contexts/SpacesContext';
 import { useNotebooks } from '@/contexts/NotebookContext';
@@ -290,17 +289,23 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                     {/* Footer */}
                     <div className="border-t border-neutral-100 dark:border-neutral-800 py-3 px-4">
                         <div className="space-y-1">
-                            <a href="https://x.com/GoOpenBook" target="_blank" rel="noopener noreferrer" className="block">
-                                <button className="flex items-center gap-2 w-full text-left px-2 py-1.5 text-sm text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded">
-                                    <MessageSquare className="h-4 w-4 text-neutral-400" />
-                                    <span>Follow on X</span>
-                                </button>
+                            <a
+                                href="https://x.com/GoOpenBook"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center gap-2 w-full text-left px-2 py-1.5 text-sm text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded"
+                            >
+                                <MessageSquare className="h-4 w-4 text-neutral-400" />
+                                <span>Follow on X</span>
                             </a>
-                            <a href="https://openbook.featurebase.app/roadmap" target="_blank" rel="noopener noreferrer" className="block">
-                                <button className="flex items-center gap-2 w-full text-left px-2 py-1.5 text-sm text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded">
-                                    <AppWindowMac className="h-4 w-4 text-neutral-400" />
-                                    <span>Feedback</span>
-                                </button>
+                            <a
+                                href="https://openbook.featurebase.app/roadmap"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center gap-2 w-full text-left px-2 py-1.5 text-sm text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded"
+                            >
+                                <AppWindowMac className="h-4 w-4 text-neutral-400" />
+                                <span>Feedback</span>
                             </a>
                             {/* Add Clear Storage button */}
                             <button

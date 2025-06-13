@@ -28,6 +28,14 @@ describe('getDefaultNameRegex', () => {
         expect(regex.test('Project Discussion')).toBe(false);
         expect(regex.test('UntitledX')).toBe(false);
     });
+    it('does not match invalid Conversation times', () => {
+        expect(regex.test('Conversation 00:00 AM')).toBe(false);
+        expect(regex.test('Conversation 13:00 PM')).toBe(false);
+        expect(regex.test('Conversation 99:99 PM')).toBe(false);
+        expect(regex.test('Conversation 3:60 PM')).toBe(false);
+        expect(regex.test('Conversation 12:61 AM')).toBe(false);
+        expect(regex.test('Conversation 0:15 AM')).toBe(false);
+    });
 });
 
 describe('isDefaultAutoName', () => {

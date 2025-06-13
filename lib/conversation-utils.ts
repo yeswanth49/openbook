@@ -21,7 +21,8 @@ interface ConversationMetadata {
  * Utility to get the default name regex (case-insensitive)
  */
 export function getDefaultNameRegex(): RegExp {
-    return /^(Untitled(?: \d+)?|Conversation \d{1,2}:\d{2}\s?(?:AM|PM)|Space - \d+)$/i;
+    // Conversation time: hours 1-12, minutes 00-59, AM/PM (case-insensitive)
+    return /^(Untitled(?: \d+)?|Conversation (1[0-2]|0?[1-9]):[0-5][0-9]\s?(AM|PM)|Space - \d+)$/i;
 }
 
 /**

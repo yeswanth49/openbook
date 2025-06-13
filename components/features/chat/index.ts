@@ -1,1 +1,1 @@
-export { ChatClearConfirmation } from './chat-clear-confirmation'; 
+export { ChatCompactConfirmation } from './chat-clear-confirmation'; 

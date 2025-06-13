@@ -3,13 +3,13 @@
 import React, { useEffect, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
 
-interface ChatClearConfirmationProps {
+interface ChatCompactConfirmationProps {
     onConfirm: () => void;
     onCancel: () => void;
     className?: string;
 }
 
-export function ChatClearConfirmation({ onConfirm, onCancel, className = '' }: ChatClearConfirmationProps) {
+export function ChatCompactConfirmation({ onConfirm, onCancel, className = '' }: ChatCompactConfirmationProps) {
     const containerRef = useRef<HTMLDivElement>(null);
 
     const handleKeyDown = useCallback(
@@ -53,10 +53,10 @@ export function ChatClearConfirmation({ onConfirm, onCancel, className = '' }: C
         >
             <div className="p-2">
                 <div className="text-xs font-medium mb-1.5 text-neutral-800 dark:text-neutral-100">
-                    Clear chat?
+                    Compact conversation?
                 </div>
                 <p className="mb-2 text-[9px] text-neutral-600 dark:text-neutral-400">
-                    This will clear all messages. Cannot be undone.
+                    This will summarize the conversation, create a new workspace, and reset the LLM context here while keeping messages visible.
                 </p>
 
                 <div className="flex space-x-1.5 mb-1.5">
@@ -71,7 +71,7 @@ export function ChatClearConfirmation({ onConfirm, onCancel, className = '' }: C
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                     >
-                        Clear
+                        Compact
                     </motion.button>
                     <motion.button
                         onClick={onCancel}

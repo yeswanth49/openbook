@@ -91,7 +91,7 @@ const HomeContent = () => {
     const [q] = useQueryState('q', parseAsString.withDefault(''));
 
     // Conversation spaces context
-    const { currentSpace, currentSpaceId, switchSpace, addMessage } = useSpaces();
+    const { currentSpace, currentSpaceId, switchSpace, addMessage, createSpace, markSpaceContextReset } = useSpaces();
     // Study mode context
     const { getStudyModeForSpace, setStudyMode } = useStudyMode();
     // Set Google Gemini 2.5 Flash as the default model
@@ -197,6 +197,75 @@ const HomeContent = () => {
         toast.info('Study mode disabled');
     }, [currentSpaceId, setStudyMode]);
 
+    // Handle conversation compacting (summarize, create new space, reset context)
+    const handleCompactSpace = useCallback(async (spaceId: string) => {
+        console.log(`[COMPACT] Starting compact process for space: ${spaceId}`);
+        
+        const space = currentSpace;
+        if (!space || space.messages.length === 0) {
+            console.error(`[COMPACT] No conversation to compact - space: ${space?.name}, messages: ${space?.messages?.length}`);
+            throw new Error('No conversation to compact');
+        }
+
+        console.log(`[COMPACT] Compacting ${space.messages.length} messages from space: ${space.name}`);
+
+        try {
+            // Call the compact API
+            const response = await fetch('/api/chat/compact', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ messages: space.messages }),
+            });
+
+            if (!response.ok) {
+                throw new Error(`API failed with status: ${response.status}`);
+            }
+
+            const { summary, title } = await response.json();
+            console.log(`[COMPACT] Generated summary for: "${title}"`);
+
+            // Create new space with the summary
+            const newSpaceId = createSpace(`${title} (Continued)`);
+            if (newSpaceId) {
+                console.log(`[COMPACT] Created new space: ${newSpaceId}`);
+                
+                // Add the summary as the first message in the new space
+                const summaryMessage: ChatMessage = {
+                    id: crypto.randomUUID(),
+                    role: 'assistant',
+                    content: `**Previous Conversation Summary:**\n\n${summary}\n\n---\n\nHow can I help you continue from here?`,
+                    timestamp: Date.now(),
+                };
+                
+                // Switch to the new space first
+                switchSpace(newSpaceId);
+                console.log(`[COMPACT] Switched to new space: ${newSpaceId}`);
+                
+                // Add the summary message to the new space
+                setTimeout(() => {
+                    addMessage(summaryMessage);
+                    console.log(`[COMPACT] Added summary message to new space`);
+                }, 100);
+
+                // CRITICAL: Reset useChat context for the original space
+                // We need to mark this space as "context-reset" so it doesn't inherit history
+                // Store this in space metadata to prevent context bleeding
+                setTimeout(() => {
+                    console.log(`[COMPACT] Marking original space ${spaceId} as context-reset`);
+                    markSpaceContextReset(spaceId);
+                }, 150);
+            }
+
+            // Clear study mode for the original space
+            setStudyMode(null, spaceId);
+            console.log(`[COMPACT] Cleared study mode for original space: ${spaceId}`);
+            
+        } catch (error) {
+            console.error(`[COMPACT] Error during compact:`, error);
+            throw error;
+        }
+    }, [currentSpace, createSpace, switchSpace, addMessage, setStudyMode, markSpaceContextReset]);
+
     const chatOptions: UseChatOptions = useMemo(() => {
         // Determine API endpoint based on study mode
         const apiEndpoint = currentStudyMode?.framework ? `/api/study/${currentStudyMode.framework}` : '/api/chat';
@@ -274,9 +343,20 @@ const HomeContent = () => {
     // Sync chat internal messages when switching spaces (only on space change, not on every message addition)
     useEffect(() => {
         if (currentSpace?.messages) {
-            // Sort messages by timestamp to ensure correct order on refresh
-            const sortedMessages = [...currentSpace.messages].sort((a, b) => a.timestamp - b.timestamp);
-            setMessages(sortedMessages);
+            // Check if this space has been marked for context reset
+            if (currentSpace.metadata?.contextReset) {
+                console.log(`[CONTEXT] Space ${currentSpaceId} marked for context reset - clearing LLM context but keeping messages visible`);
+                // Keep messages visible in UI but don't send them to LLM context
+                // The messages will be shown but useChat will start with empty context
+                const sortedMessages = [...currentSpace.messages].sort((a, b) => a.timestamp - b.timestamp);
+                setMessages([]); // Clear LLM context
+                // Note: We still show messages in the UI through the Messages component which uses currentSpace.messages
+            } else {
+                // Normal case: sync all messages to LLM context
+                console.log(`[CONTEXT] Syncing ${currentSpace.messages.length} messages to LLM context for space: ${currentSpaceId}`);
+                const sortedMessages = [...currentSpace.messages].sort((a, b) => a.timestamp - b.timestamp);
+                setMessages(sortedMessages);
+            }
         }
         // Reset initialization flag when switching spaces to allow new queries
         initializedRef.current = false;
@@ -328,14 +408,27 @@ const HomeContent = () => {
         );
     };
 
+    // Determine which messages to display based on context reset flag
+    const displayMessages = useMemo(() => {
+        if (currentSpace?.metadata?.contextReset) {
+            // For context-reset spaces, show all messages from space but useChat context is empty
+            console.log(`[DISPLAY] Using space messages for context-reset space: ${currentSpace.messages.length} messages`);
+            return [...currentSpace.messages].sort((a, b) => a.timestamp - b.timestamp);
+        } else {
+            // For normal spaces, use useChat messages
+            console.log(`[DISPLAY] Using useChat messages for normal space: ${messages.length} messages`);
+            return messages;
+        }
+    }, [currentSpace, messages]);
+
     const lastUserMessageIndex = useMemo(() => {
-        for (let i = messages.length - 1; i >= 0; i--) {
-            if (messages[i].role === 'user') {
+        for (let i = displayMessages.length - 1; i >= 0; i--) {
+            if (displayMessages[i].role === 'user') {
                 return i;
             }
         }
         return -1;
-    }, [messages]);
+    }, [displayMessages]);
 
     // Scroll to bottom on message change or refresh
     useEffect(() => {
@@ -373,6 +466,7 @@ const HomeContent = () => {
         // 1. Messages array changes (new message added)
         // 2. When streaming starts
         // 3. When suggested questions appear
+        console.log(`[SCROLL] Scrolling for ${displayMessages.length} display messages, status: ${status}`);
         scrollToBottom();
 
         // Add a scroll listener to detect manual scrolling
@@ -388,7 +482,7 @@ const HomeContent = () => {
 
         window.addEventListener('scroll', handleScroll);
         return () => window.removeEventListener('scroll', handleScroll);
-    }, [messages, suggestedQuestions, status, windowWidth, hasManuallyScrolled]);
+    }, [displayMessages, suggestedQuestions, status, windowWidth, hasManuallyScrolled]);
 
     // Handle window resize without automatically toggling sidebar
     useEffect(() => {
@@ -486,7 +580,7 @@ const HomeContent = () => {
                     <div
                         className={`w-full max-w-[95%] xs:max-w-[90%] sm:max-w-2xl md:max-w-3xl lg:max-w-4xl space-y-4 sm:space-y-6 mx-auto transition-all duration-300 overflow-visible`}
                     >
-                        {status === 'ready' && messages.length === 0 && (
+                        {status === 'ready' && displayMessages.length === 0 && (
                             <div className="text-center py-8 sm:py-12">
                                 <h1 className="text-xl xs:text-2xl sm:text-3xl md:text-4xl mb-3 sm:mb-4 md:mb-6 text-neutral-800 dark:text-neutral-100 font-syne!">
                                     What do you want to learn about?
@@ -512,7 +606,7 @@ const HomeContent = () => {
                                     )}
                             </div>
                         )}
-                        {messages.length === 0 && !hasSubmitted && (
+                        {displayMessages.length === 0 && !hasSubmitted && (
                             <div className="relative z-50 !mt-4 bg-white/60 dark:bg-neutral-900/60 backdrop-blur-sm rounded-md p-1">
                                 <ChatInput
                                     value={input}
@@ -545,12 +639,14 @@ const HomeContent = () => {
                                     fileInputRef={fileInputRef}
                                     status={status}
                                     onFrameworkSelect={handleFrameworkSelect}
+                                    currentSpaceId={currentSpaceId}
+                                    onCompactSpace={handleCompactSpace}
                                 />
                             </div>
                         )}
 
                         {/* Add the widget section below form when no messages */}
-                        {messages.length === 0 && (
+                        {displayMessages.length === 0 && (
                             <div className="mt-0 sm:mt-4">
                                 <WidgetSection
                                     status={status}
@@ -562,10 +658,10 @@ const HomeContent = () => {
                         )}
 
                         {/* Use the Messages component */}
-                        {messages.length > 0 && (
+                        {displayMessages.length > 0 && (
                             <div className="mt-4 sm:mt-8 md:mt-12 w-full overflow-visible">
                                 <Messages
-                                    messages={messages}
+                                    messages={displayMessages}
                                     lastUserMessageIndex={lastUserMessageIndex}
                                     isEditingMessage={isEditingMessage}
                                     editingMessageIndex={editingMessageIndex}
@@ -588,7 +684,7 @@ const HomeContent = () => {
                         <div ref={bottomRef} className="h-0 w-full opacity-0 pointer-events-none" aria-hidden="true" />
                     </div>
 
-                    {(messages.length > 0 || hasSubmitted) && (
+                    {(displayMessages.length > 0 || hasSubmitted) && (
                         <div
                             className="fixed bottom-0 left-0 right-0 pb-3 sm:pb-4 z-40 pointer-events-none"
                             style={{
@@ -635,6 +731,8 @@ const HomeContent = () => {
                                         fileInputRef={fileInputRef}
                                         status={status}
                                         onFrameworkSelect={handleFrameworkSelect}
+                                        currentSpaceId={currentSpaceId}
+                                        onCompactSpace={handleCompactSpace}
                                     />
                                 </div>
                             </div>

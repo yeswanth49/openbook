@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { StudyFrameworkPicker } from '@/components/features/study';
 import { AiModelPicker } from '@/components/features/ai';
-import { ChatClearConfirmation } from '@/components/features/chat';
+import { ChatCompactConfirmation } from '@/components/features/chat';
 import { StudyFramework } from '@/lib/types';
 import { SearchGroupId } from '@/lib/utils';
 
@@ -37,6 +37,8 @@ interface ChatInputProps {
     fileInputRef: React.RefObject<HTMLInputElement>;
     status: 'submitted' | 'streaming' | 'ready' | 'error';
     onFrameworkSelect?: (framework: string) => void;
+    currentSpaceId?: string;
+    onCompactSpace?: (spaceId: string) => Promise<void>;
 }
 
 // Derive the Extreme command from the StudyFramework enum to avoid string drift
@@ -47,7 +49,7 @@ const COMMANDS: ChatCommand[] = [
     { id: '/model', label: 'AI model' },
     { id: '/frameworks', label: 'Study frameworks' },
     { id: EXTREME_COMMAND, label: 'Extreme mode' },
-    { id: '/clear', label: 'Clear chat' },
+    { id: '/compact', label: 'Compact conversation' },
 ];
 
 export function ChatInput({
@@ -64,6 +66,8 @@ export function ChatInput({
     fileInputRef,
     status,
     onFrameworkSelect,
+    currentSpaceId,
+    onCompactSpace,
 }: ChatInputProps) {
     const [activeMenu, setActiveMenu] = useState<string | null>(null);
     const [showSuggestions, setShowSuggestions] = useState(false);
@@ -78,7 +82,7 @@ export function ChatInput({
         // Auto-open menus for complete commands
         if (value === '/model') setActiveMenu('model');
         else if (value === '/frameworks') setActiveMenu('frameworks');
-        else if (value === '/clear') setActiveMenu('clear');
+        else if (value === '/compact') setActiveMenu('compact');
         else setActiveMenu(null);
     }, [value]);
 
@@ -114,7 +118,7 @@ export function ChatInput({
                 break;
             case '/model':
             case '/frameworks':
-            case '/clear':
+            case '/compact':
                 // Handled by activeMenu state
                 break;
             default:
@@ -154,8 +158,20 @@ export function ChatInput({
         closeMenu();
     };
 
-    const handleClearChat = () => {
-        toast.info('Chat cleared');
+    const handleCompactChat = async () => {
+        if (!currentSpaceId || !onCompactSpace) {
+            toast.error('Unable to compact conversation');
+            closeMenu();
+            return;
+        }
+
+        try {
+            // Compact the current conversation
+            await onCompactSpace(currentSpaceId);
+            toast.success('Conversation compacted successfully');
+        } catch (error) {
+            toast.error('Failed to compact conversation');
+        }
         closeMenu();
     };
 
@@ -179,9 +195,9 @@ export function ChatInput({
                     onClose={closeMenu}
                 />
             )}
-            {activeMenu === 'clear' && (
-                <ChatClearConfirmation 
-                    onConfirm={handleClearChat}
+            {activeMenu === 'compact' && (
+                <ChatCompactConfirmation 
+                    onConfirm={handleCompactChat}
                     onCancel={closeMenu}
                 />
             )}

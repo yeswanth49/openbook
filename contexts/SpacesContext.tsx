@@ -30,6 +30,7 @@ export type Space = {
         pinned?: boolean;
         lastAutoNameUpdate?: number;
         isGeneratingName?: boolean;
+        contextReset?: boolean; // Flag to indicate LLM context should be reset for this space
     };
     studyMode?: {
         framework: 'memory-palace' | 'feynman-technique' | 'spaced-repetition' | 'extreme-mode' | null;
@@ -51,6 +52,7 @@ export interface SpacesContextType {
     exportSpace: (id: string) => void;
     togglePinSpace: (id: string) => void;
     resetToAutoNaming: (id: string) => void;
+    markSpaceContextReset: (id: string) => void;
     searchSpaces: (query: string) => Array<{
         id: string;
         name: string;
@@ -531,6 +533,23 @@ export const SpacesProvider = ({ children }: { children: ReactNode }) => {
         URL.revokeObjectURL(url);
     };
 
+    const markSpaceContextReset = (id: string) => {
+        console.log(`[SPACES] Marking space ${id} for context reset`);
+        setSpaces((prev) =>
+            prev.map((s) =>
+                s.id === id
+                    ? {
+                          ...s,
+                          metadata: {
+                              ...(s.metadata || { manuallyRenamed: false }),
+                              contextReset: true,
+                          },
+                      }
+                    : s,
+            ),
+        );
+    };
+
     const currentSpace = spaces.find((s) => s.id === currentSpaceId);
 
     const searchSpaces = (
@@ -595,6 +614,7 @@ export const SpacesProvider = ({ children }: { children: ReactNode }) => {
                 exportSpace,
                 togglePinSpace,
                 resetToAutoNaming,
+                markSpaceContextReset,
                 searchSpaces,
             }}
         >

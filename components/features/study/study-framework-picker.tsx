@@ -99,7 +99,7 @@ export function StudyFrameworkPicker({ onSelect, onClose, className = '' }: Stud
             aria-modal="true"
             className={`
                 absolute bottom-full left-0 w-80 mb-2 z-[1000]
-                bg-white/80 dark:bg-neutral-900/80 
+                bg-white/60 dark:bg-neutral-900/60 
                 backdrop-blur-xl backdrop-saturate-150
                 border border-white/30 dark:border-neutral-700/40
                 shadow-xl shadow-black/5 dark:shadow-black/20

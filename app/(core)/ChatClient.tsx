@@ -484,7 +484,7 @@ const HomeContent = () => {
                 <Navbar />
                 <div className="w-full p-2 sm:p-4 md:p-10 !mt-32 sm:!mt-40 flex !flex-col border-b border-neutral-100 dark:border-neutral-800 md:border-0">
                     <div
-                        className={`w-full max-w-[95%] xs:max-w-[90%] sm:max-w-2xl md:max-w-3xl lg:max-w-4xl space-y-4 sm:space-y-6 mx-auto transition-all duration-300 overflow-x-hidden`}
+                        className={`w-full max-w-[95%] xs:max-w-[90%] sm:max-w-2xl md:max-w-3xl lg:max-w-4xl space-y-4 sm:space-y-6 mx-auto transition-all duration-300 overflow-x-hidden flex flex-col h-screen align-center justify-center`}
                     >
                         {status === 'ready' && messages.length === 0 && (
                             <div className="text-center py-8 sm:py-12">

@@ -22,7 +22,6 @@ import {
     AppWindowMac,
     Plus,
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { useSpaces, Space as SpaceType } from '@/contexts/SpacesContext';
 import { useNotebooks } from '@/contexts/NotebookContext';
 import { useRouter } from 'next/navigation';
@@ -107,8 +106,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
 
     // Update handleCreateNotebook
     const handleCreateNotebook = () => {
-        const defaultName = `Notebook ${notebooks.length + 1}`;
-        createNotebook(defaultName);
+        createNotebook();
     };
 
     // Update clearLocalStorage function to use the custom modal

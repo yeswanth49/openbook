@@ -18,15 +18,17 @@ interface ConversationMetadata {
 // -----------------------------------------------------------------------------
 
 /**
- * Stricter time pattern: matches h:mm AM/PM formats like "12:34 PM" (case-insensitive)
+ * Utility to get the default name regex (case-insensitive)
  */
-const DEFAULT_NAME_REGEX = /^(Untitled(?: \d+)?|Conversation \d{1,2}:\d{2}\s?(?:AM|PM|am|pm)|Space - \d+)$/;
+export function getDefaultNameRegex(): RegExp {
+    return /^(Untitled(?: \d+)?|Conversation \d{1,2}:\d{2}\s?(?:AM|PM)|Space - \d+)$/i;
+}
 
 /**
  * Determine whether a given space name is one of the auto-generated defaults.
  */
 export function isDefaultAutoName(name: string): boolean {
-    return DEFAULT_NAME_REGEX.test(name.trim());
+    return getDefaultNameRegex().test(name.trim());
 }
 
 /**

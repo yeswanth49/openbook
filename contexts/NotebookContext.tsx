@@ -9,7 +9,7 @@ export interface NotebookContextType {
     notebooks: Notebook[];
     currentNotebookId: string;
     currentNotebook?: Notebook;
-    createNotebook: (name: string) => string | null;
+    createNotebook: (name?: string) => string | null;
     deleteNotebook: (id: string) => void;
     renameNotebook: (id: string, name: string) => void;
     switchNotebook: (id: string) => void;
@@ -22,6 +22,25 @@ import { NOTEBOOKS_DATA_KEY } from '@/lib/storageKeys';
 
 const STORAGE_KEY = NOTEBOOKS_DATA_KEY;
 const NOTEBOOK_LIMIT = 3;
+
+// Helper to generate a unique notebook name
+export function generateUniqueNotebookName(notebooks: Notebook[]): string {
+    const baseName = 'Notebook';
+    const usedNumbers = new Set<number>();
+    notebooks.forEach((notebook) => {
+        const match = notebook.name.match(/^Notebook(?: (\d+))?$/i);
+        if (match) {
+            const num = match[1] ? parseInt(match[1], 10) : 1;
+            usedNumbers.add(num);
+        }
+    });
+    // Find the smallest missing positive integer
+    let n = 1;
+    while (usedNumbers.has(n)) {
+        n++;
+    }
+    return n === 1 ? baseName : `${baseName} ${n}`;
+}
 
 export const NotebookProvider = ({ children }: { children: ReactNode }) => {
     const [notebooks, setNotebooks] = useState<Notebook[]>([]);
@@ -66,7 +85,7 @@ export const NotebookProvider = ({ children }: { children: ReactNode }) => {
 
     const currentNotebook = notebooks.find((notebook) => notebook.id === currentNotebookId);
 
-    const createNotebook = (name: string): string | null => {
+    const createNotebook = (name?: string): string | null => {
         // Check if limit is reached for free users
         if (!premium && notebooks.length >= NOTEBOOK_LIMIT) {
             showLimitModal(
@@ -75,17 +94,16 @@ export const NotebookProvider = ({ children }: { children: ReactNode }) => {
             );
             return null;
         }
-
+        const notebookName = name && name.trim() ? name : generateUniqueNotebookName(notebooks);
         const newNotebook: Notebook = {
             id: crypto.randomUUID(),
-            name,
+            name: notebookName,
             order: notebooks.length,
             createdAt: Date.now(),
             updatedAt: Date.now(),
             isExpanded: true,
             metadata: {},
         };
-
         setNotebooks((prev) => [...prev, newNotebook]);
         setCurrentNotebookId(newNotebook.id);
         return newNotebook.id;

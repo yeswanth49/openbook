@@ -199,15 +199,21 @@ const HomeContent = () => {
 
     // Handle conversation compacting (summarize, create new space, reset context)
     const handleCompactSpace = useCallback(async (spaceId: string) => {
-        console.log(`[COMPACT] Starting compact process for space: ${spaceId}`);
+        if (process.env.NODE_ENV === 'development') {
+            console.log(`[COMPACT] Starting compact process for space: ${spaceId}`);
+        }
         
         const space = currentSpace;
         if (!space || space.messages.length === 0) {
-            console.error(`[COMPACT] No conversation to compact - space: ${space?.name}, messages: ${space?.messages?.length}`);
+            if (process.env.NODE_ENV === 'development') {
+                console.error(`[COMPACT] No conversation to compact - space: ${space?.name}, messages: ${space?.messages?.length}`);
+            }
             throw new Error('No conversation to compact');
         }
 
-        console.log(`[COMPACT] Compacting ${space.messages.length} messages from space: ${space.name}`);
+        if (process.env.NODE_ENV === 'development') {
+            console.log(`[COMPACT] Compacting ${space.messages.length} messages from space: ${space.name}`);
+        }
 
         try {
             // Call the compact API
@@ -222,12 +228,25 @@ const HomeContent = () => {
             }
 
             const { summary, title } = await response.json();
-            console.log(`[COMPACT] Generated summary for: "${title}"`);
+            if (process.env.NODE_ENV === 'development') {
+                console.log(`[COMPACT] Generated summary for: "${title}"`);
+            }
 
             // Create new space with the summary
             const newSpaceId = createSpace(`${title} (Continued)`);
             if (newSpaceId) {
-                console.log(`[COMPACT] Created new space: ${newSpaceId}`);
+                if (process.env.NODE_ENV === 'development') {
+                    console.log(`[COMPACT] Created new space: ${newSpaceId}`);
+                }
+                
+                // Switch to the new space first and wait for state to update
+                switchSpace(newSpaceId);
+                if (process.env.NODE_ENV === 'development') {
+                    console.log(`[COMPACT] Switched to new space: ${newSpaceId}`);
+                }
+                
+                // Wait a moment for the space switch to complete
+                await new Promise(resolve => setTimeout(resolve, 50));
                 
                 // Add the summary as the first message in the new space
                 const summaryMessage: ChatMessage = {
@@ -237,31 +256,34 @@ const HomeContent = () => {
                     timestamp: Date.now(),
                 };
                 
-                // Switch to the new space first
-                switchSpace(newSpaceId);
-                console.log(`[COMPACT] Switched to new space: ${newSpaceId}`);
-                
                 // Add the summary message to the new space
-                setTimeout(() => {
-                    addMessage(summaryMessage);
+                addMessage(summaryMessage);
+                if (process.env.NODE_ENV === 'development') {
                     console.log(`[COMPACT] Added summary message to new space`);
-                }, 100);
+                }
+
+                // Wait for the message to be added before marking the original space
+                await new Promise(resolve => setTimeout(resolve, 50));
 
                 // CRITICAL: Reset useChat context for the original space
                 // We need to mark this space as "context-reset" so it doesn't inherit history
                 // Store this in space metadata to prevent context bleeding
-                setTimeout(() => {
-                    console.log(`[COMPACT] Marking original space ${spaceId} as context-reset`);
-                    markSpaceContextReset(spaceId);
-                }, 150);
+                markSpaceContextReset(spaceId);
+                if (process.env.NODE_ENV === 'development') {
+                    console.log(`[COMPACT] Marked original space ${spaceId} as context-reset`);
+                }
             }
 
             // Clear study mode for the original space
             setStudyMode(null, spaceId);
-            console.log(`[COMPACT] Cleared study mode for original space: ${spaceId}`);
+            if (process.env.NODE_ENV === 'development') {
+                console.log(`[COMPACT] Cleared study mode for original space: ${spaceId}`);
+            }
             
         } catch (error) {
-            console.error(`[COMPACT] Error during compact:`, error);
+            if (process.env.NODE_ENV === 'development') {
+                console.error(`[COMPACT] Error during compact:`, error);
+            }
             throw error;
         }
     }, [currentSpace, createSpace, switchSpace, addMessage, setStudyMode, markSpaceContextReset]);

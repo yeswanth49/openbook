@@ -534,14 +534,18 @@ export const SpacesProvider = ({ children }: { children: ReactNode }) => {
     };
 
     const markSpaceContextReset = (id: string) => {
-        console.log(`[SPACES] Marking space ${id} for context reset`);
+        if (process.env.NODE_ENV === 'development') {
+            console.log(`[SPACES] Marking space ${id} for context reset`);
+        }
         setSpaces((prev) =>
             prev.map((s) =>
                 s.id === id
                     ? {
                           ...s,
+                          updatedAt: Date.now(),
                           metadata: {
-                              ...(s.metadata || { manuallyRenamed: false }),
+                              ...s.metadata,
+                              manuallyRenamed: s.metadata?.manuallyRenamed ?? false,
                               contextReset: true,
                           },
                       }

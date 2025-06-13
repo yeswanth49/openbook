@@ -170,13 +170,13 @@ export function ChatInput({
                 <AiModelPicker 
                     selectedModel={selectedModel}
                     onSelect={handleModelSelect} 
-                    onClose={closeMenu} 
+                    onClose={closeMenu}
                 />
             )}
             {activeMenu === 'frameworks' && (
                 <StudyFrameworkPicker 
                     onSelect={handleFrameworkSelect} 
-                    onClose={closeMenu} 
+                    onClose={closeMenu}
                 />
             )}
             {activeMenu === 'clear' && (

@@ -17,15 +17,26 @@ export async function POST(request: Request) {
             return new Response('No messages provided', { status: 400 });
         }
 
+        // Limit the number of messages to prevent performance issues
+        if (messages.length > 100) {
+            return new Response('Too many messages. Maximum 100 messages allowed.', { status: 400 });
+        }
+
         // Format messages for summarization
         const conversationText = messages
             .map((msg: any) => `${msg.role.toUpperCase()}: ${msg.content}`)
             .join('\n\n');
 
+        // Limit the conversation text length to prevent cost/performance issues
+        const maxLength = 4000;
+        const truncatedConversationText = conversationText.length > maxLength 
+            ? conversationText.substring(0, maxLength) + '\n\n[... conversation truncated for processing ...]'
+            : conversationText;
+
         const prompt = `Please analyze this conversation and provide a comprehensive summary that preserves the key context, decisions, learnings, and important details. The summary should be detailed enough to continue the conversation meaningfully in a new context.
 
 Conversation:
-${conversationText}
+${truncatedConversationText}
 
 Please provide both a detailed summary and a descriptive title for continuing this discussion.`;
 

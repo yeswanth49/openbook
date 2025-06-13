@@ -240,13 +240,10 @@ const HomeContent = () => {
                 }
                 
                 // Switch to the new space first and wait for state to update
-                switchSpace(newSpaceId);
+                await switchSpace(newSpaceId);
                 if (process.env.NODE_ENV === 'development') {
                     console.log(`[COMPACT] Switched to new space: ${newSpaceId}`);
                 }
-                
-                // Wait a moment for the space switch to complete
-                await new Promise(resolve => setTimeout(resolve, 50));
                 
                 // Add the summary as the first message in the new space
                 const summaryMessage: ChatMessage = {
@@ -261,9 +258,6 @@ const HomeContent = () => {
                 if (process.env.NODE_ENV === 'development') {
                     console.log(`[COMPACT] Added summary message to new space`);
                 }
-
-                // Wait for the message to be added before marking the original space
-                await new Promise(resolve => setTimeout(resolve, 50));
 
                 // CRITICAL: Reset useChat context for the original space
                 // We need to mark this space as "context-reset" so it doesn't inherit history

@@ -45,11 +45,10 @@ interface ChatInputProps {
 // Ensure the command is always lowercase to match user input normalization
 const EXTREME_COMMAND = `/${StudyFramework.ExtremeMode.split('-')[0].toLowerCase()}` as const; // "/extreme"
 
-const COMMANDS: ChatCommand[] = [
+const BASE_COMMANDS: ChatCommand[] = [
     { id: '/model', label: 'AI model' },
     { id: '/frameworks', label: 'Study frameworks' },
     { id: EXTREME_COMMAND, label: 'Extreme mode' },
-    { id: '/compact', label: 'Compact conversation' },
 ];
 
 export function ChatInput({
@@ -73,6 +72,13 @@ export function ChatInput({
     const [showSuggestions, setShowSuggestions] = useState(false);
     const inputRef = useRef<HTMLInputElement>(null);
     const isProcessing = status === 'submitted' || status === 'streaming';
+
+    // Create dynamic commands list based on available props
+    const COMMANDS: ChatCommand[] = [
+        ...BASE_COMMANDS,
+        // Only include compact command if required props are provided
+        ...(currentSpaceId && onCompactSpace ? [{ id: '/compact', label: 'Compact conversation' }] : []),
+    ];
 
     // Command handling
     useEffect(() => {
@@ -118,8 +124,16 @@ export function ChatInput({
                 break;
             case '/model':
             case '/frameworks':
-            case '/compact':
                 // Handled by activeMenu state
+                break;
+            case '/compact':
+                // Only allow if required props are provided
+                if (currentSpaceId && onCompactSpace) {
+                    // Handled by activeMenu state
+                } else {
+                    toast.error('Compact feature not available');
+                    onChange('');
+                }
                 break;
             default:
                 toast.info('Unknown command');

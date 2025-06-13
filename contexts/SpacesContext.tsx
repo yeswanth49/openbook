@@ -47,7 +47,7 @@ export interface SpacesContextType {
     deleteSpace: (id: string) => void;
     archiveSpace: (id: string) => void;
     renameSpace: (id: string, name: string, isManualRename?: boolean) => void;
-    switchSpace: (id: string) => void;
+    switchSpace: (id: string) => Promise<void>;
     addMessage: (message: ChatMessage) => void;
     exportSpace: (id: string) => void;
     togglePinSpace: (id: string) => void;
@@ -366,7 +366,7 @@ export const SpacesProvider = ({ children }: { children: ReactNode }) => {
                           name,
                           updatedAt: Date.now(),
                           metadata: {
-                              ...s.metadata,
+                              ...(s.metadata || {}),
                               manuallyRenamed: isManualRename, // Mark if this was a manual rename
                               isGeneratingName: false, // Not generating if manually renamed
                           },
@@ -434,8 +434,14 @@ export const SpacesProvider = ({ children }: { children: ReactNode }) => {
         );
     };
 
-    const switchSpace = (id: string) => {
-        setCurrentSpaceId(id);
+    const switchSpace = (id: string): Promise<void> => {
+        return new Promise((resolve) => {
+            setCurrentSpaceId(id);
+            // Use a microtask to ensure the state update has been processed
+            Promise.resolve().then(() => {
+                resolve();
+            });
+        });
     };
 
     const addMessage = (newMessageToAdd: ChatMessage) => {
@@ -544,7 +550,7 @@ export const SpacesProvider = ({ children }: { children: ReactNode }) => {
                           ...s,
                           updatedAt: Date.now(),
                           metadata: {
-                              ...s.metadata,
+                              ...(s.metadata || {}),
                               manuallyRenamed: s.metadata?.manuallyRenamed ?? false,
                               contextReset: true,
                           },

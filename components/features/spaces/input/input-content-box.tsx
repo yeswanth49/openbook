@@ -273,7 +273,7 @@ export function ChatInput({
                     onChange={(e) => onChange(e.target.value)}
                     onKeyDown={handleKeyDown}
                     rows={1}
-                    className="flex-1 bg-transparent border-none outline-none text-sm placeholder:text-neutral-400 resize-none"
+                    className="flex-1 bg-transparent border-none outline-none text-sm placeholder:text-neutral-400 resize-none scrollbar-thin scrollbar-thumb-neutral-400 dark:scrollbar-thumb-neutral-600 scrollbar-track-transparent"
                     placeholder="Message or / for commands"
                     disabled={isProcessing}
                     aria-label="Message input"

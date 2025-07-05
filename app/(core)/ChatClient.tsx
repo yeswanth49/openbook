@@ -594,11 +594,11 @@ const HomeContent = () => {
                 <Navbar />
                 <div className="w-full p-2 sm:p-4 md:p-10 !mt-32 sm:!mt-40 flex !flex-col border-b border-neutral-100 dark:border-neutral-800 md:border-0">
                     <div
-                        className={`w-full max-w-[95%] xs:max-w-[90%] sm:max-w-2xl md:max-w-3xl lg:max-w-4xl space-y-4 sm:space-y-6 mx-auto transition-all duration-300 overflow-visible`}
+                        className={`w-full max-w-[95%] xs:max-w-[90%] sm:max-w-2xl md:max-w-3xl lg:max-w-4xl space-y-2 sm:space-y-3 mx-auto transition-all duration-300 overflow-visible`}
                     >
                         {status === 'ready' && displayMessages.length === 0 && (
-                            <div className="text-center py-8 sm:py-12">
-                                <h1 className="text-xl xs:text-2xl sm:text-3xl md:text-4xl mb-3 sm:mb-4 md:mb-6 text-neutral-800 dark:text-neutral-100 font-syne!">
+                            <div className="text-center py-4 sm:py-6">
+                                <h1 className="text-xl xs:text-2xl sm:text-3xl md:text-4xl mb-2 sm:mb-3 text-neutral-800 dark:text-neutral-100 font-syne!">
                                     What do you want to learn about?
                                 </h1>
                                 {currentSpace?.name &&
@@ -623,7 +623,7 @@ const HomeContent = () => {
                             </div>
                         )}
                         {displayMessages.length === 0 && !hasSubmitted && (
-                            <div className="relative z-50 !mt-4 bg-white/60 dark:bg-neutral-900/60 backdrop-blur-sm rounded-md p-1">
+                            <div className="relative z-50 !mt-1 bg-white/60 dark:bg-neutral-900/60 backdrop-blur-sm rounded-md p-1">
                                 <ChatInput
                                     value={input}
                                     onChange={setInput}

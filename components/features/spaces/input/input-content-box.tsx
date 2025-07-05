@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -51,6 +51,33 @@ const BASE_COMMANDS: ChatCommand[] = [
     { id: EXTREME_COMMAND, label: 'Extreme mode' },
 ];
 
+// ---------------------------------------------------------------------------
+// Auto-resize hook for the chat textarea. It updates the element height based
+// on its scrollHeight up to the maxRows limit, falling back to overflow scroll
+// when content exceeds the limit. This is lightweight and frame-synced for
+// responsiveness.
+function useAutoResize(value: string, maxRows: number = 5) {
+    const ref = React.useRef<HTMLTextAreaElement>(null);
+
+    React.useEffect(() => {
+        const ta = ref.current;
+        if (!ta) return;
+
+        // Reset to auto to correctly calculate new scrollHeight
+        ta.style.height = 'auto';
+
+        // Calculate target height
+        const lineHeight = parseInt(getComputedStyle(ta).lineHeight || '24', 10);
+        const maxHeight = lineHeight * maxRows;
+        const nextHeight = Math.min(ta.scrollHeight, maxHeight);
+
+        ta.style.height = `${nextHeight}px`;
+        ta.style.overflowY = ta.scrollHeight > maxHeight ? 'auto' : 'hidden';
+    }, [value, maxRows]);
+
+    return ref;
+}
+
 export function ChatInput({
     value,
     onChange,
@@ -70,7 +97,7 @@ export function ChatInput({
 }: ChatInputProps) {
     const [activeMenu, setActiveMenu] = useState<string | null>(null);
     const [showSuggestions, setShowSuggestions] = useState(false);
-    const inputRef = useRef<HTMLInputElement>(null);
+    const textareaRef = useAutoResize(value, 5);
     const isProcessing = status === 'submitted' || status === 'streaming';
 
     // Create dynamic commands list based on available props
@@ -144,13 +171,13 @@ export function ChatInput({
     const selectSuggestion = (command: string) => {
         onChange(command);
         setShowSuggestions(false);
-        inputRef.current?.focus();
+        textareaRef.current?.focus();
     };
 
     const closeMenu = () => {
         setActiveMenu(null);
         onChange('');
-        inputRef.current?.focus();
+        textareaRef.current?.focus();
     };
 
     const handleModelSelect = (model: string) => {
@@ -240,14 +267,16 @@ export function ChatInput({
             {/* Main input */}
             <div className="flex items-center gap-2 p-1">
                 <span className="text-neutral-400 text-sm select-none">❯</span>
-                <input
-                    ref={inputRef}
+                <textarea
+                    ref={textareaRef}
                     value={value}
                     onChange={(e) => onChange(e.target.value)}
                     onKeyDown={handleKeyDown}
-                    className="flex-1 bg-transparent border-none outline-none text-sm placeholder:text-neutral-400"
+                    rows={1}
+                    className="flex-1 bg-transparent border-none outline-none text-sm placeholder:text-neutral-400 resize-none"
                     placeholder="Message or / for commands"
                     disabled={isProcessing}
+                    aria-label="Message input"
                 />
                 
                 {/* Hidden file input */}

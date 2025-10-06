@@ -178,8 +178,8 @@ importers:
         specifier: ^3.55.12
         version: 3.58.1
       '@types/node':
-        specifier: ^20
-        version: 20.17.25
+        specifier: ^24
+        version: 24.7.0
       '@types/react':
         specifier: ^19
         version: 19.1.13
@@ -206,7 +206,7 @@ importers:
         version: 9.1.7
       knip:
         specifier: ^5.64.0
-        version: 5.64.0(@types/node@20.17.25)(typescript@5.8.2)
+        version: 5.64.0(@types/node@24.7.0)(typescript@5.8.2)
       lint-staged:
         specifier: ^16.2.0
         version: 16.2.0
@@ -1217,8 +1217,8 @@ packages:
   '@types/mapbox__point-geometry@0.1.4':
     resolution: {integrity: sha512-mUWlSxAmYLfwnRBmgYV86tgYmMIICX4kza8YnE/eIlywGe2XoOxlpVnXWwir92xRLjwyarqwpu2EJKD2pk0IUA==}
 
-  '@types/node@20.17.25':
-    resolution: {integrity: sha512-bT+r2haIlplJUYtlZrEanFHdPIZTeiMeh/fSOEbOOfWf9uTn+lg8g0KU6Q3iMgjd9FLuuMAgfCNSkjUbxL6E3Q==}
+  '@types/node@24.7.0':
+    resolution: {integrity: sha512-IbKooQVqUBrlzWTi79E8Fw78l8k1RNtlDDNWsFZs7XonuQSJ8oNYfEeclhprUldXISRMLzBpILuKgPlIxm+/Yw==}
 
   '@types/pbf@3.0.5':
     resolution: {integrity: sha512-j3pOPiEcWZ34R6a6mN07mUkM4o4Lwf6hPNt8eilOeZhTFbxFXmKhvXl9Y28jotFPaI1bpPDJsbCprUoNke6OrA==}
@@ -3480,8 +3480,8 @@ packages:
     resolution: {integrity: sha512-nWJ91DjeOkej/TA8pXQ3myruKpKEYgqvpw9lz4OPHj/NWFNluYrjbz9j01CJ8yKQd2g4jFoOkINCTW2I5LEEyw==}
     engines: {node: '>= 0.4'}
 
-  undici-types@6.19.8:
-    resolution: {integrity: sha512-ve2KP6f/JnbPBFyobGHuerC9g1FYGn/F8n1LWTwNxCEzd6IfqTwUQcNXgEtmmQ6DlRrC1hrSrBnCZPokRrDHjw==}
+  undici-types@7.14.0:
+    resolution: {integrity: sha512-QQiYxHuyZ9gQUIrmPo3IA+hUl4KYk8uSA7cHrcKd/l3p1OTpZcM0Tbp9x7FAtXdAYhlasd60ncPpgu6ihG6TOA==}
 
   undici@5.29.0:
     resolution: {integrity: sha512-raqeBD6NQK4SkWhQzeYKd1KmIG6dllBOTt55Rmkt4HtI9mwdWtJljnrXjAFUBLTSN67HWrOIZ3EPF4kjUw80Bg==}
@@ -4476,9 +4476,9 @@ snapshots:
 
   '@types/mapbox__point-geometry@0.1.4': {}
 
-  '@types/node@20.17.25':
+  '@types/node@24.7.0':
     dependencies:
-      undici-types: 6.19.8
+      undici-types: 7.14.0
 
   '@types/pbf@3.0.5': {}
 
@@ -5886,10 +5886,10 @@ snapshots:
     dependencies:
       json-buffer: 3.0.1
 
-  knip@5.64.0(@types/node@20.17.25)(typescript@5.8.2):
+  knip@5.64.0(@types/node@24.7.0)(typescript@5.8.2):
     dependencies:
       '@nodelib/fs.walk': 1.2.8
-      '@types/node': 20.17.25
+      '@types/node': 24.7.0
       fast-glob: 3.3.3
       formatly: 0.3.0
       jiti: 2.6.0
@@ -6924,7 +6924,7 @@ snapshots:
       has-symbols: 1.1.0
       which-boxed-primitive: 1.1.1
 
-  undici-types@6.19.8: {}
+  undici-types@7.14.0: {}
 
   undici@5.29.0:
     dependencies:

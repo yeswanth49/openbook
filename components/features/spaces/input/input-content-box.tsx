@@ -109,9 +109,9 @@ export function ChatInput({
 
     // Command handling
     useEffect(() => {
-        const isCommand = value.startsWith('/') && !value.includes(' ');
+        const isCommand = value && typeof value === 'string' && value.startsWith('/') && !value.includes(' ');
         setShowSuggestions(isCommand);
-        
+
         // Auto-open menus for complete commands
         if (value === '/model') setActiveMenu('model');
         else if (value === '/frameworks') setActiveMenu('frameworks');
@@ -291,7 +291,7 @@ export function ChatInput({
                 {/* Send/Stop button */}
                 <Button
                     onClick={isProcessing ? onStop : handleSubmit}
-                    disabled={!value.trim() && attachments.length === 0 && !isProcessing}
+                    disabled={(!value || !value.trim()) && attachments.length === 0 && !isProcessing}
                     variant="ghost"
                     size="sm"
                     className={cn(

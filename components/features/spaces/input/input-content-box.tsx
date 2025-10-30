@@ -109,7 +109,7 @@ export function ChatInput({
 
     // Command handling
     useEffect(() => {
-        const isCommand = value.startsWith('/') && !value.includes(' ');
+        const isCommand = value?.startsWith('/') && !value.includes(' ');
         setShowSuggestions(isCommand);
         
         // Auto-open menus for complete commands
@@ -131,7 +131,7 @@ export function ChatInput({
     };
 
     const handleSubmit = () => {
-        if (!value.trim() && attachments.length === 0) return;
+        if (!value?.trim() && attachments.length === 0) return;
 
         if (value.startsWith('/')) {
             handleCommand(value.toLowerCase());
@@ -270,7 +270,7 @@ export function ChatInput({
                 <textarea
                     ref={textareaRef}
                     value={value}
-                    onChange={(e) => onChange(e.target.value)}
+                    onChange={(e) => onChange?.(e.target.value)}
                     onKeyDown={handleKeyDown}
                     rows={1}
                     className="flex-1 bg-transparent border-none outline-none text-sm placeholder:text-neutral-400 resize-none scrollbar-thin scrollbar-thumb-neutral-400 dark:scrollbar-thumb-neutral-600 scrollbar-track-transparent"
@@ -291,7 +291,7 @@ export function ChatInput({
                 {/* Send/Stop button */}
                 <Button
                     onClick={isProcessing ? onStop : handleSubmit}
-                    disabled={!value.trim() && attachments.length === 0 && !isProcessing}
+                    disabled={!value?.trim() && attachments.length === 0 && !isProcessing}
                     variant="ghost"
                     size="sm"
                     className={cn(
@@ -330,3 +330,6 @@ export function ChatInput({
         </div>
     );
 }
+
+
+// @coderabbitai input component is not working can you please check whole codebase for that, and find issue (/ command is not work and showing menu and enter/send is not working)

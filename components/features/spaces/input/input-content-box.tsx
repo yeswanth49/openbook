@@ -26,7 +26,7 @@ interface ChatCommand {
 interface ChatInputProps {
     value: string;
     onChange: (value: string) => void;
-    onSubmit: () => void;
+    handleSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
     onStop: () => void;
     selectedModel: string;
     onModelChange: (model: string) => void;
@@ -81,7 +81,7 @@ function useAutoResize(value: string, maxRows: number = 5) {
 export function ChatInput({
     value,
     onChange,
-    onSubmit,
+    handleSubmit,
     onStop,
     selectedModel,
     onModelChange,
@@ -109,7 +109,7 @@ export function ChatInput({
 
     // Command handling
     useEffect(() => {
-        const isCommand = value.startsWith('/') && !value.includes(' ');
+        const isCommand = value?.startsWith('/') && !value.includes(' ');
         setShowSuggestions(isCommand);
         
         // Auto-open menus for complete commands
@@ -122,7 +122,8 @@ export function ChatInput({
     const handleKeyDown = (e: React.KeyboardEvent) => {
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
-            handleSubmit();
+            // Downcast here, as FormEvent is more generic than KeyboardEvent
+            handleSubmit(e as any as React.FormEvent<HTMLFormElement>);
         }
         if (e.key === 'Escape' && activeMenu) {
             e.preventDefault();
@@ -130,15 +131,16 @@ export function ChatInput({
         }
     };
 
-    const handleSubmit = () => {
-        if (!value.trim() && attachments.length === 0) return;
+    const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        if (!value?.trim() && attachments.length === 0) return;
 
         if (value.startsWith('/')) {
             handleCommand(value.toLowerCase());
             return;
         }
 
-        onSubmit();
+        handleSubmit(e);
     };
 
     const handleCommand = (cmd: string) => {
@@ -265,12 +267,12 @@ export function ChatInput({
             )}
 
             {/* Main input */}
-            <div className="flex items-center gap-2 p-1">
+            <form onSubmit={handleFormSubmit} className="flex items-center gap-2 p-1">
                 <span className="text-neutral-400 text-sm select-none">❯</span>
                 <textarea
                     ref={textareaRef}
                     value={value}
-                    onChange={(e) => onChange(e.target.value)}
+                    onChange={(e) => onChange?.(e.target.value)}
                     onKeyDown={handleKeyDown}
                     rows={1}
                     className="flex-1 bg-transparent border-none outline-none text-sm placeholder:text-neutral-400 resize-none scrollbar-thin scrollbar-thumb-neutral-400 dark:scrollbar-thumb-neutral-600 scrollbar-track-transparent"
@@ -290,8 +292,9 @@ export function ChatInput({
 
                 {/* Send/Stop button */}
                 <Button
-                    onClick={isProcessing ? onStop : handleSubmit}
-                    disabled={!value.trim() && attachments.length === 0 && !isProcessing}
+                    type={isProcessing ? 'button' : 'submit'}
+                    onClick={isProcessing ? onStop : undefined}
+                    disabled={!value?.trim() && attachments.length === 0 && !isProcessing}
                     variant="ghost"
                     size="sm"
                     className={cn(
@@ -309,7 +312,7 @@ export function ChatInput({
                         </svg>
                     )}
                 </Button>
-            </div>
+            </form>
 
             {/* Attachments */}
             {attachments.length > 0 && (
@@ -330,3 +333,6 @@ export function ChatInput({
         </div>
     );
 }
+
+
+// @coderabbitai input component is not working can you please check whole codebase for that, and find issue (/ command is not work and showing menu and enter/send is not working)

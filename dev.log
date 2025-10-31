@@ -1,0 +1,5 @@
+
+> openbook@0.1.0 dev
+> next dev --turbopack
+
+sh: 1: next: not found

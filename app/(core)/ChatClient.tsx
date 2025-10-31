@@ -627,27 +627,17 @@ const HomeContent = () => {
                                 <ChatInput
                                     value={input}
                                     onChange={setInput}
-                                    onSubmit={() => {
+                                    handleSubmit={(e) => {
                                         lastSubmittedQueryRef.current = input;
-                                        appendWithPersist({
-                                            content: input,
-                                            role: 'user',
-                                        });
-                                        setInput(''); // Clear input after submit
+                                        handleSubmit(e);
+                                        // Custom logic after submit
                                         setHasSubmitted(true);
-                                        setHasManuallyScrolled(false); // Reset manual scroll when user submits
-
-                                        // Smooth scroll to bottom after a small delay
-                                        setTimeout(() => {
-                                            bottomRef.current?.scrollIntoView({
-                                                behavior: windowWidth < 640 ? 'auto' : 'smooth',
-                                                block: windowWidth < 640 ? 'end' : 'center',
-                                            });
-                                        }, 100);
+                                        setHasManuallyScrolled(false); // Reset manual scroll on new submission
+                                        resetSuggestedQuestions(); // Clear suggestions
                                     }}
                                     onStop={stop}
                                     selectedModel={selectedModel}
-                                    onModelChange={setSelectedModel}
+                                    onModelChange={handleModelChange}
                                     selectedGroup={selectedGroup}
                                     onGroupChange={setSelectedGroup}
                                     attachments={attachments}
@@ -719,27 +709,17 @@ const HomeContent = () => {
                                     <ChatInput
                                         value={input}
                                         onChange={setInput}
-                                        onSubmit={() => {
-                                            lastSubmittedQueryRef.current = input;
-                                            appendWithPersist({
-                                                content: input,
-                                                role: 'user',
-                                            });
-                                            setInput(''); // Clear input after submit
+                                        handleSubmit={(e) => {
+                                            lastSubmittedQuery-Ref.current = input;
+                                            handleSubmit(e);
+                                            // Custom logic after submit
                                             setHasSubmitted(true);
-                                            setHasManuallyScrolled(false); // Reset manual scroll when user submits
-
-                                            // Smooth scroll to bottom after a small delay
-                                            setTimeout(() => {
-                                                bottomRef.current?.scrollIntoView({
-                                                    behavior: windowWidth < 640 ? 'auto' : 'smooth',
-                                                    block: windowWidth < 640 ? 'end' : 'center',
-                                                });
-                                            }, 100);
+                                            setHasManuallyScrolled(false); // Reset manual scroll on new submission
+                                            resetSuggestedQuestions(); // Clear suggestions
                                         }}
                                         onStop={stop}
                                         selectedModel={selectedModel}
-                                        onModelChange={setSelectedModel}
+                                        onModelChange={handleModelChange}
                                         selectedGroup={selectedGroup}
                                         onGroupChange={setSelectedGroup}
                                         attachments={attachments}

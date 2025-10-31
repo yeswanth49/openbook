@@ -26,7 +26,7 @@ interface ChatCommand {
 interface ChatInputProps {
     value: string;
     onChange: (value: string) => void;
-    onSubmit: () => void;
+    handleSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
     onStop: () => void;
     selectedModel: string;
     onModelChange: (model: string) => void;
@@ -81,7 +81,7 @@ function useAutoResize(value: string, maxRows: number = 5) {
 export function ChatInput({
     value,
     onChange,
-    onSubmit,
+    handleSubmit,
     onStop,
     selectedModel,
     onModelChange,
@@ -122,7 +122,8 @@ export function ChatInput({
     const handleKeyDown = (e: React.KeyboardEvent) => {
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
-            handleSubmit();
+            // Downcast here, as FormEvent is more generic than KeyboardEvent
+            handleSubmit(e as any as React.FormEvent<HTMLFormElement>);
         }
         if (e.key === 'Escape' && activeMenu) {
             e.preventDefault();
@@ -130,7 +131,8 @@ export function ChatInput({
         }
     };
 
-    const handleSubmit = () => {
+    const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
         if (!value?.trim() && attachments.length === 0) return;
 
         if (value.startsWith('/')) {
@@ -138,7 +140,7 @@ export function ChatInput({
             return;
         }
 
-        onSubmit();
+        handleSubmit(e);
     };
 
     const handleCommand = (cmd: string) => {
@@ -265,7 +267,7 @@ export function ChatInput({
             )}
 
             {/* Main input */}
-            <div className="flex items-center gap-2 p-1">
+            <form onSubmit={handleFormSubmit} className="flex items-center gap-2 p-1">
                 <span className="text-neutral-400 text-sm select-none">❯</span>
                 <textarea
                     ref={textareaRef}
@@ -290,7 +292,8 @@ export function ChatInput({
 
                 {/* Send/Stop button */}
                 <Button
-                    onClick={isProcessing ? onStop : handleSubmit}
+                    type={isProcessing ? 'button' : 'submit'}
+                    onClick={isProcessing ? onStop : undefined}
                     disabled={!value?.trim() && attachments.length === 0 && !isProcessing}
                     variant="ghost"
                     size="sm"
@@ -309,7 +312,7 @@ export function ChatInput({
                         </svg>
                     )}
                 </Button>
-            </div>
+            </form>
 
             {/* Attachments */}
             {attachments.length > 0 && (

@@ -3,6 +3,7 @@ import 'katex/dist/katex.min.css';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { Metadata, Viewport } from 'next';
 import { Syne } from 'next/font/google';
+import Script from 'next/script';
 
 export const metadata: Metadata = {
     metadataBase: new URL('https://goopenbook.in'),
@@ -88,6 +89,16 @@ export default function RootLayout({
 }) {
     return (
         <html lang="en" suppressHydrationWarning>
+            <head>
+                {process.env.NODE_ENV === "development" && (
+                    <Script
+                        src="//unpkg.com/react-grab/dist/index.global.js"
+                        crossOrigin="anonymous"
+                        strategy="beforeInteractive"
+                        data-enabled="true"
+                    />
+                )}
+            </head>
             <body className={`${GeistSans.variable} ${syne.variable} font-sans antialiased`}>
                 {children}
             </body>

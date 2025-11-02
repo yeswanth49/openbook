@@ -7,7 +7,7 @@ import { motion } from 'framer-motion';
 const models = [
     {
         value: 'neuman-google',
-        label: 'Gemini 2.5 Flash (Preview)',
+        label: 'Gemini 2.5 Flash',
         description: "Google's advanced small reasoning model",
         color: 'gemini',
     },
@@ -19,9 +19,15 @@ const models = [
     },
     {
         value: 'neuman-gemini',
-        label: 'Gemini 2.5 Pro (Preview)',
+        label: 'Gemini 2.5 Pro',
         description: "Google's advanced reasoning model",
         color: 'gemini',
+    },
+    {
+        value: 'neuman-grok-3',
+        label: 'Grok 4 Fast',
+        description: "xAI's latest fast reasoning model",
+        color: 'orange',
     },
     { value: 'neuman-4o', label: 'GPT 4o', description: "OpenAI's flagship model", color: 'blue' },
     {
@@ -29,6 +35,12 @@ const models = [
         label: 'GPT 4.1-nano',
         description: "OpenAI's nano model",
         color: 'blue',
+    },
+    {
+        value: 'neuman-anthropic',
+        label: 'Claude Sonnet 4.5',
+        description: "Anthropic's latest intelligent model",
+        color: 'purple',
     },
 ];
 
@@ -144,4 +156,4 @@ export function AiModelPicker({ selectedModel, onSelect, onClose, className = ''
             </div>
         </motion.div>
     );
-} 
+}

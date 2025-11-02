@@ -17,7 +17,7 @@ const middleware = extractReasoningMiddleware({
 export const neuman = customProvider({
   languageModels: {
     'neuman-default': openai('o4-mini'),
-    'neuman-grok-3': xai('grok-3-fast-beta'),
+    'neuman-grok-3': xai('grok-4-fast-reasoning'),
     'neuman-vision': xai('grok-2-vision-1212'),
     'neuman-4o': openai('gpt-4o', {
       structuredOutputs: true,
@@ -28,13 +28,13 @@ export const neuman = customProvider({
       model: groq('qwen-qwq-32b'),
       middleware,
     }),
-    'neuman-google': google('gemini-2.5-flash-preview-04-17', {
+    'neuman-google': google('gemini-2.5-flash', {
       structuredOutputs: true,
     }),
-    'neuman-gemini': google('gemini-2.5-pro-exp-03-25', {
+    'neuman-gemini': google('gemini-2.5-pro', {
       structuredOutputs: true,
     }),
-    'neuman-anthropic': anthropic('claude-3-7-sonnet-20250219'),
+    'neuman-anthropic': anthropic('claude-sonnet-4-5-20250929'),
   },
 });
 
@@ -105,4 +105,4 @@ export type AvailableModel = (typeof AVAILABLE_MODELS)[number];
  */
 export function isValidModel(model: string): model is AvailableModel {
   return AVAILABLE_MODELS.includes(model as AvailableModel);
-} 
+}

@@ -439,7 +439,8 @@ export default function SidebarNotebook({ notebook, currentPageType, currentPage
                                             <div
                                                 className={cn(
                                                     'flex w-full items-center cursor-pointer',
-                                                    currentPageType === 'space' && currentPageId === space.id
+                                                    (currentPageType === 'space' && currentPageId === space.id) ||
+                                                    (currentPageType === '' && currentSpaceId === space.id)
                                                         ? 'bg-emerald-50 dark:bg-emerald-900/20'
                                                         : '',
                                                 )}
@@ -465,8 +466,8 @@ export default function SidebarNotebook({ notebook, currentPageType, currentPage
                                                         className="w-full text-left px-4 py-1.5 text-sm flex items-center"
                                                         style={{
                                                             color:
-                                                                currentPageType === 'space' &&
-                                                                currentPageId === space.id
+                                                                (currentPageType === 'space' && currentPageId === space.id) ||
+                                                                (currentPageType === '' && currentSpaceId === space.id)
                                                                     ? 'var(--tw-color-emerald-600)'
                                                                     : 'var(--tw-color-neutral-600)',
                                                         }}

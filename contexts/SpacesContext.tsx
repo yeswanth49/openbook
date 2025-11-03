@@ -9,6 +9,7 @@ import {
 } from '@/lib/conversation-utils';
 import { useUser } from './UserContext';
 import { useLimitModal } from './LimitModalContext';
+import { useNotebooks } from './NotebookContext';
 
 export type ChatMessage = {
     id: string;
@@ -74,10 +75,14 @@ export const SpacesProvider = ({ children }: { children: ReactNode }) => {
     const [currentSpaceId, setCurrentSpaceId] = React.useState<string>('');
     const { premium } = useUser();
     const { showLimitModal } = useLimitModal();
+    const { notebooks, currentNotebookId } = useNotebooks();
     const pendingSpaceCreation = React.useRef<string | null>(null);
 
-    // Load from localStorage
+    // Load from localStorage and initialize default space
     React.useEffect(() => {
+        // Wait for notebooks to be initialized first
+        if (notebooks.length === 0) return;
+
         const stored = localStorage.getItem(STORAGE_KEY);
         if (stored) {
             try {
@@ -99,22 +104,25 @@ export const SpacesProvider = ({ children }: { children: ReactNode }) => {
                 // ignore parse errors
             }
         }
-        // initialize default space
+
+        // Initialize default space within the default notebook
+        const defaultNotebook = notebooks[0]; // The first notebook is the default one
         const defaultSpace: Space = {
             id: crypto.randomUUID(),
-            name: 'General',
+            name: 'Untitled',
             messages: [],
             archived: false,
             createdAt: Date.now(),
             updatedAt: Date.now(),
+            notebook_id: defaultNotebook.id,
             metadata: {
-                manuallyRenamed: true, // Default space is considered manually renamed
+                manuallyRenamed: false, // Allow auto-naming for the default space
                 isGeneratingName: false,
             },
         };
         setSpaces([defaultSpace]);
         setCurrentSpaceId(defaultSpace.id);
-    }, []);
+    }, [notebooks]);
 
     // Persist to localStorage
     React.useEffect(() => {
@@ -311,41 +319,60 @@ export const SpacesProvider = ({ children }: { children: ReactNode }) => {
     };
 
     const deleteSpace = (id: string) => {
-        // Find the space to check if it's the General space
-        const spaceToDelete = spaces.find((s) => s.id === id);
+        let newSpaceId: string | undefined = undefined;
 
-        // Prevent deletion of the General space
-        if (spaceToDelete?.name === 'General') {
-            console.log('Cannot delete the General space');
-            return;
-        }
-
-        setSpaces((prev) => prev.filter((s) => s.id !== id));
-        if (currentSpaceId === id) {
-            // If deleting current space, switch to General space first, or any other space
-            const generalSpace = spaces.find((s) => s.name === 'General' && s.id !== id);
-            const fallback = generalSpace || spaces.find((s) => s.id !== id);
-
+        setSpaces((prevSpaces) => {
+            const filteredSpaces = prevSpaces.filter((s) => s.id !== id);
+            // Find the notebook safely - use current notebooks state passed as parameter
+            const currentNotebooks = notebooks; // Capture current notebooks at call time
+            const defaultNotebook = currentNotebooks.length > 0 ? currentNotebooks[0] : undefined;
+            // Find the space we're deleting (with latest state)
+            const spaceToDelete = prevSpaces.find((s) => s.id === id);
+            // Prevent deletion of the default Untitled space in the default notebook
+            if (
+                spaceToDelete?.notebook_id === defaultNotebook?.id &&
+                spaceToDelete?.name === 'Untitled'
+            ) {
+                if (process.env.NODE_ENV !== 'production') {
+                    console.log('Cannot delete the default Untitled space');
+                }
+                return prevSpaces;
+            }
+            // If the deleted space is NOT the current space, we just return the filtered result
+            if (currentSpaceId !== id) {
+                return filteredSpaces;
+            }
+            // Fallback logic — pick a default space with updated list, not stale state
+            const defaultSpace = filteredSpaces.find(
+                (s) => s.notebook_id === defaultNotebook?.id && s.name === 'Untitled'
+            );
+            const fallback = defaultSpace || filteredSpaces[0];
             if (fallback) {
-                setCurrentSpaceId(fallback.id);
+                newSpaceId = fallback.id;
             } else {
-                // No fallback space found, create a new General space
-                const newGeneralSpace: Space = {
+                // Create a new Untitled space in the default notebook if no fallback exists
+                const newDefaultSpace: Space = {
                     id: crypto.randomUUID(),
-                    name: 'General',
+                    name: 'Untitled',
                     messages: [],
                     archived: false,
                     createdAt: Date.now(),
                     updatedAt: Date.now(),
+                    notebook_id: defaultNotebook?.id,
                     metadata: {
-                        manuallyRenamed: true, // Default space is considered manually renamed
+                        manuallyRenamed: false,
                         isGeneratingName: false,
                     },
                 };
-
-                setSpaces((prev) => [...prev, newGeneralSpace]);
-                setCurrentSpaceId(newGeneralSpace.id);
+                filteredSpaces.push(newDefaultSpace);
+                newSpaceId = newDefaultSpace.id;
             }
+            return filteredSpaces;
+        });
+
+        // Update currentSpaceId outside setSpaces to keep sync
+        if (newSpaceId) {
+            setCurrentSpaceId(newSpaceId);
         }
     };
 
@@ -447,18 +474,21 @@ export const SpacesProvider = ({ children }: { children: ReactNode }) => {
     const addMessage = (newMessageToAdd: ChatMessage) => {
         const spaceUpdateTimestamp = Date.now(); // For the space's updatedAt field
 
-        // Ensure we have a current space - if not, find or create General space
+        // Ensure we have a current space - if not, find or create default space
         if (!currentSpaceId || !spaces.find((s) => s.id === currentSpaceId)) {
-            console.log('No current space found, finding or creating General space');
+            if (process.env.NODE_ENV !== 'production') {
+                console.log('No current space found, finding or creating default space');
+            }
 
-            // First try to find existing General space
-            const existingGeneral = spaces.find((s) => s.name === 'General');
-            if (existingGeneral) {
-                setCurrentSpaceId(existingGeneral.id);
-                // Add message to existing General space
+            // First try to find existing default space (Untitled in default notebook)
+            const defaultNotebook = notebooks[0];
+            const existingDefault = spaces.find((s) => s.notebook_id === defaultNotebook?.id && s.name === 'Untitled');
+            if (existingDefault) {
+                setCurrentSpaceId(existingDefault.id);
+                // Add message to existing default space
                 setSpaces((prev) =>
                     prev.map((s) =>
-                        s.id === existingGeneral.id
+                        s.id === existingDefault.id
                             ? {
                                   ...s,
                                   messages: [...s.messages, newMessageToAdd],
@@ -470,16 +500,17 @@ export const SpacesProvider = ({ children }: { children: ReactNode }) => {
                 return;
             }
 
-            // Create new General space if none exists
+            // Create new default space if none exists
             const defaultSpace: Space = {
                 id: crypto.randomUUID(),
-                name: 'General',
+                name: 'Untitled',
                 messages: [newMessageToAdd],
                 archived: false,
                 createdAt: Date.now(),
                 updatedAt: spaceUpdateTimestamp,
+                notebook_id: defaultNotebook?.id,
                 metadata: {
-                    manuallyRenamed: true,
+                    manuallyRenamed: false,
                     isGeneratingName: false,
                 },
             };
@@ -503,13 +534,13 @@ export const SpacesProvider = ({ children }: { children: ReactNode }) => {
                     updatedAt: spaceUpdateTimestamp,
                 };
 
-                // Auto-naming logic (uses newMessageToAdd.role) - but not for General space
+                // Auto-naming logic (uses newMessageToAdd.role) - but not for Untitled spaces
                 if (
                     newMessageToAdd.role === 'user' &&
                     updatedSpace.messages.filter((m) => m.role === 'user').length === 1 &&
                     updatedSpace.messages.length <= 2 && // Ensure it's early in the conversation
                     !updatedSpace.metadata?.manuallyRenamed &&
-                    updatedSpace.name !== 'General' // Don't auto-rename General space
+                    updatedSpace.name !== 'Untitled' // Don't auto-rename Untitled spaces
                 ) {
                     return {
                         ...updatedSpace,

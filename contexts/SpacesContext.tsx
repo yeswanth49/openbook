@@ -331,7 +331,8 @@ export const SpacesProvider = ({ children }: { children: ReactNode }) => {
             // Prevent deletion of the default Untitled space in the default notebook
             if (
                 spaceToDelete?.notebook_id === defaultNotebook?.id &&
-                spaceToDelete?.name === 'Untitled'
+                spaceToDelete?.name === 'Untitled' &&
+                spaceToDelete?.metadata?.manuallyRenamed !== true
             ) {
                 if (process.env.NODE_ENV !== 'production') {
                     console.log('Cannot delete the default Untitled space');

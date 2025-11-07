@@ -52,7 +52,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
     const [showClearStorageConfirm, setShowClearStorageConfirm] = useState(false);
     const { notebooks, createNotebook } = useNotebooks();
     const { entries, deleteEntry } = useJournal();
-    const { spaces, switchSpace, deleteSpace } = useSpaces();
+    const { spaces, switchSpace, deleteSpace, currentSpaceId } = useSpaces();
     const router = useRouter();
 
     // Get current path and parse current page type and ID

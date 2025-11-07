@@ -674,18 +674,25 @@ const HomeContent = () => {
                             </div>
                         )}
 
-                        {/* Show space switching skeleton when switching spaces */}
+                        {/* Show minimal centered spinner when switching spaces (centered in content area, excluding sidebar) */}
                         <AnimatePresence>
                             {isSwitchingSpace && (
                                 <motion.div
-                                    key="space-switching-skeleton"
-                                    initial={{ opacity: 0, y: 10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    exit={{ opacity: 0, y: -10 }}
-                                    transition={{ duration: 0.3 }}
-                                    className="mt-4 sm:mt-8 md:mt-12 w-full"
+                                    key="space-switching-spinner"
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    exit={{ opacity: 0 }}
+                                    transition={{ duration: 0.2 }}
+                                    className={cn(
+                                        'fixed inset-y-0 right-0 z-30 flex items-center justify-center pointer-events-none',
+                                        sidebarOpen && windowWidth >= 768
+                                            ? windowWidth >= 1024
+                                                ? 'left-[256px]'
+                                                : 'left-[240px]'
+                                            : 'left-0',
+                                    )}
                                 >
-                                    <SpaceSwitchingSkeleton />
+                                    <div className="h-6 w-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin bg-background/80 backdrop-blur-sm pointer-events-auto" />
                                 </motion.div>
                             )}
                         </AnimatePresence>

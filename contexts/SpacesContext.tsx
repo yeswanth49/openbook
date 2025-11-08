@@ -44,6 +44,7 @@ export interface SpacesContextType {
     spaces: Space[];
     currentSpaceId: string;
     currentSpace?: Space;
+    isSwitchingSpace: boolean;
     createSpace: (name: string, notebook_id?: string) => string | null;
     deleteSpace: (id: string) => void;
     archiveSpace: (id: string) => void;
@@ -73,6 +74,7 @@ const STORAGE_KEY = SPACES_DATA_KEY;
 export const SpacesProvider = ({ children }: { children: ReactNode }) => {
     const [spaces, setSpaces] = React.useState<Space[]>([]);
     const [currentSpaceId, setCurrentSpaceId] = React.useState<string>('');
+    const [isSwitchingSpace, setIsSwitchingSpace] = React.useState<boolean>(false);
     const { premium } = useUser();
     const { showLimitModal } = useLimitModal();
     const { notebooks, currentNotebookId } = useNotebooks();
@@ -463,10 +465,33 @@ export const SpacesProvider = ({ children }: { children: ReactNode }) => {
 
     const switchSpace = (id: string): Promise<void> => {
         return new Promise((resolve) => {
+            // Don't do anything if switching to the same space
+            if (id === currentSpaceId) {
+                resolve();
+                return;
+            }
+
+            const targetSpace = spaces.find((s) => s.id === id);
+
+            // If target space has no messages, switch immediately without skeleton
+            if (!targetSpace || targetSpace.messages.length === 0) {
+                setCurrentSpaceId(id);
+                setIsSwitchingSpace(false);
+                resolve();
+                return;
+            }
+
+            // For non-empty spaces, show brief AI-side skeleton during transition
+            setIsSwitchingSpace(true);
             setCurrentSpaceId(id);
+
             // Use a microtask to ensure the state update has been processed
             Promise.resolve().then(() => {
-                resolve();
+                // Add a small delay to make the loading state visible
+                setTimeout(() => {
+                    setIsSwitchingSpace(false);
+                    resolve();
+                }, 300);
             });
         });
     };
@@ -646,6 +671,7 @@ export const SpacesProvider = ({ children }: { children: ReactNode }) => {
                 spaces,
                 currentSpaceId,
                 currentSpace,
+                isSwitchingSpace,
                 createSpace,
                 deleteSpace,
                 archiveSpace,

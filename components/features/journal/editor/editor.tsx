@@ -289,11 +289,13 @@ export default function Editor({ initialBlocks, onBlocksChange, title, onTitleCh
 
     if (isLoading) {
         return (
-            <div className="flex h-full items-center justify-center bg-white text-black dark:bg-black dark:text-white">
-                <div className="flex flex-col items-center">
-                    <div className="h-8 w-8 animate-spin rounded-full border-t-2 border-b-2 border-black dark:border-white"></div>
-                    <p className="mt-4 text-sm font-light">Loading...</p>
-                </div>
+            <div
+                className="fixed inset-y-0 right-0 z-30 flex items-center justify-center pointer-events-none"
+                style={{
+                    left: 256,
+                }}
+            >
+                <div className="h-6 w-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin bg-background/80 backdrop-blur-sm pointer-events-auto" />
             </div>
         );
     }

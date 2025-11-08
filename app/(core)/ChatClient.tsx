@@ -34,6 +34,7 @@ import Messages from '@/components/features/spaces/chat/messages';
 import { Input } from '@/components/ui/input';
 import Sidebar from '@/components/layout/sidebar';
 import { useSpaces, type ChatMessage } from '@/contexts/SpacesContext'; // Adjusted path, assuming ChatMessage is exported from index of SpacesContext
+import { SpaceSwitchingSkeleton } from '@/components/features/spaces/loading/space-switching-skeleton';
 import { ChatInput } from '@/components/features/spaces/input/input-content-box';
 import { useStudyMode } from '@/contexts/StudyModeContext';
 import { StudyModeBadge } from '@/components/features/study/study-mode-badge';
@@ -91,7 +92,7 @@ const HomeContent = () => {
     const [q] = useQueryState('q', parseAsString.withDefault(''));
 
     // Conversation spaces context
-    const { currentSpace, currentSpaceId, switchSpace, addMessage, createSpace, markSpaceContextReset } = useSpaces();
+    const { currentSpace, currentSpaceId, isSwitchingSpace, switchSpace, addMessage, createSpace, markSpaceContextReset } = useSpaces();
     // Study mode context
     const { getStudyModeForSpace, setStudyMode } = useStudyMode();
     // Set Google Gemini 2.5 Flash as the default model
@@ -673,8 +674,31 @@ const HomeContent = () => {
                             </div>
                         )}
 
+                        {/* Show minimal centered spinner when switching spaces (centered in content area, excluding sidebar) */}
+                        <AnimatePresence>
+                            {isSwitchingSpace && (
+                                <motion.div
+                                    key="space-switching-spinner"
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    exit={{ opacity: 0 }}
+                                    transition={{ duration: 0.2 }}
+                                    className={cn(
+                                        'fixed inset-y-0 right-0 z-30 flex items-center justify-center pointer-events-none',
+                                        sidebarOpen && windowWidth >= 768
+                                            ? windowWidth >= 1024
+                                                ? 'left-[256px]'
+                                                : 'left-[240px]'
+                                            : 'left-0',
+                                    )}
+                                >
+                                    <div className="h-6 w-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin bg-background/80 backdrop-blur-sm pointer-events-auto" />
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+
                         {/* Use the Messages component */}
-                        {displayMessages.length > 0 && (
+                        {displayMessages.length > 0 && !isSwitchingSpace && (
                             <div className="mt-4 sm:mt-8 md:mt-12 w-full overflow-visible">
                                 <Messages
                                     messages={displayMessages}

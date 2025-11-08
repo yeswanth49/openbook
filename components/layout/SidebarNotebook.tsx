@@ -125,13 +125,24 @@ export default function SidebarNotebook({ notebook, currentPageType, currentPage
         if (!spacesOpen) setSpacesOpen(true);
     };
 
+    // @coderabbitai: Page re-routing causes sidebar reload animations
+    // When clicking spaces/journals, router.push() triggers full page navigation
+    // which causes the sidebar to unmount/remount, creating jarring transition effects.
+    // Suggested fix: Implement client-side routing without Next.js router.push()
+    // for space switching. Use URL state management or hash routing instead.
+    // For journals, consider keeping them as separate pages but prevent sidebar remounting
+    // by ensuring sidebar state persists across navigation.
     const handleJournalClick = (entryId: string) => {
         router.push(`/journal/${entryId}`);
     };
 
     const handleSpaceClick = (spaceId: string) => {
+        // If we're on a journal page, navigate back to main chat first
+        if (currentPageType === 'journal') {
+            router.push('/');
+        }
+        // Then switch to the space (this will work whether we navigated or not)
         switchSpace(spaceId);
-        router.push(`/space/${spaceId}`);
     };
 
     const handleDeleteJournal = (e: React.MouseEvent, journalId: string, journalName: string) => {
